@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { UserPlus, Mail, Lock, User, Phone } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 
@@ -13,13 +13,15 @@ export default function Register() {
   const register = useAuthStore((state) => state.register);
   const loading = useAuthStore((state) => state.loading);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
     const res = await register(name, email, password, phone);
     if (res.success) {
-      navigate('/profile');
+      const fromPath = location.state?.from || '/profile';
+      navigate(fromPath, { replace: true });
     } else {
       setErrorMsg(res.message);
     }
@@ -114,7 +116,7 @@ export default function Register() {
 
         <div className="text-center text-xs text-gray-500 pt-2 border-t border-gray-100">
           ¿Ya tienes cuenta?{' '}
-          <Link to="/login" className="text-brand-blue font-bold hover:underline">
+          <Link to="/login" state={location.state} className="text-brand-blue font-bold hover:underline">
             Inicia sesión
           </Link>
         </div>

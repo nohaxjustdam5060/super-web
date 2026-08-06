@@ -6,6 +6,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const requireRole = require('../middlewares/roleMiddleware');
 
 router.get('/', productController.getProducts);
+router.get('/filters', productController.getFilterOptions);
 router.get('/categories', productController.getCategories);
 router.get('/brands', productController.getBrands);
 router.get('/:slug', productController.getProductBySlug);

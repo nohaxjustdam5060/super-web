@@ -5,7 +5,24 @@ const logger = require('../config/logger');
 
 exports.processPayment = async (req, res, next) => {
   try {
-    const { order_id, formData, payment_method_id, token, installments, payer } = req.body;
+    const rawData = req.body.formData || req.body;
+    const token = req.body.token || rawData?.token;
+    const payment_method_id = req.body.payment_method_id || rawData?.payment_method_id;
+    const installments = req.body.installments || rawData?.installments || 1;
+    const issuer_id = req.body.issuer_id || rawData?.issuer_id;
+    const payer = req.body.payer || rawData?.payer;
+    const order_id = req.body.order_id || rawData?.external_reference;
+
+    console.log('👉 [LOG PASO 3 - BACKEND RECIBE PAYLOAD]:', {
+      order_id,
+      has_token: !!token,
+      token_preview: token ? `${token.substring(0, 15)}...` : 'NINGUNO',
+      payment_method_id,
+      installments,
+      issuer_id,
+      payer_email: payer?.email || req.user?.email,
+      full_body: req.body
+    });
 
     const order = await Order.findByPk(order_id, {
       include: [{ model: User, as: 'user' }]
@@ -17,13 +34,16 @@ exports.processPayment = async (req, res, next) => {
 
     const paymentResult = await paymentService.createPayment({
       transaction_amount: order.total,
-      token: token || formData?.token || 'mock_token_approved',
+      token: token || 'mock_token_approved',
       description: `Compra en SUPER Tech - Orden #${order.order_number}`,
-      installments: installments || formData?.installments || 1,
-      payment_method_id: payment_method_id || formData?.payment_method_id || 'visa',
-      payer: payer || formData?.payer || { email: req.user.email, first_name: req.user.name },
+      installments: Number(installments) || 1,
+      payment_method_id: payment_method_id || 'visa',
+      issuer_id: issuer_id || null,
+      payer: payer || { email: req.user.email, first_name: req.user.name },
       external_reference: order.id
     });
+
+    console.log('✅ [LOG PASO 3 - RESULTADO PAGO EN BACKEND]:', paymentResult);
 
     // Save payment details in DB
     const payment = await Payment.create({
@@ -70,6 +90,7 @@ exports.processPayment = async (req, res, next) => {
       order
     });
   } catch (error) {
+    console.error('❌ [LOG PASO 3 - ERROR EN CONTROLLER PAGO]:', error);
     next(error);
   }
 };

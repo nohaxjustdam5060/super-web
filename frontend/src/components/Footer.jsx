@@ -82,7 +82,7 @@ export default function Footer() {
 
         <div>
           <h4 className="text-white font-bold text-base mb-4 border-b border-emerald-400 inline-block pb-1">Medios de Pago</h4>
-          <p className="text-xs text-gray-400 mb-4">Aceptamos todas las tarjetas vía Mercado Pago Checkout Bricks:</p>
+          <p className="text-xs text-gray-400 mb-4">Aceptamos todas las tarjetas vía Mercado Pago Checkout:</p>
           <div className="flex flex-wrap gap-2 text-xs font-semibold text-gray-200">
             <span className="bg-gray-800 px-3 py-1.5 rounded border border-gray-700">💳 Visa</span>
             <span className="bg-gray-800 px-3 py-1.5 rounded border border-gray-700">💳 Mastercard</span>

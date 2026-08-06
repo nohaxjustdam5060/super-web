@@ -61,6 +61,39 @@ const Product = sequelize.define('Product', {
   brand_id: {
     type: DataTypes.UUID,
     allowNull: true
+  },
+  processor_family: {
+    type: DataTypes.STRING(50),
+    allowNull: true
+  },
+  ram_gb: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  storage_gb: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  storage_type: {
+    type: DataTypes.STRING(20),
+    allowNull: true
+  },
+  screen_size: {
+    type: DataTypes.DECIMAL(4, 1),
+    allowNull: true
+  },
+  full_name: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  needs_review: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  external_id: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    unique: true
   }
 }, {
   tableName: 'products',

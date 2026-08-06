@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { LogIn, Mail, Lock } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 
@@ -10,16 +10,20 @@ export default function Login() {
   const login = useAuthStore((state) => state.login);
   const loading = useAuthStore((state) => state.loading);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
     const res = await login(email, password);
     if (res.success) {
-      if (res.user.role === 'admin' || res.user.role === 'super_admin') {
-        navigate('/admin');
+      const fromPath = location.state?.from;
+      if (fromPath) {
+        navigate(fromPath, { replace: true });
+      } else if (res.user.role === 'admin' || res.user.role === 'super_admin') {
+        navigate('/admin', { replace: true });
       } else {
-        navigate('/profile');
+        navigate('/profile', { replace: true });
       }
     } else {
       setErrorMsg(res.message);
@@ -89,7 +93,7 @@ export default function Login() {
 
         <div className="text-center text-xs text-gray-500 pt-2 border-t border-gray-100">
           ¿No tienes una cuenta aún?{' '}
-          <Link to="/register" className="text-brand-red font-bold hover:underline">
+          <Link to="/register" state={location.state} className="text-brand-red font-bold hover:underline">
             Regístrate aquí
           </Link>
         </div>

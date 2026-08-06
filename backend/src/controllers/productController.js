@@ -3,11 +3,17 @@ const searchService = require('../services/searchService');
 
 exports.getProducts = async (req, res, next) => {
   try {
-    const { page = 1, limit = 12, sort = 'newest', search, category_id, brand_id, min_price, max_price, in_stock, is_featured } = req.query;
+    const { page = 1, limit = 12, sort = 'newest', search, category_id, brand_id, min_price, max_price, in_stock, is_featured, processor_family, ram_gb, storage, screen_range } = req.query;
 
     const offset = (Number(page) - 1) * Number(limit);
     const where = await searchService.buildProductSearchQuery({
-      search, category_id, brand_id, min_price, max_price, in_stock, is_featured
+      search, category_id, brand_id, min_price, max_price, in_stock, is_featured,
+      specs: {
+        processor_family,
+        ram_gb,
+        storage,
+        screen_range
+      }
     });
 
     let order = [['createdAt', 'DESC']];
@@ -176,6 +182,86 @@ exports.updateProduct = async (req, res, next) => {
     await product.update(req.body);
     return res.json({ success: true, message: 'Producto actualizado', product });
   } catch (error) {
+    next(error);
+  }
+};
+
+exports.getFilterOptions = async (req, res, next) => {
+  try {
+    const sequelize = require('../config/database');
+
+    // 1. Processors (stock > 0 and processor_family is not null)
+    const processors = await sequelize.query(`
+      SELECT processor_family AS value, COUNT(*)::int AS count
+      FROM products
+      WHERE stock > 0 AND processor_family IS NOT NULL AND is_active = true
+      GROUP BY processor_family
+      HAVING COUNT(*) > 0
+      ORDER BY processor_family ASC
+    `, { type: sequelize.QueryTypes.SELECT });
+
+    // 2. RAM (stock > 0 and ram_gb is not null)
+    const ramOptions = await sequelize.query(`
+      SELECT ram_gb AS value, COUNT(*)::int AS count
+      FROM products
+      WHERE stock > 0 AND ram_gb IS NOT NULL AND is_active = true
+      GROUP BY ram_gb
+      HAVING COUNT(*) > 0
+      ORDER BY ram_gb ASC
+    `, { type: sequelize.QueryTypes.SELECT });
+
+    // 3. Storage (stock > 0 and storage_gb is not null)
+    const storageOptions = await sequelize.query(`
+      SELECT storage_gb, storage_type, COUNT(*)::int AS count
+      FROM products
+      WHERE stock > 0 AND storage_gb IS NOT NULL AND is_active = true
+      GROUP BY storage_gb, storage_type
+      HAVING COUNT(*) > 0
+      ORDER BY storage_gb ASC, storage_type ASC
+    `, { type: sequelize.QueryTypes.SELECT });
+
+    // 4. Screen Size Ranges
+    const screenOptions = await sequelize.query(`
+      SELECT 
+        CASE 
+          WHEN screen_size < 13 THEN 'Menos de 13"'
+          WHEN screen_size >= 13 AND screen_size < 14 THEN '13" - 13.9"'
+          WHEN screen_size >= 14 AND screen_size < 15 THEN '14" - 14.9"'
+          WHEN screen_size >= 15 AND screen_size < 16 THEN '15" - 15.9"'
+          ELSE '16" o más'
+        END AS range,
+        COUNT(*)::int AS count,
+        MIN(screen_size) as min_size
+      FROM products
+      WHERE stock > 0 AND screen_size IS NOT NULL AND is_active = true
+      GROUP BY range
+      HAVING COUNT(*) > 0
+      ORDER BY min_size ASC
+    `, { type: sequelize.QueryTypes.SELECT });
+
+    // 5. Brands with stock count > 0
+    const brandOptions = await sequelize.query(`
+      SELECT b.id, b.name, b.slug, COUNT(p.id)::int AS count
+      FROM brands b
+      INNER JOIN products p ON p.brand_id = b.id
+      WHERE p.stock > 0 AND p.is_active = true
+      GROUP BY b.id, b.name, b.slug
+      HAVING COUNT(p.id) > 0
+      ORDER BY b.name ASC
+    `, { type: sequelize.QueryTypes.SELECT });
+
+    return res.json({
+      success: true,
+      filters: {
+        processors,
+        ramOptions,
+        storageOptions,
+        screenOptions,
+        brandOptions
+      }
+    });
+  } catch (error) {
+    console.error('[GET_FILTER_OPTIONS_ERROR]', error);
     next(error);
   }
 };

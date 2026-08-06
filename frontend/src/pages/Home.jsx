@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Cpu, Monitor, HardDrive, Database, Zap, Layers, ChevronRight, Flame, Shield, ArrowRight, Star } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
+import LocationMap from '../components/LocationMap';
 import axiosClient from '../api/axiosClient';
 
 export default function Home() {
@@ -147,6 +148,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Location Map Section */}
+      <LocationMap />
     </div>
   );
 }

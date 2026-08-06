@@ -1,3 +1,4 @@
+const { Op } = require('sequelize');
 const { Order, OrderItem, OrderStatusHistory, Product, Coupon, Address } = require('../models');
 const emailService = require('../services/emailService');
 
@@ -57,6 +58,45 @@ exports.createOrder = async (req, res, next) => {
     const shippingCost = 15.00; // Tarifa plana express
     const total = Math.max(0, subtotal - discountAmount + shippingCost);
 
+    // 1. Check if user already has an existing pending order to REUSE and update
+    const existingPendingOrder = await Order.findOne({
+      where: {
+        user_id: req.user.id,
+        status: 'pending'
+      },
+      order: [['createdAt', 'DESC']]
+    });
+
+    if (existingPendingOrder) {
+      existingPendingOrder.subtotal = subtotal;
+      existingPendingOrder.discount_amount = discountAmount;
+      existingPendingOrder.shipping_cost = shippingCost;
+      existingPendingOrder.total = total;
+      existingPendingOrder.shipping_address = shipping_address;
+      existingPendingOrder.shipping_method = shipping_method || 'Envío Express a Domicilio';
+      existingPendingOrder.coupon_code = coupon_code || null;
+      existingPendingOrder.notes = notes;
+      await existingPendingOrder.save();
+
+      // Re-create items for this order
+      await OrderItem.destroy({ where: { order_id: existingPendingOrder.id } });
+      await Promise.all(
+        validatedItems.map((item) =>
+          OrderItem.create({
+            order_id: existingPendingOrder.id,
+            ...item
+          })
+        )
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: 'Orden pendiente actualizada exitosamente',
+        order: existingPendingOrder
+      });
+    }
+
+    // 2. Create new order if no pending order exists
     const orderNumber = `SUP-${Date.now().toString().slice(-6)}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const order = await Order.create({
@@ -102,7 +142,10 @@ exports.createOrder = async (req, res, next) => {
 exports.getOrders = async (req, res, next) => {
   try {
     const orders = await Order.findAll({
-      where: { user_id: req.user.id },
+      where: {
+        user_id: req.user.id,
+        status: { [Op.ne]: 'pending' } // Exclude un-paid pending orders from user history
+      },
       order: [['createdAt', 'DESC']],
       include: [{ model: OrderItem, as: 'items' }]
     });

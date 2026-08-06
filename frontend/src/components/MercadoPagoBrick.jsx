@@ -10,7 +10,6 @@ export default function MercadoPagoBrick({ amount, orderId, onSubmitPayment }) {
 
   const initialization = {
     amount: Number(amount) || 100,
-    preferenceId: `<PREFERENCE_ID>`,
   };
 
   const customization = {
@@ -23,25 +22,48 @@ export default function MercadoPagoBrick({ amount, orderId, onSubmitPayment }) {
     },
     visual: {
       style: {
-        theme: 'default', // 'default' | 'dark' | 'bootstrap' | 'flat'
+        theme: 'default',
       }
     }
   };
 
-  const onSubmit = async ({ selectedPaymentMethod, formData }) => {
+  const onSubmit = async (param) => {
+    // Extract formData whether param is { selectedPaymentMethod, formData } or formData directly
+    const formData = param?.formData || param;
+
+    console.log('👉 [LOG PASO 1 - BRICK GENERÓ FORMDATA]:', {
+      token: formData?.token ? `${formData.token.substring(0, 15)}...` : 'NO_TOKEN',
+      payment_method_id: formData?.payment_method_id,
+      installments: formData?.installments,
+      issuer_id: formData?.issuer_id,
+      payer_email: formData?.payer?.email,
+      raw_formData: formData
+    });
+
     return new Promise((resolve, reject) => {
-      onSubmitPayment(formData)
+      onSubmitPayment({
+        ...formData,
+        token: formData?.token,
+        payment_method_id: formData?.payment_method_id,
+        installments: formData?.installments,
+        issuer_id: formData?.issuer_id,
+        payer: formData?.payer,
+        external_reference: orderId,
+      })
         .then(() => resolve())
-        .catch(() => reject());
+        .catch((err) => {
+          console.error('❌ [MercadoPago Brick Submit Error]:', err);
+          reject();
+        });
     });
   };
 
   const onError = async (error) => {
-    console.error('[MercadoPago Brick Error]:', error);
+    console.error('❌ [MercadoPago Brick Error]:', error);
   };
 
   const onReady = async () => {
-    console.log('[MercadoPago Brick Ready]');
+    console.log('✅ [MercadoPago Brick Renderizado y Listo]');
   };
 
   return (
