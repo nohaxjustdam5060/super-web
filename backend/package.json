@@ -12,7 +12,9 @@
     "db:reset": "npx sequelize-cli db:migrate:undo:all && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1106.0",
     "@sentry/node": "^7.100.0",
+    "@supabase/supabase-js": "^2.112.2",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -26,6 +28,7 @@
     "nodemailer": "^6.9.12",
     "pg": "^8.11.3",
     "pg-hstore": "^2.3.4",
+    "resend": "^6.18.1",
     "sequelize": "^6.37.1",
     "winston": "^3.12.0"
   },

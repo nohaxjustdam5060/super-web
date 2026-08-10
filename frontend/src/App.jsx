@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
+import ScrollToTop from './components/ScrollToTop';
 
 import Home from './pages/Home';
 import Catalog from './pages/Catalog';
@@ -11,6 +12,8 @@ import Compare from './pages/Compare';
 import Checkout from './pages/Checkout';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminProducts from './pages/AdminProducts';
@@ -28,6 +31,7 @@ function ProtectedAdminRoute({ children }) {
 export default function App() {
   return (
     <div className="min-h-screen flex flex-col justify-between bg-gray-50 text-slate-900 font-sans">
+      <ScrollToTop />
       <Navbar />
       <CartDrawer />
 
@@ -40,6 +44,8 @@ export default function App() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/profile" element={<Profile />} />
 
           {/* Admin Routes */}

@@ -7,8 +7,19 @@ class SearchService {
   /**
    * Builds search & filter query criteria for Products
    */
-  async buildProductSearchQuery({ search, category_id, brand_id, min_price, max_price, in_stock, is_featured, specs }) {
-    const where = { is_active: true };
+  async buildProductSearchQuery({ search, category_id, brand_id, min_price, max_price, in_stock, is_featured, include_inactive, status, specs }) {
+    const where = {};
+
+    if (status === 'active') {
+      where.is_active = true;
+    } else if (status === 'inactive') {
+      where.is_active = false;
+    } else if (status === 'all' || include_inactive === 'true' || include_inactive === true) {
+      // Do not filter by is_active (returns both active and inactive)
+    } else {
+      // Default for public catalog queries: only show active products
+      where.is_active = true;
+    }
 
     // Search query using ILIKE / Full-text PostgreSQL search fallback
     if (search && search.trim() !== '') {

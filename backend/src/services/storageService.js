@@ -1,58 +1,26 @@
-const path = require('path');
-const fs = require('fs');
-const logger = require('../config/logger');
+const s3Provider = require('./storageProviders/s3Provider');
 
 class StorageService {
-  constructor() {
-    this.provider = process.env.STORAGE_PROVIDER || 'local';
-    this.uploadDir = path.join(__dirname, '../../public/uploads');
-
-    if (!fs.existsSync(this.uploadDir)) {
-      fs.mkdirSync(this.uploadDir, { recursive: true });
-    }
-  }
-
   /**
-   * Abstracted upload function
+   * Delegates file upload directly to S3 Provider (Supabase Storage via S3 protocol)
+   * Returns public URL string
    */
-  async uploadFile(fileBuffer, fileName, mimeType) {
-    if (this.provider === 'supabase') {
-      // Supabase Storage implementation placeholder using REST/fetch without locking logic
-      logger.info(`[StorageService] Uploading ${fileName} to Supabase Storage bucket`);
-      return `https://your-supabase-url.storage.supabase.co/object/public/products/${fileName}`;
-    }
-
-    // Local storage default implementation
-    const targetPath = path.join(this.uploadDir, fileName);
-    await fs.promises.writeFile(targetPath, fileBuffer);
-    return `/uploads/${fileName}`;
+  async uploadFile(fileBuffer, originalName, mimeType) {
+    return await s3Provider.uploadFile(fileBuffer, originalName, mimeType);
   }
 
   /**
-   * Abstracted delete function
+   * Delegates object deletion directly to S3 Provider
    */
-  async deleteFile(fileName) {
-    if (this.provider === 'supabase') {
-      logger.info(`[StorageService] Deleting ${fileName} from Supabase Storage`);
-      return true;
-    }
-
-    const targetPath = path.join(this.uploadDir, fileName);
-    if (fs.existsSync(targetPath)) {
-      await fs.promises.unlink(targetPath);
-    }
-    return true;
+  async deleteFile(fileUrlOrName) {
+    return await s3Provider.deleteFile(fileUrlOrName);
   }
 
   /**
-   * Resolves absolute or public URL for assets
+   * Resolves public URL via S3 Provider
    */
   getUrl(filePath) {
-    if (!filePath) return '/placeholder-product.png';
-    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
-      return filePath;
-    }
-    return filePath;
+    return s3Provider.getUrl(filePath);
   }
 }
 

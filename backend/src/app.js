@@ -18,9 +18,6 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Static files (Uploads)
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
-
 // API Rate Limiting
 app.use('/api', apiLimiter);
 

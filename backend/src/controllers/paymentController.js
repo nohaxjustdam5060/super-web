@@ -1,6 +1,6 @@
 const paymentService = require('../services/paymentService');
 const emailService = require('../services/emailService');
-const { Order, Payment, OrderStatusHistory, Product, User } = require('../models');
+const { Order, OrderItem, Payment, OrderStatusHistory, Product, User } = require('../models');
 const logger = require('../config/logger');
 
 exports.processPayment = async (req, res, next) => {
@@ -78,9 +78,22 @@ exports.processPayment = async (req, res, next) => {
       created_by_user_id: req.user.id
     });
 
-    // If approved, send confirmation email
+    // If approved, send confirmation email with full item details (isolated try/catch so email errors never break payment flow)
     if (newOrderStatus === 'paid') {
-      emailService.sendOrderConfirmation(req.user.email, order);
+      try {
+        const fullOrder = await Order.findByPk(order.id, {
+          include: [
+            { model: OrderItem, as: 'items' },
+            { model: User, as: 'user' }
+          ]
+        });
+        const recipientEmail = fullOrder?.user?.email || req.user?.email;
+        if (recipientEmail && fullOrder) {
+          await emailService.sendOrderConfirmation(recipientEmail, fullOrder);
+        }
+      } catch (emailErr) {
+        logger.error('[PaymentController] Error sending order confirmation email (payment succeeded):', emailErr);
+      }
     }
 
     return res.json({

@@ -1,13 +1,14 @@
 const { Product, Category, Brand, ProductImage, ProductVariant, Review, User } = require('../models');
 const searchService = require('../services/searchService');
+const storageService = require('../services/storageService');
 
 exports.getProducts = async (req, res, next) => {
   try {
-    const { page = 1, limit = 12, sort = 'newest', search, category_id, brand_id, min_price, max_price, in_stock, is_featured, processor_family, ram_gb, storage, screen_range } = req.query;
+    const { page = 1, limit = 12, sort = 'newest', search, category_id, brand_id, min_price, max_price, in_stock, is_featured, include_inactive, status, processor_family, ram_gb, storage, screen_range } = req.query;
 
     const offset = (Number(page) - 1) * Number(limit);
     const where = await searchService.buildProductSearchQuery({
-      search, category_id, brand_id, min_price, max_price, in_stock, is_featured,
+      search, category_id, brand_id, min_price, max_price, in_stock, is_featured, include_inactive, status,
       specs: {
         processor_family,
         ram_gb,
@@ -148,23 +149,33 @@ exports.createProduct = async (req, res, next) => {
       is_featured: !!is_featured
     });
 
-    if (images && Array.isArray(images)) {
+    if (images && Array.isArray(images) && images.length > 0) {
       await Promise.all(
-        images.map((img, idx) =>
-          ProductImage.create({
+        images.map((img, idx) => {
+          const imgUrl = typeof img === 'string' ? img : img.url || img.image_url;
+          const isPrimary = typeof img === 'object' && img.is_primary !== undefined ? !!img.is_primary : idx === 0;
+          return ProductImage.create({
             product_id: product.id,
-            image_url: img.url || img,
-            is_primary: idx === 0,
+            image_url: imgUrl,
+            is_primary: isPrimary,
             order: idx
-          })
-        )
+          });
+        })
       );
     }
+
+    const createdProduct = await Product.findByPk(product.id, {
+      include: [
+        { model: Category, as: 'category' },
+        { model: Brand, as: 'brand' },
+        { model: ProductImage, as: 'images' }
+      ]
+    });
 
     return res.status(201).json({
       success: true,
       message: 'Producto creado exitosamente',
-      product
+      product: createdProduct
     });
   } catch (error) {
     next(error);
@@ -174,13 +185,109 @@ exports.createProduct = async (req, res, next) => {
 exports.updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
+    const { images, ...updateData } = req.body;
+
     const product = await Product.findByPk(id);
     if (!product) {
       return res.status(404).json({ success: false, message: 'Producto no encontrado' });
     }
 
-    await product.update(req.body);
-    return res.json({ success: true, message: 'Producto actualizado', product });
+    // Auto-extract specs if name is being updated
+    if (updateData.name && updateData.name !== product.name) {
+      const extraerEspecificaciones = require('../utils/specExtractor');
+      const specs = extraerEspecificaciones(updateData.name);
+      updateData.processor_family = specs.processor_family || updateData.processor_family;
+      updateData.ram_gb = specs.ram_gb || updateData.ram_gb;
+      updateData.storage_gb = specs.storage_gb || updateData.storage_gb;
+      updateData.storage_type = specs.storage_type || updateData.storage_type;
+      updateData.screen_size = specs.screen_size || updateData.screen_size;
+      updateData.full_name = specs.full_name || updateData.name;
+    }
+
+    await product.update(updateData);
+
+    // If multi-image array provided, synchronize ProductImage records and clean orphaned files
+    if (images && Array.isArray(images)) {
+      const currentImages = await ProductImage.findAll({ where: { product_id: product.id } });
+      const newUrls = images.map((img) => (typeof img === 'string' ? img : img.url || img.image_url));
+
+      // Remove orphaned files from storage for images removed in edit
+      for (const oldImg of currentImages) {
+        if (!newUrls.includes(oldImg.image_url)) {
+          await storageService.deleteFile(oldImg.image_url);
+        }
+      }
+
+      await ProductImage.destroy({ where: { product_id: product.id } });
+
+      await Promise.all(
+        images.map((img, idx) => {
+          const imgUrl = typeof img === 'string' ? img : img.url || img.image_url;
+          const isPrimary = typeof img === 'object' && img.is_primary !== undefined ? !!img.is_primary : idx === 0;
+          return ProductImage.create({
+            product_id: product.id,
+            image_url: imgUrl,
+            is_primary: isPrimary,
+            order: idx
+          });
+        })
+      );
+    } else if (updateData.image_url) {
+      const primaryImg = await ProductImage.findOne({ where: { product_id: product.id, is_primary: true } });
+      if (primaryImg) {
+        await primaryImg.update({ image_url: updateData.image_url });
+      } else {
+        await ProductImage.create({ product_id: product.id, image_url: updateData.image_url, is_primary: true, order: 0 });
+      }
+    }
+
+    const updatedProduct = await Product.findByPk(id, {
+      include: [
+        { model: Category, as: 'category', attributes: ['id', 'name', 'slug'] },
+        { model: Brand, as: 'brand', attributes: ['id', 'name', 'slug'] },
+        { model: ProductImage, as: 'images' }
+      ]
+    });
+
+    return res.json({ success: true, message: 'Producto actualizado exitosamente', product: updatedProduct });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.uploadProductImages = async (req, res, next) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ success: false, message: 'No se recibieron archivos de imagen.' });
+    }
+
+    const urls = [];
+    for (const file of req.files) {
+      const publicUrl = await storageService.uploadFile(file.buffer, file.originalname, file.mimetype);
+      urls.push(publicUrl);
+    }
+
+    return res.json({
+      success: true,
+      message: `${urls.length} imagen(es) subida(s) exitosamente`,
+      urls
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteProductImage = async (req, res, next) => {
+  try {
+    const { imageUrl } = req.body;
+    if (!imageUrl) {
+      return res.status(400).json({ success: false, message: 'URL de imagen requerida' });
+    }
+
+    await storageService.deleteFile(imageUrl);
+    await ProductImage.destroy({ where: { image_url: imageUrl } });
+
+    return res.json({ success: true, message: 'Imagen eliminada exitosamente' });
   } catch (error) {
     next(error);
   }

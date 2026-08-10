@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Package, MapPin, LogOut, Clock, CheckCircle2, Truck, ShieldAlert } from 'lucide-react';
+import { User, Package, LogOut, KeyRound, Lock, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import axiosClient from '../api/axiosClient';
 
@@ -10,6 +10,14 @@ export default function Profile() {
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
 
+  // Change Password Form State
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loadingPassword, setLoadingPassword] = useState(false);
+  const [passwordMsg, setPasswordMsg] = useState({ type: '', text: '' });
+
   useEffect(() => {
     if (!user) {
       navigate('/login');
@@ -18,7 +26,8 @@ export default function Profile() {
     axiosClient.get('/orders')
       .then((res) => {
         if (res.data.success) {
-          setOrders(res.data.orders || []);
+          const visibleOrders = (res.data.orders || []).filter((ord) => ord.status !== 'pending');
+          setOrders(visibleOrders);
         }
       })
       .catch((err) => console.error(err))
@@ -28,6 +37,44 @@ export default function Profile() {
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordMsg({ type: '', text: '' });
+
+    if (newPassword.length < 6) {
+      setPasswordMsg({ type: 'error', text: 'La nueva contraseña debe tener al menos 6 caracteres.' });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordMsg({ type: 'error', text: 'La confirmación de la contraseña no coincide.' });
+      return;
+    }
+
+    setLoadingPassword(true);
+    try {
+      const res = await axiosClient.put('/auth/change-password', {
+        currentPassword,
+        newPassword,
+        confirmPassword
+      });
+
+      if (res.data.success) {
+        setPasswordMsg({ type: 'success', text: res.data.message || 'Contraseña actualizada correctamente.' });
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      }
+    } catch (err) {
+      setPasswordMsg({
+        type: 'error',
+        text: err.response?.data?.message || 'Error al cambiar la contraseña. Verifica tu contraseña actual.'
+      });
+    } finally {
+      setLoadingPassword(false);
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -62,13 +109,92 @@ export default function Profile() {
           </div>
         </div>
 
-        <button
-          onClick={handleLogout}
-          className="bg-gray-100 hover:bg-red-50 text-gray-700 hover:text-red-600 font-bold px-4 py-2 rounded-xl text-xs flex items-center transition-colors border border-gray-200"
-        >
-          <LogOut className="w-4 h-4 mr-1.5" /> Cerrar Sesión
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => setShowPasswordForm(!showPasswordForm)}
+            className="bg-gray-100 hover:bg-slate-200 text-gray-800 font-bold px-4 py-2 rounded-xl text-xs flex items-center transition-colors border border-gray-200"
+          >
+            <KeyRound className="w-4 h-4 mr-1.5 text-brand-red" />
+            {showPasswordForm ? 'Ocultar Cambio de Contraseña' : 'Cambiar Contraseña'}
+          </button>
+          <button
+            onClick={handleLogout}
+            className="bg-red-50 hover:bg-red-100 text-red-600 font-bold px-4 py-2 rounded-xl text-xs flex items-center transition-colors border border-red-200"
+          >
+            <LogOut className="w-4 h-4 mr-1.5" /> Cerrar Sesión
+          </button>
+        </div>
       </div>
+
+      {/* Change Password Form Section */}
+      {showPasswordForm && (
+        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-md max-w-xl mx-auto space-y-4">
+          <h3 className="text-lg font-black text-gray-900 flex items-center border-b border-gray-100 pb-3">
+            <Lock className="w-5 h-5 mr-2 text-brand-red" /> Cambiar Contraseña
+          </h3>
+
+          {passwordMsg.text && (
+            <div className={`p-3 rounded-xl text-xs font-bold flex items-center space-x-2 ${
+              passwordMsg.type === 'success' 
+                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
+                : 'bg-red-50 text-red-700 border border-red-200'
+            }`}>
+              {passwordMsg.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+              )}
+              <span>{passwordMsg.text}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">Contraseña Actual</label>
+              <input
+                type="password"
+                required
+                placeholder="••••••••"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">Nueva Contraseña</label>
+              <input
+                type="password"
+                required
+                placeholder="••••••••"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">Confirmar Nueva Contraseña</label>
+              <input
+                type="password"
+                required
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loadingPassword}
+              className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3 px-4 rounded-xl shadow transition-transform active:scale-95 text-xs"
+            >
+              {loadingPassword ? 'Actualizando...' : 'Guardar Nueva Contraseña'}
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Orders Section */}
       <div className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm space-y-6">

@@ -1,60 +1,100 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const logger = require('../config/logger');
+const { generateOrderConfirmationHTML } = require('../utils/emailTemplates');
+
+// Local dev certificate fallback for Windows environments with SSL interception
+if (process.env.NODE_ENV !== 'production') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
+
+const resend = new Resend(process.env.RESEND_API_KEY || 're_mock_key');
 
 class EmailService {
-  constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.mailtrap.io',
-      port: Number(process.env.SMTP_PORT) || 2525,
-      auth: {
-        user: process.env.SMTP_USER || 'mock_user',
-        pass: process.env.SMTP_PASS || 'mock_pass'
+  /**
+   * Base function to send emails via Resend SDK
+   * Resend returns { data, error } instead of throwing exceptions.
+   */
+  async sendEmail({ to, subject, html, text }) {
+    try {
+      const fromAddress = process.env.EMAIL_FROM || 'SUPER Tech Store <onboarding@resend.dev>';
+
+      logger.info(`[EmailService] Attempting to send email via Resend to: ${to}`);
+
+      const { data, error } = await resend.emails.send({
+        from: fromAddress,
+        to: Array.isArray(to) ? to : [to],
+        subject,
+        html,
+        text
+      });
+
+      // Explicit error handling for Resend SDK response
+      if (error) {
+        logger.error('[EmailService] Resend API returned error:', error);
+        return { success: false, error };
       }
-    });
+
+      logger.info(`[EmailService] Email sent successfully via Resend. ID: ${data?.id}`);
+      return { success: true, data };
+    } catch (err) {
+      logger.error('[EmailService] Unexpected error sending email via Resend:', err);
+      return { success: false, error: err.message || err };
+    }
   }
 
+  /**
+   * Order Confirmation Email
+   */
   async sendOrderConfirmation(userEmail, order) {
-    try {
-      const mailOptions = {
-        from: process.env.EMAIL_FROM || '"SUPER Tech Store" <no-reply@supertech.com>',
-        to: userEmail,
-        subject: `Confirmación de Pedido #${order.order_number} - SUPER Tech`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
-            <div style="background-color: #DC2626; color: white; padding: 20px; text-align: center;">
-              <h1 style="margin: 0; font-size: 24px; font-weight: bold;">SUPER TECH STORE</h1>
-              <p style="margin: 5px 0 0 0; font-size: 14px;">¡Gracias por tu compra!</p>
-            </div>
-            <div style="padding: 20px; color: #1f2937;">
-              <h2 style="font-size: 18px; color: #1E3A8A;">Resumen de la orden #${order.order_number}</h2>
-              <p>Estado del pago: <strong>${order.status.toUpperCase()}</strong></p>
-              <p>Monto Total: <strong>S/ ${order.total}</strong></p>
-              <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
-              <p style="font-size: 12px; color: #6b7280;">Estamos preparando tus componentes informáticos para el envío express.</p>
-            </div>
-          </div>
-        `
-      };
+    const subject = `Confirmación de Pedido #${order.order_number || ''} - SUPER Tech Store`;
+    const html = generateOrderConfirmationHTML(order);
 
-      if (process.env.NODE_ENV !== 'test' && process.env.SMTP_USER !== 'mock_user') {
-        await this.transporter.sendMail(mailOptions);
-      }
-      logger.info(`[EmailService] Order confirmation sent to ${userEmail} for #${order.order_number}`);
-      return true;
-    } catch (error) {
-      logger.error('[EmailService] Error sending order confirmation email:', error);
-      return false;
-    }
+    const result = await this.sendEmail({ to: userEmail, subject, html });
+    return result.success;
   }
 
+  /**
+   * Order Status Update Email
+   */
   async sendOrderStatusUpdate(userEmail, orderNumber, newStatus) {
-    try {
-      logger.info(`[EmailService] Order status update notification sent to ${userEmail} (#${orderNumber} -> ${newStatus})`);
-      return true;
-    } catch (error) {
-      logger.error('[EmailService] Error sending status update email:', error);
-      return false;
-    }
+    const subject = `Actualización de Pedido #${orderNumber} - SUPER Tech`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
+        <h2 style="color: #1E3A8A;">Actualización de tu Pedido #${orderNumber}</h2>
+        <p>El nuevo estado de tu pedido es: <strong>${newStatus.toUpperCase()}</strong></p>
+        <p style="font-size: 12px; color: #6b7280;">Gracias por elegir SUPER Tech Store.</p>
+      </div>
+    `;
+
+    const result = await this.sendEmail({ to: userEmail, subject, html });
+    return result.success;
+  }
+
+  /**
+   * Password Reset Email
+   */
+  async sendPasswordReset(userEmail, resetLinkOrToken) {
+    const subject = 'Restablecimiento de Contraseña - SUPER Tech Store';
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
+        <div style="background-color: #0F172A; color: white; padding: 15px; text-align: center; border-radius: 6px;">
+          <h2 style="color: #EF4444; margin: 0;">SUPER TECH STORE</h2>
+        </div>
+        <div style="padding: 20px 0;">
+          <h3 style="color: #1F2937;">Recuperación de Contraseña</h3>
+          <p style="color: #4B5563;">Has solicitado restablecer la contraseña de tu cuenta en SUPER Tech.</p>
+          <p style="margin: 25px 0;">
+            <a href="${resetLinkOrToken}" style="background-color: #DC2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+              Restablecer Contraseña
+            </a>
+          </p>
+          <p style="font-size: 12px; color: #9CA3AF;">Si no solicitaste este cambio, puedes ignorar este correo de forma segura.</p>
+        </div>
+      </div>
+    `;
+
+    const result = await this.sendEmail({ to: userEmail, subject, html });
+    return result.success;
   }
 }
 

@@ -1,28 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Cpu, Monitor, HardDrive, Database, Zap, Layers, ChevronRight, Flame, Shield, ArrowRight, Star } from 'lucide-react';
+import { Cpu, Monitor, HardDrive, Database, Zap, Layers, ChevronRight, Flame, ArrowRight, Sparkles, Star } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import LocationMap from '../components/LocationMap';
 import axiosClient from '../api/axiosClient';
 
 export default function Home() {
+  const [newestProducts, setNewestProducts] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingNewest, setLoadingNewest] = useState(true);
+  const [loadingFeatured, setLoadingFeatured] = useState(true);
 
   useEffect(() => {
-    axiosClient.get('/products?is_featured=true&limit=8')
+    // 1. Fetch 4 Newest Products
+    axiosClient.get('/products?sort=newest&limit=4')
       .then((res) => {
         if (res.data.success) {
-          setFeaturedProducts(res.data.products);
+          setNewestProducts(res.data.products || []);
         }
       })
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
+      .catch((err) => console.error('[NEWEST_PRODUCTS_ERROR]', err))
+      .finally(() => setLoadingNewest(false));
+
+    // 2. Fetch 4 Featured Products
+    axiosClient.get('/products?is_featured=true&limit=4')
+      .then((res) => {
+        if (res.data.success) {
+          setFeaturedProducts(res.data.products || []);
+        }
+      })
+      .catch((err) => console.error('[FEATURED_PRODUCTS_ERROR]', err))
+      .finally(() => setLoadingFeatured(false));
   }, []);
 
   return (
     <div className="space-y-12 pb-16">
-      {/* Hero Banner Section */}
+      {/* 1. Hero Banner Section */}
       <section className="relative bg-gradient-to-r from-brand-dark via-slate-900 to-brand-blue text-white overflow-hidden py-16 px-4 rounded-3xl max-w-7xl mx-auto shadow-2xl mt-6 border border-slate-800">
         <div className="absolute top-0 right-0 w-96 h-96 bg-brand-red/20 rounded-full blur-3xl -z-10" />
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
@@ -63,7 +76,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Category Grid */}
+      {/* 2. Categorías Principales */}
       <section className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -103,19 +116,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Products */}
+      {/* 3. Productos Destacados (limitado a 4 productos) */}
       <section className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-black text-gray-900">Productos Destacados</h2>
+            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 flex items-center space-x-2">
+              <span>Productos Destacados</span>
+              <Star className="w-6 h-6 text-amber-500 fill-amber-500" />
+            </h2>
             <p className="text-sm text-gray-500">Hardware seleccionado por rendimiento y disponibilidad inmediata</p>
           </div>
-          <Link to="/catalog" className="text-brand-red font-bold text-sm flex items-center hover:underline">
+          <Link to="/catalog?is_featured=true" className="text-brand-red font-bold text-sm flex items-center hover:underline">
             Ver Todo <ChevronRight className="w-4 h-4 ml-1" />
           </Link>
         </div>
 
-        {loading ? (
+        {loadingFeatured ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="bg-gray-200 animate-pulse h-80 rounded-2xl" />
@@ -123,33 +139,121 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.map((product) => (
+            {featuredProducts.slice(0, 4).map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}
       </section>
 
-      {/* Brands Showcase Banner */}
+      {/* 4. Bloques Promocionales Grandes (2 Banners) */}
       <section className="max-w-7xl mx-auto px-4">
-        <div className="bg-slate-900 rounded-3xl p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 border border-slate-800">
-          <div>
-            <span className="text-brand-red-accent text-xs font-black uppercase tracking-widest">Partners Oficiales</span>
-            <h3 className="text-2xl font-black mt-1">Las Marcas Más Prestigiosas del Mundo</h3>
-            <p className="text-gray-400 text-sm mt-1">NVIDIA, Intel, AMD, ASUS ROG, Corsair, Samsung y más.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Promo Banner 1: Laptops Gamer Pro */}
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl min-h-[340px] sm:min-h-[380px] group border border-slate-800 flex flex-col justify-end p-8 text-white">
+            {/* Background Image */}
+            <img
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRmQEtGYoAzwlm7fCZFYKq2LvhpzguxSHtacidthcUwgw&s=10"
+              alt="Laptops Gamer Pro"
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 -z-20"
+            />
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-900/30 -z-10" />
+            {/* Red Accent Bar */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-red via-brand-red-accent to-transparent" />
+
+            {/* Content */}
+            <div className="space-y-3 max-w-md">
+              <span className="inline-block text-[11px] font-black text-brand-red-accent uppercase tracking-widest bg-brand-red/20 border border-brand-red/30 px-3 py-1 rounded-full">
+                LO MÁS NUEVO EN
+              </span>
+              <h3 className="text-3xl sm:text-4xl font-black tracking-tight leading-none font-heading text-white">
+                Laptops Gamer Pro
+              </h3>
+              <p className="text-gray-300 text-xs sm:text-sm line-clamp-2 leading-relaxed">
+                Potencia portátil con procesadores i7/i9/Ryzen y gráficos dedicados de última generación.
+              </p>
+              <div className="pt-2">
+                <Link
+                  to="/catalog?search=laptop"
+                  className="inline-flex items-center space-x-2 bg-brand-blue-bright hover:bg-brand-blue-hover text-white font-black text-xs px-6 py-2.5 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 uppercase tracking-wider"
+                >
+                  <span>VER TODO</span>
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-6 font-extrabold text-gray-400 text-lg">
-            <span className="hover:text-white transition-colors">NVIDIA</span>
-            <span className="hover:text-white transition-colors">INTEL</span>
-            <span className="hover:text-white transition-colors">AMD</span>
-            <span className="hover:text-white transition-colors">ASUS ROG</span>
-            <span className="hover:text-white transition-colors">SAMSUNG</span>
-            <span className="hover:text-white transition-colors">CORSAIR</span>
+
+          {/* Promo Banner 2: Workstations & All in One */}
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl min-h-[340px] sm:min-h-[380px] group border border-slate-800 flex flex-col justify-end p-8 text-white">
+            {/* Background Image */}
+            <img
+              src="https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=1000&auto=format&fit=crop"
+              alt="Workstations & All in One"
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 -z-20"
+            />
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-900/30 -z-10" />
+            {/* Red Accent Bar */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-red-accent via-amber-400 to-transparent" />
+
+            {/* Content */}
+            <div className="space-y-3 max-w-md">
+              <span className="inline-block text-[11px] font-black text-amber-400 uppercase tracking-widest bg-amber-500/20 border border-amber-500/30 px-3 py-1 rounded-full">
+                EQUIPAMIENTO PROFESIONAL
+              </span>
+              <h3 className="text-3xl sm:text-4xl font-black tracking-tight leading-none font-heading text-white">
+                Workstations & All in One
+              </h3>
+              <p className="text-gray-300 text-xs sm:text-sm line-clamp-2 leading-relaxed">
+                Estaciones de trabajo de alto rendimiento preparadas para renderizado 3D, IA y desarrollo.
+              </p>
+              <div className="pt-2">
+                <Link
+                  to="/catalog?ram_gb=32,64"
+                  className="inline-flex items-center space-x-2 bg-brand-blue-bright hover:bg-brand-blue-hover text-white font-black text-xs px-6 py-2.5 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 uppercase tracking-wider"
+                >
+                  <span>VER TODO</span>
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Location Map Section */}
+      {/* 5. Novedades (4 productos más nuevos) */}
+      <section className="max-w-7xl mx-auto px-4">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 flex items-center space-x-2">
+              <span>Novedades</span>
+              <Sparkles className="w-6 h-6 text-amber-500" />
+            </h2>
+            <p className="text-sm text-gray-500">Productos añadidos recientemente</p>
+          </div>
+          <Link to="/catalog?sort=newest" className="text-brand-red font-bold text-sm flex items-center hover:underline">
+            Ver Todas <ChevronRight className="w-4 h-4 ml-1" />
+          </Link>
+        </div>
+
+        {loadingNewest ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-gray-200 animate-pulse h-80 rounded-2xl" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {newestProducts.slice(0, 4).map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 6. Location Map Section */}
       <LocationMap />
     </div>
   );
