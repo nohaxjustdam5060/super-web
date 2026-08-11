@@ -45,6 +45,14 @@ const Order = sequelize.define('Order', {
     type: DataTypes.STRING(100),
     defaultValue: 'Envío Express a Domicilio'
   },
+  invoice_info: {
+    type: DataTypes.JSONB,
+    allowNull: true
+  },
+  payment_method: {
+    type: DataTypes.STRING(50),
+    defaultValue: 'mercadopago'
+  },
   tracking_number: {
     type: DataTypes.STRING(100),
     allowNull: true

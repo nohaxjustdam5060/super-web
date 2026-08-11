@@ -150,18 +150,33 @@ exports.createProduct = async (req, res, next) => {
     });
 
     if (images && Array.isArray(images) && images.length > 0) {
+      const primaryIdx = images.findIndex((img) => typeof img === 'object' && img.is_primary);
+      const targetPrimaryIdx = primaryIdx >= 0 ? primaryIdx : 0;
+
+      const orderedImages = images.map((img, idx) => {
+        const isPrimary = idx === targetPrimaryIdx;
+        return {
+          imgUrl: typeof img === 'string' ? img : img.url || img.image_url,
+          isPrimary,
+          order: isPrimary ? 0 : (idx < targetPrimaryIdx ? idx + 1 : idx)
+        };
+      });
+
       await Promise.all(
-        images.map((img, idx) => {
-          const imgUrl = typeof img === 'string' ? img : img.url || img.image_url;
-          const isPrimary = typeof img === 'object' && img.is_primary !== undefined ? !!img.is_primary : idx === 0;
-          return ProductImage.create({
+        orderedImages.map((img) =>
+          ProductImage.create({
             product_id: product.id,
-            image_url: imgUrl,
-            is_primary: isPrimary,
-            order: idx
-          });
-        })
+            image_url: img.imgUrl,
+            is_primary: img.isPrimary,
+            order: img.order
+          })
+        )
       );
+
+      const primaryImgObj = orderedImages.find((i) => i.isPrimary);
+      if (primaryImgObj) {
+        await product.update({ image_url: primaryImgObj.imgUrl });
+      }
     }
 
     const createdProduct = await Product.findByPk(product.id, {
@@ -220,18 +235,33 @@ exports.updateProduct = async (req, res, next) => {
 
       await ProductImage.destroy({ where: { product_id: product.id } });
 
+      const primaryIdx = images.findIndex((img) => typeof img === 'object' && img.is_primary);
+      const targetPrimaryIdx = primaryIdx >= 0 ? primaryIdx : 0;
+
+      const orderedImages = images.map((img, idx) => {
+        const isPrimary = idx === targetPrimaryIdx;
+        return {
+          imgUrl: typeof img === 'string' ? img : img.url || img.image_url,
+          isPrimary,
+          order: isPrimary ? 0 : (idx < targetPrimaryIdx ? idx + 1 : idx)
+        };
+      });
+
       await Promise.all(
-        images.map((img, idx) => {
-          const imgUrl = typeof img === 'string' ? img : img.url || img.image_url;
-          const isPrimary = typeof img === 'object' && img.is_primary !== undefined ? !!img.is_primary : idx === 0;
-          return ProductImage.create({
+        orderedImages.map((img) =>
+          ProductImage.create({
             product_id: product.id,
-            image_url: imgUrl,
-            is_primary: isPrimary,
-            order: idx
-          });
-        })
+            image_url: img.imgUrl,
+            is_primary: img.isPrimary,
+            order: img.order
+          })
+        )
       );
+
+      const primaryImgObj = orderedImages.find((i) => i.isPrimary);
+      if (primaryImgObj) {
+        await product.update({ image_url: primaryImgObj.imgUrl });
+      }
     } else if (updateData.image_url) {
       const primaryImg = await ProductImage.findOne({ where: { product_id: product.id, is_primary: true } });
       if (primaryImg) {

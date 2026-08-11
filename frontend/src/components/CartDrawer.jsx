@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
+import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, MessageSquare } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
+import { generateWhatsAppOrderUrl } from '../utils/whatsappMessage';
 
 export default function CartDrawer() {
   const { items, isOpen, closeCart, updateQuantity, removeItem, getSubtotal } = useCartStore();
@@ -9,6 +10,8 @@ export default function CartDrawer() {
   const subtotal = getSubtotal();
 
   if (!isOpen) return null;
+
+  const whatsappUrl = generateWhatsAppOrderUrl(items);
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -99,13 +102,27 @@ export default function CartDrawer() {
                 <span className="text-lg font-black text-gray-900">S/ {subtotal.toFixed(2)}</span>
               </div>
               <p className="text-xs text-gray-500">Impuestos y costo de envío express calculados en el checkout.</p>
-              <button
-                onClick={() => { closeCart(); navigate('/checkout'); }}
-                className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-sm"
-              >
-                <span>Proceder al Checkout</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+              
+              <div className="space-y-2 pt-1">
+                <button
+                  onClick={() => { closeCart(); navigate('/checkout'); }}
+                  className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-sm"
+                >
+                  <span>Proceder al Checkout</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={closeCart}
+                  className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center space-x-2 shadow transition-transform active:scale-95 text-sm"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  <span>Comprar por WhatsApp</span>
+                </a>
+              </div>
             </div>
           )}
         </div>

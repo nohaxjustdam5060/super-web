@@ -81,7 +81,7 @@ function generateOrderConfirmationHTML(order) {
             </tr>
             <tr>
               <td style="padding: 10px; font-size: 12px; color: #64748b; font-weight: bold;">MÉTODO DE PAGO:</td>
-              <td style="padding: 10px; font-size: 13px; color: #0f172a; text-align: right;">Mercado Pago Checkout Bricks</td>
+              <td style="padding: 10px; font-size: 13px; color: #0f172a; text-align: right;">Mercado Pago Checkout</td>
             </tr>
           </table>
 

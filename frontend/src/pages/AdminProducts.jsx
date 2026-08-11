@@ -206,17 +206,21 @@ export default function AdminProducts() {
         }
       }
 
-      // 2. Map final image items with public URLs
+      // 2. Map final image items with public URLs and guarantee order 0 for primary image
       let newFileCounter = 0;
+      const primaryIdx = imageItems.findIndex((i) => i.is_primary);
+      const targetPrimaryIdx = primaryIdx >= 0 ? primaryIdx : 0;
+
       const finalImages = imageItems.map((item, idx) => {
         let finalUrl = item.previewUrl;
         if (item.file !== null) {
           finalUrl = uploadedPublicUrls[newFileCounter++] || item.previewUrl;
         }
+        const isPrimary = idx === targetPrimaryIdx;
         return {
           url: finalUrl,
-          is_primary: item.is_primary,
-          order: idx
+          is_primary: isPrimary,
+          order: isPrimary ? 0 : (idx < targetPrimaryIdx ? idx + 1 : idx)
         };
       });
 
@@ -587,44 +591,58 @@ export default function AdminProducts() {
                   {imageItems.map((item, idx) => (
                     <div
                       key={item.id || idx}
-                      className={`relative bg-white border-2 rounded-2xl p-1.5 flex flex-col items-center justify-between transition-all ${
-                        item.is_primary ? 'border-brand-red ring-2 ring-brand-red/20 shadow-md' : 'border-gray-200'
+                      className={`relative bg-white border-2 rounded-2xl p-2 flex flex-col items-center justify-between transition-all ${
+                        item.is_primary
+                          ? 'border-brand-red ring-4 ring-brand-red/15 shadow-md scale-[1.02]'
+                          : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <div className="relative w-full h-24 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 flex items-center justify-center">
+                      <div className="relative w-full h-24 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 flex items-center justify-center group">
                         <img
                           src={item.previewUrl}
                           alt={`Vista previa ${idx + 1}`}
                           className="w-full h-full object-contain p-1"
                         />
-                        {item.is_primary && (
-                          <span className="absolute top-1 left-1 bg-brand-red text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow">
-                            Principal
+                        {item.is_primary ? (
+                          <span className="absolute top-1.5 left-1.5 bg-brand-red text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-md flex items-center space-x-1">
+                            <Star className="w-3 h-3 fill-amber-300 text-amber-300" />
+                            <span>Principal</span>
                           </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleSetPrimaryImage(idx)}
+                            className="absolute top-1.5 left-1.5 bg-slate-900/70 hover:bg-amber-500 text-white p-1 rounded-full backdrop-blur-sm transition-all shadow"
+                            title="Marcar como imagen principal"
+                          >
+                            <Star className="w-3.5 h-3.5" />
+                          </button>
                         )}
                         <button
                           type="button"
                           onClick={() => handleRemoveImage(idx)}
-                          className="absolute top-1 right-1 bg-slate-900/80 hover:bg-red-600 text-white p-1 rounded-full opacity-90 transition-colors shadow"
+                          className="absolute top-1.5 right-1.5 bg-slate-900/80 hover:bg-red-600 text-white p-1 rounded-full opacity-90 transition-colors shadow"
                           title="Quitar imagen"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
 
-                      <div className="w-full pt-1.5 text-center">
-                        {!item.is_primary ? (
+                      <div className="w-full pt-2">
+                        {item.is_primary ? (
+                          <div className="w-full py-1 text-[10px] font-black text-brand-red bg-red-50 rounded-xl border border-red-200 flex items-center justify-center space-x-1 shadow-sm">
+                            <Star className="w-3 h-3 fill-brand-red" />
+                            <span>Principal</span>
+                          </div>
+                        ) : (
                           <button
                             type="button"
                             onClick={() => handleSetPrimaryImage(idx)}
-                            className="text-[10px] font-bold text-brand-blue hover:underline"
+                            className="w-full py-1 text-[10px] font-bold text-gray-600 hover:text-brand-red bg-gray-50 hover:bg-red-50 rounded-xl border border-gray-200 hover:border-red-200 transition-all flex items-center justify-center space-x-1"
                           >
-                            Hacer Principal
+                            <Star className="w-3 h-3 text-gray-400" />
+                            <span>Hacer Principal</span>
                           </button>
-                        ) : (
-                          <span className="text-[10px] font-black text-brand-red flex items-center justify-center">
-                            <Star className="w-3 h-3 mr-0.5 fill-brand-red" /> Foto Principal
-                          </span>
                         )}
                       </div>
                     </div>

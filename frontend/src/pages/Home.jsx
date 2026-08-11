@@ -153,17 +153,17 @@ export default function Home() {
           <div className="relative rounded-3xl overflow-hidden shadow-2xl min-h-[340px] sm:min-h-[380px] group border border-slate-800 flex flex-col justify-end p-8 text-white">
             {/* Background Image */}
             <img
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRmQEtGYoAzwlm7fCZFYKq2LvhpzguxSHtacidthcUwgw&s=10"
+              src="/images/laptop_banner.jpg"
               alt="Laptops Gamer Pro"
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 -z-20"
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 z-0"
             />
             {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-900/30 -z-10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-900/30 z-10" />
             {/* Red Accent Bar */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-red via-brand-red-accent to-transparent" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-red via-brand-red-accent to-transparent z-10" />
 
             {/* Content */}
-            <div className="space-y-3 max-w-md">
+            <div className="space-y-3 max-w-md z-20">
               <span className="inline-block text-[11px] font-black text-brand-red-accent uppercase tracking-widest bg-brand-red/20 border border-brand-red/30 px-3 py-1 rounded-full">
                 LO MÁS NUEVO EN
               </span>
@@ -189,17 +189,17 @@ export default function Home() {
           <div className="relative rounded-3xl overflow-hidden shadow-2xl min-h-[340px] sm:min-h-[380px] group border border-slate-800 flex flex-col justify-end p-8 text-white">
             {/* Background Image */}
             <img
-              src="https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=1000&auto=format&fit=crop"
+              src="/images/laptop_hogar_banner.jpg"
               alt="Workstations & All in One"
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 -z-20"
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 z-0"
             />
             {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-900/30 -z-10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-900/30 z-10" />
             {/* Red Accent Bar */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-red-accent via-amber-400 to-transparent" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-red-accent via-amber-400 to-transparent z-10" />
 
             {/* Content */}
-            <div className="space-y-3 max-w-md">
+            <div className="space-y-3 max-w-md z-20">
               <span className="inline-block text-[11px] font-black text-amber-400 uppercase tracking-widest bg-amber-500/20 border border-amber-500/30 px-3 py-1 rounded-full">
                 EQUIPAMIENTO PROFESIONAL
               </span>

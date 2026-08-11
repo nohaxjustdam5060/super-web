@@ -86,7 +86,7 @@ export default function Navbar() {
             </span>
           </div>
           <div className="flex items-center space-x-3 text-gray-300">
-            <span>Atención: (01) 700-SUPER</span>
+            <span>Atención: +51 933 347 488 </span>
             {user?.role === 'admin' || user?.role === 'super_admin' ? (
               <Link to="/admin" className="text-brand-red-accent font-bold hover:underline">
                 [ Panel Admin ]

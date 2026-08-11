@@ -81,6 +81,22 @@ exports.updateUserRole = async (req, res, next) => {
   }
 };
 
+exports.getAdminOrders = async (req, res, next) => {
+  try {
+    const { Payment } = require('../models');
+    const orders = await Order.findAll({
+      order: [['createdAt', 'DESC']],
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'name', 'email'] },
+        { model: Payment, as: 'payments' }
+      ]
+    });
+    return res.json({ success: true, orders });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getAuditLogs = async (req, res, next) => {
   try {
     const logs = await AuditLog.findAll({

@@ -53,10 +53,11 @@ export default function Footer() {
           </p>
           <div className="space-y-2 text-sm text-gray-400">
             <p className="flex items-center"><MapPin className="w-4 h-4 mr-2 text-brand-red-accent" /> Av. Javier Prado Este 1234, Lima</p>
-            <p className="flex items-center"><Phone className="w-4 h-4 mr-2 text-brand-red-accent" /> (01) 700-SUPER / 999 888 777</p>
+            <p className="flex items-center"><Phone  className="w-4 h-4 mr-2 text-brand-red-accent" /> +51 933 347 488</p>
             <p className="flex items-center"><Mail className="w-4 h-4 mr-2 text-brand-red-accent" /> ventas@supertech.com</p>
           </div>
         </div>
+
 
         <div>
           <h4 className="text-white font-bold text-base mb-4 border-b border-brand-red inline-block pb-1">Categorías Populares</h4>

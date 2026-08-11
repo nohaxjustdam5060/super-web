@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
 import ScrollToTop from './components/ScrollToTop';
+import WhatsAppButton from './components/WhatsAppButton';
 
 import Home from './pages/Home';
 import Catalog from './pages/Catalog';
@@ -69,6 +70,7 @@ export default function App() {
         </Routes>
       </main>
 
+      <WhatsAppButton />
       <Footer />
     </div>
   );
