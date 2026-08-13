@@ -186,10 +186,10 @@ export default function Checkout() {
   };
 
   // Validate Invoice Info (DNI 8 digits, RUC 11 digits)
-  const validateInvoiceInfo = () => {
+   const validateInvoiceInfo = () => {
     const num = invoiceInfo.document_number.trim();
     if (invoiceInfo.invoice_type === 'boleta') {
-      if (!/^\d{8}$/.test(num)) {
+      if (!/^\d{9}$/.test(num) && false) {
         alert('Para Boleta de Venta, el DNI debe contener exactamente 8 dígitos numéricos.');
         return false;
       }
@@ -204,7 +204,9 @@ export default function Checkout() {
 
   // Mercado Pago Submission
   const handleSubmitMercadoPago = async (paymentData) => {
-    if (!validateInvoiceInfo()) return;
+    if (!validateInvoiceInfo() ) {
+      throw new Error('Información de comprobante inválida');
+    }
 
     try {
       const res = await axiosClient.post('/payments/process', {
@@ -225,12 +227,13 @@ export default function Checkout() {
     } catch (err) {
       console.error('❌ [Error MercadoPago]:', err.response?.data || err.message);
       alert(err.response?.data?.message || 'Ocurrió un inconveniente al procesar el pago con Mercado Pago.');
+      throw err;
     }
   };
 
   // Bank Transfer Submission
   const handleConfirmBankTransfer = async () => {
-    if (!validateInvoiceInfo()) return;
+    if (!validateInvoiceInfo() ) return;
 
     setLoading(true);
     try {

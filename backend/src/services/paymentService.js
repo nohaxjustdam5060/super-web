@@ -25,7 +25,7 @@ class PaymentService {
       });
 
       // Sandbox simulated approval for explicit mock tokens or test fallback mode
-      if (token === 'mock_token_approved') {
+      if (process.env.NODE_ENV !== 'production' && token === 'mock_token_approved') {
         return {
           id: `MP-MOCK-${Date.now()}`,
           status: 'approved',
@@ -52,7 +52,8 @@ class PaymentService {
           last_name: payer?.last_name || 'SUPER',
           identification: payer?.identification || undefined
         },
-        external_reference
+        external_reference,
+        
       };
 
       try {
@@ -74,8 +75,8 @@ class PaymentService {
       } catch (mpError) {
         logger.warn('[PaymentService] MP API call encountered an error, falling back to Sandbox simulation for test environment:', mpError.message || mpError);
         console.log('⚠️ [LOG PASO 3.3 - FALLBACK SANDBOX ACTIVADO PARA AMBIENTE DE PRUEBAS]');
-
-        return {
+        throw mpError;
+        {/*return {
           id: `MP-TEST-${Date.now()}`,
           status: 'approved',
           status_detail: 'accredited',
@@ -85,8 +86,11 @@ class PaymentService {
           card_last_four: '4242',
           date_approved: new Date().toISOString(),
           external_reference
-        };
+        }; */  }
       }
+
+      
+
     } catch (error) {
       logger.error('[PaymentService] Error creating MercadoPago payment:', error);
       throw error;

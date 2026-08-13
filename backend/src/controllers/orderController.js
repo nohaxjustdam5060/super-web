@@ -402,6 +402,14 @@ exports.verifyBankTransfer = async (req, res, next) => {
       console.error('[VerifyPaymentEmailError]', emailErr);
     }
 
+    // Trigger NubeFact electronic invoicing (isolated try/catch so invoice errors never break verification)
+    try {
+      const nubeFactService = require('../services/nubeFactService');
+      await nubeFactService.generateInvoiceForOrder(order.id);
+    } catch (invoiceErr) {
+      console.error('[VerifyBankTransfer] Error emitting NubeFact invoice:', invoiceErr);
+    }
+
     return res.json({
       success: true,
       message: 'Transferencia bancaria verificada exitosamente. Orden marcada como PAGADA.',

@@ -7,6 +7,12 @@ exports.processPayment = async (req, res, next) => {
   try {
     const rawData = req.body.formData || req.body;
     const token = req.body.token || rawData?.token;
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'No se recibió el token de la tarjeta. Intenta nuevamente.'
+      });
+    }
     const payment_method_id = req.body.payment_method_id || rawData?.payment_method_id;
     const installments = req.body.installments || rawData?.installments || 1;
     const issuer_id = req.body.issuer_id || rawData?.issuer_id;
@@ -34,7 +40,7 @@ exports.processPayment = async (req, res, next) => {
 
     const paymentResult = await paymentService.createPayment({
       transaction_amount: order.total,
-      token: token || 'mock_token_approved',
+      token: token,
       description: `Compra en SUPER Tech - Orden #${order.order_number}`,
       installments: Number(installments) || 1,
       payment_method_id: payment_method_id || 'visa',
@@ -94,6 +100,14 @@ exports.processPayment = async (req, res, next) => {
       } catch (emailErr) {
         logger.error('[PaymentController] Error sending order confirmation email (payment succeeded):', emailErr);
       }
+
+      // Trigger NubeFact electronic invoicing (isolated try/catch so invoice errors never break payment completion)
+      try {
+        const nubeFactService = require('../services/nubeFactService');
+        await nubeFactService.generateInvoiceForOrder(order.id);
+      } catch (invoiceErr) {
+        console.error('[PaymentController] Error emitting NubeFact invoice:', invoiceErr);
+      }
     }
 
     return res.json({
@@ -104,6 +118,13 @@ exports.processPayment = async (req, res, next) => {
     });
   } catch (error) {
     console.error('❌ [LOG PASO 3 - ERROR EN CONTROLLER PAGO]:', error);
+    if (error?.cause || error?.status) {
+      return res.status(402).json({
+        success: false,
+        message: 'El pago no pudo ser procesado. Verifica los datos de tu tarjeta.',
+        detail: error.cause?.[0]?.description || error.message
+      });
+    }
     next(error);
   }
 };
