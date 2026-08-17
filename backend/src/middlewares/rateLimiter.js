@@ -14,6 +14,7 @@ const authLimiter = rateLimit({
 const apiLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minuto
   max: 120, // 120 peticiones por minuto
+  skip: (req) => req.path === '/payments/webhook' || req.originalUrl?.includes('/payments/webhook'),
   message: {
     success: false,
     message: 'Límite de peticiones alcanzado. Por favor espera un momento.'

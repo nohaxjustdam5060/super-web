@@ -64,6 +64,14 @@ const Order = sequelize.define('Order', {
   coupon_code: {
     type: DataTypes.STRING(50),
     allowNull: true
+  },
+  preference_id: {
+    type: DataTypes.STRING(255),
+    allowNull: true
+  },
+  mp_payment_id: {
+    type: DataTypes.STRING(255),
+    allowNull: true
   }
 }, {
   tableName: 'orders',
@@ -71,7 +79,9 @@ const Order = sequelize.define('Order', {
   indexes: [
     { fields: ['order_number'] },
     { fields: ['user_id'] },
-    { fields: ['status'] }
+    { fields: ['status'] },
+    { fields: ['preference_id'] },
+    { fields: ['mp_payment_id'] }
   ]
 });
 

@@ -19,6 +19,10 @@ import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminProducts from './pages/AdminProducts';
 
+import CheckoutSuccess from './pages/CheckoutSuccess';
+import CheckoutFailure from './pages/CheckoutFailure';
+import CheckoutPending from './pages/CheckoutPending';
+
 import { useAuthStore } from './store/useAuthStore';
 
 function ProtectedAdminRoute({ children }) {
@@ -43,6 +47,9 @@ export default function App() {
           <Route path="/product/:slug" element={<ProductDetail />} />
           <Route path="/compare" element={<Compare />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route path="/checkout/success" element={<CheckoutSuccess />} />
+          <Route path="/checkout/failure" element={<CheckoutFailure />} />
+          <Route path="/checkout/pending" element={<CheckoutPending />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />

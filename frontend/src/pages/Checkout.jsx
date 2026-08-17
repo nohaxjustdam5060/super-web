@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, CreditCard, Truck, CheckCircle2, ArrowRight, ArrowLeft, Building2, FileText, Check, Copy, Clock, MessageSquare, MapPin, Store } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
-import MercadoPagoBrick from '../components/MercadoPagoBrick';
+import CheckoutButton from '../components/CheckoutButton';
 import axiosClient from '../api/axiosClient';
 
 export default function Checkout() {
@@ -200,35 +200,6 @@ export default function Checkout() {
       }
     }
     return true;
-  };
-
-  // Mercado Pago Submission
-  const handleSubmitMercadoPago = async (paymentData) => {
-    if (!validateInvoiceInfo() ) {
-      throw new Error('Información de comprobante inválida');
-    }
-
-    try {
-      const res = await axiosClient.post('/payments/process', {
-        order_id: createdOrder.id,
-        invoice_info: invoiceInfo,
-        formData: paymentData,
-        token: paymentData?.token,
-        payment_method_id: paymentData?.payment_method_id,
-        installments: paymentData?.installments,
-        issuer_id: paymentData?.issuer_id,
-        payer: paymentData?.payer
-      });
-
-      if (res.data.success) {
-        setPaymentSuccess(true);
-        clearCart();
-      }
-    } catch (err) {
-      console.error('❌ [Error MercadoPago]:', err.response?.data || err.message);
-      alert(err.response?.data?.message || 'Ocurrió un inconveniente al procesar el pago con Mercado Pago.');
-      throw err;
-    }
   };
 
   // Bank Transfer Submission
@@ -642,16 +613,15 @@ export default function Checkout() {
                   </div>
                 </div>
 
-                {/* OPTION A: MERCADO PAGO CHECKOUT BRICKS */}
+                {/* OPTION A: MERCADO PAGO CHECKOUT PRO */}
                 {paymentMethod === 'mercadopago' ? (
                   <div className="space-y-3 pt-2">
                     <p className="text-xs text-gray-500">
-                      Ingresa los datos de tu tarjeta en el componente seguro de Mercado Pago:
+                      Al hacer clic en el botón, serás redirigido a la plataforma segura de Mercado Pago para completar tu pago con tarjeta de crédito, débito, Yape o efectivo:
                     </p>
-                    <MercadoPagoBrick
-                      amount={total}
+                    <CheckoutButton
                       orderId={createdOrder?.id}
-                      onSubmitPayment={handleSubmitMercadoPago}
+                      invoiceInfo={invoiceInfo}
                     />
                   </div>
                 ) : (

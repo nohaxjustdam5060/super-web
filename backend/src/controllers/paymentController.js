@@ -1,165 +1,216 @@
+const crypto = require('crypto');
 const paymentService = require('../services/paymentService');
 const emailService = require('../services/emailService');
-const { Order, OrderItem, Payment, OrderStatusHistory, Product, User } = require('../models');
+const nubeFactService = require('../services/nubeFactService');
+const { Order, OrderItem, Payment, OrderStatusHistory, User } = require('../models');
 const logger = require('../config/logger');
 
-exports.processPayment = async (req, res, next) => {
+/**
+ * Create Mercado Pago Checkout Pro Preference and return init_point redirect URL
+ */
+exports.createPreference = async (req, res, next) => {
   try {
-    const rawData = req.body.formData || req.body;
-    const token = req.body.token || rawData?.token;
-    if (!token) {
+    const { order_id, invoice_info } = req.body;
+
+    if (!order_id) {
       return res.status(400).json({
         success: false,
-        message: 'No se recibió el token de la tarjeta. Intenta nuevamente.'
+        message: 'No se especificó el ID de la orden.'
       });
     }
-    const payment_method_id = req.body.payment_method_id || rawData?.payment_method_id;
-    const installments = req.body.installments || rawData?.installments || 1;
-    const issuer_id = req.body.issuer_id || rawData?.issuer_id;
-    const payer = req.body.payer || rawData?.payer;
-    const order_id = req.body.order_id || rawData?.external_reference;
-
-    console.log('👉 [LOG PASO 3 - BACKEND RECIBE PAYLOAD]:', {
-      order_id,
-      has_token: !!token,
-      token_preview: token ? `${token.substring(0, 15)}...` : 'NINGUNO',
-      payment_method_id,
-      installments,
-      issuer_id,
-      payer_email: payer?.email || req.user?.email,
-      full_body: req.body
-    });
 
     const order = await Order.findByPk(order_id, {
-      include: [{ model: User, as: 'user' }]
+      include: [
+        { model: OrderItem, as: 'items' },
+        { model: User, as: 'user' }
+      ]
     });
 
     if (!order) {
-      return res.status(404).json({ success: false, message: 'Orden no encontrada' });
+      return res.status(404).json({
+        success: false,
+        message: 'Orden no encontrada'
+      });
     }
 
-    const paymentResult = await paymentService.createPayment({
-      transaction_amount: order.total,
-      token: token,
-      description: `Compra en SUPER Tech - Orden #${order.order_number}`,
-      installments: Number(installments) || 1,
-      payment_method_id: payment_method_id || 'visa',
-      issuer_id: issuer_id || null,
-      payer: payer || { email: req.user.email, first_name: req.user.name },
-      external_reference: order.id
-    });
-
-    console.log('✅ [LOG PASO 3 - RESULTADO PAGO EN BACKEND]:', paymentResult);
-
-    // Save payment details in DB
-    const payment = await Payment.create({
-      order_id: order.id,
-      provider: 'mercadopago',
-      payment_id: paymentResult.id,
-      status: paymentResult.status,
-      status_detail: paymentResult.status_detail,
-      amount: paymentResult.transaction_amount,
-      payment_method: paymentResult.payment_method_id,
-      card_last_four: paymentResult.card_last_four,
-      raw_response: paymentResult
-    });
-
-    // Update order status depending on Mercado Pago response
-    let newOrderStatus = 'pending';
-    if (paymentResult.status === 'approved') {
-      newOrderStatus = 'paid';
-    } else if (paymentResult.status === 'in_process' || paymentResult.status === 'pending') {
-      newOrderStatus = 'payment_review';
-    } else if (paymentResult.status === 'rejected') {
-      newOrderStatus = 'cancelled';
+    if (invoice_info) {
+      order.invoice_info = invoice_info;
     }
 
-    order.status = newOrderStatus;
+    const preference = await paymentService.createPreference(order);
+
+    order.preference_id = preference.id;
     await order.save();
-
-    await OrderStatusHistory.create({
-      order_id: order.id,
-      status: newOrderStatus,
-      comment: `Pago procesado con estado: ${paymentResult.status}`,
-      created_by_user_id: req.user.id
-    });
-
-    // If approved, send confirmation email with full item details (isolated try/catch so email errors never break payment flow)
-    if (newOrderStatus === 'paid') {
-      try {
-        const fullOrder = await Order.findByPk(order.id, {
-          include: [
-            { model: OrderItem, as: 'items' },
-            { model: User, as: 'user' }
-          ]
-        });
-        const recipientEmail = fullOrder?.user?.email || req.user?.email;
-        if (recipientEmail && fullOrder) {
-          await emailService.sendOrderConfirmation(recipientEmail, fullOrder);
-        }
-      } catch (emailErr) {
-        logger.error('[PaymentController] Error sending order confirmation email (payment succeeded):', emailErr);
-      }
-
-      // Trigger NubeFact electronic invoicing (isolated try/catch so invoice errors never break payment completion)
-      try {
-        const nubeFactService = require('../services/nubeFactService');
-        await nubeFactService.generateInvoiceForOrder(order.id);
-      } catch (invoiceErr) {
-        console.error('[PaymentController] Error emitting NubeFact invoice:', invoiceErr);
-      }
-    }
 
     return res.json({
       success: true,
-      message: `Pago procesado con estado: ${paymentResult.status}`,
-      payment,
-      order
+      message: 'Preferencia de Mercado Pago creada exitosamente.',
+      preference_id: preference.id,
+      init_point: preference.init_point,
+      sandbox_init_point: preference.sandbox_init_point
     });
   } catch (error) {
-    console.error('❌ [LOG PASO 3 - ERROR EN CONTROLLER PAGO]:', error);
-    if (error?.cause || error?.status) {
-      return res.status(402).json({
-        success: false,
-        message: 'El pago no pudo ser procesado. Verifica los datos de tu tarjeta.',
-        detail: error.cause?.[0]?.description || error.message
-      });
-    }
+    logger.error('❌ [paymentController.createPreference Error]:', error);
     next(error);
   }
 };
 
+/**
+ * Handle Mercado Pago Webhook / IPN Notifications
+ * Responds 200 OK immediately and processes real payment status via Payment.get()
+ */
 exports.handleWebhook = async (req, res, next) => {
+  // Respond 200 OK immediately to Mercado Pago to avoid retries
+  console.log('🔔🔔🔔 [WEBHOOK] LLEGÓ UNA PETICIÓN', new Date().toISOString());
+  res.status(200).send('OK');
+
   try {
-    logger.info('[PaymentController] MercadoPago webhook triggered', req.body);
-    const webhookData = req.body;
+    const body = req.body || {};
+    const query = req.query || {};
 
-    const paymentInfo = await paymentService.handleWebhook(webhookData);
+    logger.info('[PaymentController] Webhook received:', { body, query, headers: req.headers });
 
-    if (paymentInfo && paymentInfo.external_reference) {
-      const order = await Order.findByPk(paymentInfo.external_reference);
-      if (order) {
-        let newStatus = order.status;
-        if (paymentInfo.status === 'approved') newStatus = 'paid';
-        if (paymentInfo.status === 'rejected') newStatus = 'cancelled';
+    // Extract payment ID from body or query params
+    const paymentId = body.data?.id || query['data.id'] || query.id || body.id;
+    const type = body.type || query.topic || body.action;
 
-        if (order.status !== newStatus) {
-          order.status = newStatus;
-          await order.save();
+    if (!paymentId) {
+      logger.info('[PaymentController] Webhook received notification without payment ID, ignoring.');
+      return;
+    }
 
-          await OrderStatusHistory.create({
-            order_id: order.id,
-            status: newStatus,
-            comment: `Estado de pago actualizado vía Webhook MercadoPago (${paymentInfo.status})`
-          });
+    // Validate Webhook Signature if MP_WEBHOOK_SECRET is configured
+    const webhookSecret = process.env.MP_WEBHOOK_SECRET;
+    const xSignature = req.headers['x-signature'];
+    const xRequestId = req.headers['x-request-id'];
+
+    if (webhookSecret && xSignature) {
+      try {
+        const parts = xSignature.split(',');
+        let ts = '';
+        let hash = '';
+        parts.forEach((part) => {
+          const [key, value] = part.split('=');
+          if (key.trim() === 'ts') ts = value.trim();
+          if (key.trim() === 'v1') hash = value.trim();
+        });
+
+        const manifest = `id:${paymentId};request-id:${xRequestId};ts:${ts};`;
+        const calculatedHash = crypto.createHmac('sha256', webhookSecret).update(manifest).digest('hex');
+
+        if (calculatedHash !== hash) {
+          logger.warn('[PaymentController] Webhook signature mismatch! Calculated:', calculatedHash, 'Received:', hash);
+        } else {
+          logger.info('✅ [PaymentController] Webhook signature verified successfully.');
         }
+      } catch (sigErr) {
+        logger.error('[PaymentController] Error verifying webhook signature:', sigErr);
       }
     }
 
-    // Always respond 200 OK to Mercado Pago webhook service
-    return res.status(200).send('OK');
+    // Fetch real payment status directly from Mercado Pago API using Payment.get()
+    const paymentData = await paymentService.getPaymentStatus(paymentId);
+
+    if (!paymentData || !paymentData.external_reference) {
+      logger.warn(`[PaymentController] Webhook payment ${paymentId} has no external_reference, skipping.`);
+      return;
+    }
+
+    const orderId = paymentData.external_reference;
+    const order = await Order.findByPk(orderId, {
+      include: [
+        { model: OrderItem, as: 'items' },
+        { model: User, as: 'user' }
+      ]
+    });
+
+    if (!order) {
+      logger.error(`[PaymentController] Order #${orderId} referenced in payment ${paymentId} not found.`);
+      return;
+    }
+
+    // Idempotency check: prevent duplicate processing if order is already paid with same mp_payment_id
+    if (order.mp_payment_id === String(paymentData.id) && order.status === 'paid' && paymentData.status === 'approved') {
+      logger.info(`[PaymentController] Order #${order.order_number} already processed for payment ${paymentData.id}.`);
+      return;
+    }
+
+    const previousStatus = order.status;
+
+    // Map Mercado Pago status to Order status
+    let newOrderStatus = 'pending';
+    if (paymentData.status === 'approved') {
+      newOrderStatus = 'paid';
+    } else if (['in_process', 'pending', 'authorized'].includes(paymentData.status)) {
+      newOrderStatus = 'payment_review';
+    } else if (['rejected', 'cancelled'].includes(paymentData.status)) {
+      newOrderStatus = 'cancelled';
+    } else if (['refunded', 'charged_back'].includes(paymentData.status)) {
+      newOrderStatus = 'refunded';
+    }
+
+    order.mp_payment_id = String(paymentData.id);
+    order.status = newOrderStatus;
+    await order.save();
+
+    // Create or update Payment record in DB
+    const [dbPayment] = await Payment.findOrCreate({
+      where: { order_id: order.id },
+      defaults: {
+        order_id: order.id,
+        provider: 'mercadopago',
+        payment_id: String(paymentData.id),
+        status: paymentData.status,
+        status_detail: paymentData.status_detail,
+        amount: paymentData.transaction_amount || order.total,
+        payment_method: paymentData.payment_method_id,
+        card_last_four: paymentData.card_last_four,
+        raw_response: paymentData.raw
+      }
+    });
+
+    if (dbPayment) {
+      dbPayment.provider = 'mercadopago';
+      dbPayment.payment_id = String(paymentData.id);
+      dbPayment.status = paymentData.status;
+      dbPayment.status_detail = paymentData.status_detail;
+      dbPayment.amount = paymentData.transaction_amount || order.total;
+      dbPayment.payment_method = paymentData.payment_method_id;
+      dbPayment.card_last_four = paymentData.card_last_four;
+      dbPayment.raw_response = paymentData.raw;
+      await dbPayment.save();
+    }
+
+    // Log status history
+    await OrderStatusHistory.create({
+      order_id: order.id,
+      status: newOrderStatus,
+      comment: `Webhook Mercado Pago: Estado ${paymentData.status} (ID: ${paymentData.id})`,
+      created_by_user_id: order.user_id
+    });
+
+    logger.info(`✅ [PaymentController] Order #${order.order_number} status updated to '${newOrderStatus}' via Webhook.`);
+
+    // If order was newly transitioned to 'paid', send confirmation email & NubeFact invoice
+    if (newOrderStatus === 'paid' && previousStatus !== 'paid') {
+      // 1. Send Order Confirmation Email
+      try {
+        const recipientEmail = order.user?.email;
+        if (recipientEmail) {
+          await emailService.sendOrderConfirmation(recipientEmail, order);
+        }
+      } catch (emailErr) {
+        logger.error('[PaymentController] Error sending order confirmation email via Webhook:', emailErr);
+      }
+
+      // 2. Trigger NubeFact Electronic Invoicing
+      try {
+        await nubeFactService.generateInvoiceForOrder(order.id);
+      } catch (invoiceErr) {
+        logger.error('[PaymentController] Error emitting NubeFact invoice via Webhook:', invoiceErr);
+      }
+    }
   } catch (error) {
-    logger.error('[PaymentController] Error handling webhook:', error);
-    return res.status(200).send('OK');
+    logger.error('❌ [PaymentController.handleWebhook Error]:', error);
   }
 };
