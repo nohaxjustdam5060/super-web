@@ -2,6 +2,8 @@ const crypto = require('crypto');
 const paymentService = require('../services/paymentService');
 const emailService = require('../services/emailService');
 const nubeFactService = require('../services/nubeFactService');
+const sequelize = require('../config/database');
+const { Transaction } = require('sequelize');
 const { Order, OrderItem, Payment, OrderStatusHistory, User } = require('../models');
 const logger = require('../config/logger');
 
@@ -58,24 +60,30 @@ exports.createPreference = async (req, res, next) => {
 /**
  * Handle Mercado Pago Webhook / IPN Notifications
  * Responds 200 OK immediately and processes real payment status via Payment.get()
+ * Uses row-locking and Managed Transactions to prevent race conditions.
  */
 exports.handleWebhook = async (req, res, next) => {
   // Respond 200 OK immediately to Mercado Pago to avoid retries
-  console.log('🔔🔔🔔 [WEBHOOK] LLEGÓ UNA PETICIÓN', new Date().toISOString());
+  console.log('🔔 [WEBHOOK RECIBIDO]', new Date().toISOString());
   res.status(200).send('OK');
 
   try {
     const body = req.body || {};
     const query = req.query || {};
 
-    logger.info('[PaymentController] Webhook received:', { body, query, headers: req.headers });
+    logger.info('[PaymentController] Webhook payload:', { body, query, headers: req.headers });
 
-    // Extract payment ID from body or query params
+    const topic = query.topic || query.type || body.type || body.action || '';
     const paymentId = body.data?.id || query['data.id'] || query.id || body.id;
-    const type = body.type || query.topic || body.action;
+
+    // Filter out merchant_order events or events without a valid payment ID
+    if (topic === 'merchant_order' || topic.includes('merchant_order')) {
+      logger.info(`[PaymentController] Evento 'merchant_order' (${paymentId}) omitido intencionalmente.`);
+      return;
+    }
 
     if (!paymentId) {
-      logger.info('[PaymentController] Webhook received notification without payment ID, ignoring.');
+      logger.info('[PaymentController] Webhook recibido sin payment ID, ignorando.');
       return;
     }
 
@@ -109,105 +117,130 @@ exports.handleWebhook = async (req, res, next) => {
     }
 
     // Fetch real payment status directly from Mercado Pago API using Payment.get()
-    const paymentData = await paymentService.getPaymentStatus(paymentId);
+    let paymentData;
+    try {
+      paymentData = await paymentService.getPaymentStatus(paymentId);
+    } catch (mpErr) {
+      logger.warn(`[PaymentController] No se pudo obtener el pago ${paymentId} de Mercado Pago (ID no corresponde a un pago válido):`, mpErr.message || mpErr);
+      return;
+    }
 
     if (!paymentData || !paymentData.external_reference) {
-      logger.warn(`[PaymentController] Webhook payment ${paymentId} has no external_reference, skipping.`);
+      logger.warn(`[PaymentController] Webhook payment ${paymentId} no tiene external_reference, ignorando.`);
       return;
     }
 
     const orderId = paymentData.external_reference;
-    const order = await Order.findByPk(orderId, {
-      include: [
-        { model: OrderItem, as: 'items' },
-        { model: User, as: 'user' }
-      ]
-    });
 
-    if (!order) {
-      logger.error(`[PaymentController] Order #${orderId} referenced in payment ${paymentId} not found.`);
-      return;
-    }
+    let shouldTriggerActions = false;
+    let targetOrder = null;
 
-    // Idempotency check: prevent duplicate processing if order is already paid with same mp_payment_id
-    if (order.mp_payment_id === String(paymentData.id) && order.status === 'paid' && paymentData.status === 'approved') {
-      logger.info(`[PaymentController] Order #${order.order_number} already processed for payment ${paymentData.id}.`);
-      return;
-    }
+    // Use a Managed Sequelize Transaction with Row Locking (Transaction.LOCK.UPDATE without outer join)
+    await sequelize.transaction(async (t) => {
+      const order = await Order.findByPk(orderId, {
+        lock: t.LOCK.UPDATE,
+        transaction: t
+      });
 
-    const previousStatus = order.status;
+      if (!order) {
+        logger.error(`[PaymentController] Orden #${orderId} referenciada en pago ${paymentId} no encontrada.`);
+        return;
+      }
 
-    // Map Mercado Pago status to Order status
-    let newOrderStatus = 'pending';
-    if (paymentData.status === 'approved') {
-      newOrderStatus = 'paid';
-    } else if (['in_process', 'pending', 'authorized'].includes(paymentData.status)) {
-      newOrderStatus = 'payment_review';
-    } else if (['rejected', 'cancelled'].includes(paymentData.status)) {
-      newOrderStatus = 'cancelled';
-    } else if (['refunded', 'charged_back'].includes(paymentData.status)) {
-      newOrderStatus = 'refunded';
-    }
+      // Idempotency check inside row-locked transaction: prevent duplicate processing
+      if (order.mp_payment_id === String(paymentData.id) && order.status === 'paid' && paymentData.status === 'approved') {
+        logger.info(`[PaymentController] Orden #${order.order_number} ya fue procesada anteriormente para el pago ${paymentData.id}.`);
+        return;
+      }
 
-    order.mp_payment_id = String(paymentData.id);
-    order.status = newOrderStatus;
-    await order.save();
+      const previousStatus = order.status;
 
-    // Create or update Payment record in DB
-    const [dbPayment] = await Payment.findOrCreate({
-      where: { order_id: order.id },
-      defaults: {
+      // Map Mercado Pago status to Order status
+      let newOrderStatus = 'pending';
+      if (paymentData.status === 'approved') {
+        newOrderStatus = 'paid';
+      } else if (['in_process', 'pending', 'authorized'].includes(paymentData.status)) {
+        newOrderStatus = 'payment_review';
+      } else if (['rejected', 'cancelled'].includes(paymentData.status)) {
+        newOrderStatus = 'cancelled';
+      } else if (['refunded', 'charged_back'].includes(paymentData.status)) {
+        newOrderStatus = 'refunded';
+      }
+
+      order.mp_payment_id = String(paymentData.id);
+      order.status = newOrderStatus;
+      await order.save({ transaction: t });
+
+      // Create or update Payment record in DB
+      const [dbPayment] = await Payment.findOrCreate({
+        where: { order_id: order.id },
+        defaults: {
+          order_id: order.id,
+          provider: 'mercadopago',
+          payment_id: String(paymentData.id),
+          status: paymentData.status,
+          status_detail: paymentData.status_detail,
+          amount: paymentData.transaction_amount || order.total,
+          payment_method: paymentData.payment_method_id,
+          card_last_four: paymentData.card_last_four,
+          raw_response: paymentData.raw
+        },
+        transaction: t
+      });
+
+      if (dbPayment) {
+        dbPayment.provider = 'mercadopago';
+        dbPayment.payment_id = String(paymentData.id);
+        dbPayment.status = paymentData.status;
+        dbPayment.status_detail = paymentData.status_detail;
+        dbPayment.amount = paymentData.transaction_amount || order.total;
+        dbPayment.payment_method = paymentData.payment_method_id;
+        dbPayment.card_last_four = paymentData.card_last_four;
+        dbPayment.raw_response = paymentData.raw;
+        await dbPayment.save({ transaction: t });
+      }
+
+      // Log status history
+      await OrderStatusHistory.create({
         order_id: order.id,
-        provider: 'mercadopago',
-        payment_id: String(paymentData.id),
-        status: paymentData.status,
-        status_detail: paymentData.status_detail,
-        amount: paymentData.transaction_amount || order.total,
-        payment_method: paymentData.payment_method_id,
-        card_last_four: paymentData.card_last_four,
-        raw_response: paymentData.raw
+        status: newOrderStatus,
+        comment: `Webhook Mercado Pago: Estado ${paymentData.status} (ID: ${paymentData.id})`,
+        created_by_user_id: order.user_id
+      }, { transaction: t });
+
+      logger.info(`✅ [PaymentController] Orden #${order.order_number} actualizada a '${newOrderStatus}' vía Webhook.`);
+
+      if (newOrderStatus === 'paid' && previousStatus !== 'paid') {
+        shouldTriggerActions = true;
+        targetOrder = order;
       }
     });
 
-    if (dbPayment) {
-      dbPayment.provider = 'mercadopago';
-      dbPayment.payment_id = String(paymentData.id);
-      dbPayment.status = paymentData.status;
-      dbPayment.status_detail = paymentData.status_detail;
-      dbPayment.amount = paymentData.transaction_amount || order.total;
-      dbPayment.payment_method = paymentData.payment_method_id;
-      dbPayment.card_last_four = paymentData.card_last_four;
-      dbPayment.raw_response = paymentData.raw;
-      await dbPayment.save();
-    }
+    // Execute secondary actions (email & NubeFact console output) AFTER transaction finishes cleanly
+    if (shouldTriggerActions && targetOrder) {
+      // Re-fetch order with associations for email & invoice generation
+      const fullOrder = await Order.findByPk(targetOrder.id, {
+        include: [
+          { model: OrderItem, as: 'items' },
+          { model: User, as: 'user' }
+        ]
+      });
 
-    // Log status history
-    await OrderStatusHistory.create({
-      order_id: order.id,
-      status: newOrderStatus,
-      comment: `Webhook Mercado Pago: Estado ${paymentData.status} (ID: ${paymentData.id})`,
-      created_by_user_id: order.user_id
-    });
-
-    logger.info(`✅ [PaymentController] Order #${order.order_number} status updated to '${newOrderStatus}' via Webhook.`);
-
-    // If order was newly transitioned to 'paid', send confirmation email & NubeFact invoice
-    if (newOrderStatus === 'paid' && previousStatus !== 'paid') {
       // 1. Send Order Confirmation Email
       try {
-        const recipientEmail = order.user?.email;
-        if (recipientEmail) {
-          await emailService.sendOrderConfirmation(recipientEmail, order);
+        const recipientEmail = fullOrder?.user?.email;
+        if (recipientEmail && fullOrder) {
+          await emailService.sendOrderConfirmation(recipientEmail, fullOrder);
         }
       } catch (emailErr) {
-        logger.error('[PaymentController] Error sending order confirmation email via Webhook:', emailErr);
+        logger.error('[PaymentController] Error enviando email de confirmación vía Webhook:', emailErr);
       }
 
-      // 2. Trigger NubeFact Electronic Invoicing
+      // 2. Trigger NubeFact Electronic Invoicing (Logs response to console)
       try {
-        await nubeFactService.generateInvoiceForOrder(order.id);
+        await nubeFactService.generateInvoiceForOrder(targetOrder.id);
       } catch (invoiceErr) {
-        logger.error('[PaymentController] Error emitting NubeFact invoice via Webhook:', invoiceErr);
+        logger.error('[PaymentController] Error emitiendo factura NubeFact vía Webhook:', invoiceErr);
       }
     }
   } catch (error) {

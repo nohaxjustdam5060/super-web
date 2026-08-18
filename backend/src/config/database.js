@@ -7,7 +7,7 @@ const databaseUrl = process.env.DATABASE_URL;
 const sequelize = databaseUrl
   ? new Sequelize(databaseUrl, {
       dialect: 'postgres',
-      logging: process.env.NODE_ENV === 'development' ? console.log : false,
+      logging: process.env.NODE_ENV === 'develo..' ? console.log : false,
       dialectOptions: {
         ssl: {
           require: true,

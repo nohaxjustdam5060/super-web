@@ -10,7 +10,7 @@ class PaymentService {
       logger.info(`[PaymentService] Creating Checkout Pro Preference for Order #${order.order_number} (${order.id})`);
 
       const frontendUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:5173';
-      const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+      const backendUrl = process.env.BACKEND_URL ;
 
       const items = (order.items || []).map((item) => ({
         id: item.sku || item.product_id || item.id,

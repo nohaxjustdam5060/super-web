@@ -133,47 +133,7 @@ exports.createOrder = async (req, res, next) => {
       }
     }
 
-    // 1. Check if user already has an existing pending order to REUSE and update
-    const existingPendingOrder = await Order.findOne({
-      where: {
-        user_id: req.user.id,
-        status: 'pending'
-      },
-      order: [['createdAt', 'DESC']]
-    });
-
-    if (existingPendingOrder) {
-      existingPendingOrder.subtotal = subtotal;
-      existingPendingOrder.discount_amount = discountAmount;
-      existingPendingOrder.shipping_cost = calculatedShippingCost;
-      existingPendingOrder.total = total;
-      existingPendingOrder.shipping_address = shipping_address;
-      existingPendingOrder.shipping_method = shipping_method || 'Envío Express a Domicilio';
-      existingPendingOrder.invoice_info = invoice_info || null;
-      existingPendingOrder.payment_method = payment_method || 'mercadopago';
-      existingPendingOrder.coupon_code = coupon_code || null;
-      existingPendingOrder.notes = notes;
-      await existingPendingOrder.save();
-
-      // Re-create items for this order
-      await OrderItem.destroy({ where: { order_id: existingPendingOrder.id } });
-      await Promise.all(
-        validatedItems.map((item) =>
-          OrderItem.create({
-            order_id: existingPendingOrder.id,
-            ...item
-          })
-        )
-      );
-
-      return res.status(200).json({
-        success: true,
-        message: 'Orden pendiente actualizada exitosamente',
-        order: existingPendingOrder
-      });
-    }
-
-    // 2. Create new order if no pending order exists
+    // Always create a new unique order for every purchase attempt
     const orderNumber = `SUP-${Date.now().toString().slice(-6)}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const order = await Order.create({
