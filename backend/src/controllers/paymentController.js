@@ -8,6 +8,129 @@ const { Order, OrderItem, Payment, OrderStatusHistory, User } = require('../mode
 const logger = require('../config/logger');
 
 /**
+ * Shared helper function to update order status, store payment record, and trigger NubeFact & Resend email.
+ * Ensures idempotency via row-locking transaction.
+ */
+async function processSuccessfulOrder(orderId, paymentData) {
+  let shouldTriggerActions = false;
+  let targetOrder = null;
+  let isAlreadyProcessed = false;
+
+  await sequelize.transaction(async (t) => {
+    const order = await Order.findByPk(orderId, {
+      lock: t.LOCK.UPDATE,
+      transaction: t
+    });
+
+    if (!order) {
+      throw new Error(`Orden #${orderId} no encontrada en la base de datos.`);
+    }
+
+    // Idempotency check inside row-locked transaction: prevent duplicate processing
+    if (order.mp_payment_id === String(paymentData.id) && order.status === 'paid' && paymentData.status === 'approved') {
+      logger.info(`[PaymentController] Orden #${order.order_number} ya fue procesada anteriormente para el pago ${paymentData.id}.`);
+      isAlreadyProcessed = true;
+      targetOrder = order;
+      return;
+    }
+
+    const previousStatus = order.status;
+
+    // Map Mercado Pago status to Order status
+    let newOrderStatus = 'pending';
+    if (paymentData.status === 'approved') {
+      newOrderStatus = 'paid';
+    } else if (['in_process', 'pending', 'authorized'].includes(paymentData.status)) {
+      newOrderStatus = 'payment_review';
+    } else if (['rejected', 'cancelled'].includes(paymentData.status)) {
+      newOrderStatus = 'cancelled';
+    } else if (['refunded', 'charged_back'].includes(paymentData.status)) {
+      newOrderStatus = 'refunded';
+    }
+
+    order.mp_payment_id = String(paymentData.id);
+    order.status = newOrderStatus;
+    await order.save({ transaction: t });
+
+    // Create or update Payment record in DB
+    const [dbPayment] = await Payment.findOrCreate({
+      where: { order_id: order.id },
+      defaults: {
+        order_id: order.id,
+        provider: 'mercadopago',
+        payment_id: String(paymentData.id),
+        status: paymentData.status,
+        status_detail: paymentData.status_detail,
+        amount: paymentData.transaction_amount || order.total,
+        payment_method: paymentData.payment_method_id,
+        card_last_four: paymentData.card_last_four,
+        raw_response: paymentData.raw
+      },
+      transaction: t
+    });
+
+    if (dbPayment) {
+      dbPayment.provider = 'mercadopago';
+      dbPayment.payment_id = String(paymentData.id);
+      dbPayment.status = paymentData.status;
+      dbPayment.status_detail = paymentData.status_detail;
+      dbPayment.amount = paymentData.transaction_amount || order.total;
+      dbPayment.payment_method = paymentData.payment_method_id;
+      dbPayment.card_last_four = paymentData.card_last_four;
+      dbPayment.raw_response = paymentData.raw;
+      await dbPayment.save({ transaction: t });
+    }
+
+    // Log status history
+    await OrderStatusHistory.create({
+      order_id: order.id,
+      status: newOrderStatus,
+      comment: `Mercado Pago: Estado ${paymentData.status} (ID: ${paymentData.id})`,
+      created_by_user_id: order.user_id
+    }, { transaction: t });
+
+    logger.info(`✅ [PaymentController] Orden #${order.order_number} actualizada a '${newOrderStatus}'.`);
+
+    targetOrder = order;
+    if (newOrderStatus === 'paid' && previousStatus !== 'paid') {
+      shouldTriggerActions = true;
+    }
+  });
+
+  // Execute secondary actions (email & NubeFact console output) AFTER transaction finishes cleanly
+  if (shouldTriggerActions && targetOrder) {
+    const fullOrder = await Order.findByPk(targetOrder.id, {
+      include: [
+        { model: OrderItem, as: 'items' },
+        { model: User, as: 'user' }
+      ]
+    });
+
+    // 1. Send Order Confirmation Email
+    try {
+      const recipientEmail = fullOrder?.user?.email;
+      if (recipientEmail && fullOrder) {
+        await emailService.sendOrderConfirmation(recipientEmail, fullOrder);
+      }
+    } catch (emailErr) {
+      logger.error('[PaymentController] Error enviando email de confirmación:', emailErr);
+    }
+
+    // 2. Trigger NubeFact Electronic Invoicing (Logs response to console)
+    try {
+      await nubeFactService.generateInvoiceForOrder(targetOrder.id);
+    } catch (invoiceErr) {
+      logger.error('[PaymentController] Error emitiendo factura NubeFact:', invoiceErr);
+    }
+  }
+
+  return {
+    alreadyProcessed: isAlreadyProcessed,
+    order: targetOrder
+  };
+}
+
+/**
  * Create Mercado Pago Checkout Pro Preference and return init_point redirect URL
  */
 exports.createPreference = async (req, res, next) => {
@@ -58,6 +181,91 @@ exports.createPreference = async (req, res, next) => {
 };
 
 /**
+ * Synchronous Payment Verification Endpoint (POST /api/payments/verify-and-fulfill)
+ * Fetches real payment status from Mercado Pago via Payment.get({ id })
+ * If approved, performs idempotent order update, triggers NubeFact invoice & email confirmation, and returns order status.
+ */
+exports.verifyAndFulfill = async (req, res, next) => {
+  try {
+    const { paymentId, payment_id, orderId, order_id } = req.body;
+    const targetPaymentId = paymentId || payment_id;
+    const targetOrderId = orderId || order_id;
+
+    if (!targetPaymentId) {
+      return res.status(400).json({
+        success: false,
+        message: 'No se especificó el ID del pago (paymentId).'
+      });
+    }
+
+    logger.info(`[PaymentController.verifyAndFulfill] Verificando síncronamente pago ${targetPaymentId} para orden ${targetOrderId || 'N/A'}`);
+
+    // Fetch real payment status directly from Mercado Pago API using Payment.get()
+    const paymentData = await paymentService.getPaymentStatus(targetPaymentId);
+
+    if (!paymentData) {
+      return res.status(404).json({
+        success: false,
+        message: 'Pago no encontrado en Mercado Pago.'
+      });
+    }
+
+    // Verify if payment status is approved
+    if (paymentData.status !== 'approved') {
+      logger.info(`[PaymentController.verifyAndFulfill] Pago ${targetPaymentId} no está aprobado. Estado actual: ${paymentData.status}`);
+      return res.status(400).json({
+        success: false,
+        message: `El pago no fue aprobado. Estado de Mercado Pago: ${paymentData.status}`,
+        payment_status: paymentData.status,
+        status_detail: paymentData.status_detail
+      });
+    }
+
+    // Determine target order ID from request body or external_reference
+    const finalOrderId = targetOrderId || paymentData.external_reference;
+
+    if (!finalOrderId) {
+      return res.status(400).json({
+        success: false,
+        message: 'No se pudo asociar el pago a ninguna orden de compra.'
+      });
+    }
+
+    // Execute idempotent order fulfillment
+    const result = await processSuccessfulOrder(finalOrderId, paymentData);
+
+    const fullOrder = await Order.findByPk(finalOrderId, {
+      include: [
+        { model: OrderItem, as: 'items' },
+        { model: User, as: 'user' }
+      ]
+    });
+
+    if (result.alreadyProcessed) {
+      return res.json({
+        success: true,
+        message: 'La orden ya fue procesada previamente.',
+        already_processed: true,
+        order: fullOrder
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: 'Pago verificado exitosamente y orden procesada.',
+      already_processed: false,
+      order: fullOrder
+    });
+  } catch (error) {
+    logger.error('❌ [PaymentController.verifyAndFulfill Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Error al verificar el pago con Mercado Pago.'
+    });
+  }
+};
+
+/**
  * Handle Mercado Pago Webhook / IPN Notifications
  * Responds 200 OK immediately and processes real payment status via Payment.get()
  * Uses row-locking and Managed Transactions to prevent race conditions.
@@ -99,8 +307,8 @@ exports.handleWebhook = async (req, res, next) => {
         let hash = '';
         parts.forEach((part) => {
           const [key, value] = part.split('=');
-          if (key.trim() === 'ts') ts = value.trim();
-          if (key.trim() === 'v1') hash = value.trim();
+          if (key?.trim() === 'ts') ts = value?.trim() || '';
+          if (key?.trim() === 'v1') hash = value?.trim() || '';
         });
 
         const manifest = `id:${paymentId};request-id:${xRequestId};ts:${ts};`;
@@ -131,118 +339,7 @@ exports.handleWebhook = async (req, res, next) => {
     }
 
     const orderId = paymentData.external_reference;
-
-    let shouldTriggerActions = false;
-    let targetOrder = null;
-
-    // Use a Managed Sequelize Transaction with Row Locking (Transaction.LOCK.UPDATE without outer join)
-    await sequelize.transaction(async (t) => {
-      const order = await Order.findByPk(orderId, {
-        lock: t.LOCK.UPDATE,
-        transaction: t
-      });
-
-      if (!order) {
-        logger.error(`[PaymentController] Orden #${orderId} referenciada en pago ${paymentId} no encontrada.`);
-        return;
-      }
-
-      // Idempotency check inside row-locked transaction: prevent duplicate processing
-      if (order.mp_payment_id === String(paymentData.id) && order.status === 'paid' && paymentData.status === 'approved') {
-        logger.info(`[PaymentController] Orden #${order.order_number} ya fue procesada anteriormente para el pago ${paymentData.id}.`);
-        return;
-      }
-
-      const previousStatus = order.status;
-
-      // Map Mercado Pago status to Order status
-      let newOrderStatus = 'pending';
-      if (paymentData.status === 'approved') {
-        newOrderStatus = 'paid';
-      } else if (['in_process', 'pending', 'authorized'].includes(paymentData.status)) {
-        newOrderStatus = 'payment_review';
-      } else if (['rejected', 'cancelled'].includes(paymentData.status)) {
-        newOrderStatus = 'cancelled';
-      } else if (['refunded', 'charged_back'].includes(paymentData.status)) {
-        newOrderStatus = 'refunded';
-      }
-
-      order.mp_payment_id = String(paymentData.id);
-      order.status = newOrderStatus;
-      await order.save({ transaction: t });
-
-      // Create or update Payment record in DB
-      const [dbPayment] = await Payment.findOrCreate({
-        where: { order_id: order.id },
-        defaults: {
-          order_id: order.id,
-          provider: 'mercadopago',
-          payment_id: String(paymentData.id),
-          status: paymentData.status,
-          status_detail: paymentData.status_detail,
-          amount: paymentData.transaction_amount || order.total,
-          payment_method: paymentData.payment_method_id,
-          card_last_four: paymentData.card_last_four,
-          raw_response: paymentData.raw
-        },
-        transaction: t
-      });
-
-      if (dbPayment) {
-        dbPayment.provider = 'mercadopago';
-        dbPayment.payment_id = String(paymentData.id);
-        dbPayment.status = paymentData.status;
-        dbPayment.status_detail = paymentData.status_detail;
-        dbPayment.amount = paymentData.transaction_amount || order.total;
-        dbPayment.payment_method = paymentData.payment_method_id;
-        dbPayment.card_last_four = paymentData.card_last_four;
-        dbPayment.raw_response = paymentData.raw;
-        await dbPayment.save({ transaction: t });
-      }
-
-      // Log status history
-      await OrderStatusHistory.create({
-        order_id: order.id,
-        status: newOrderStatus,
-        comment: `Webhook Mercado Pago: Estado ${paymentData.status} (ID: ${paymentData.id})`,
-        created_by_user_id: order.user_id
-      }, { transaction: t });
-
-      logger.info(`✅ [PaymentController] Orden #${order.order_number} actualizada a '${newOrderStatus}' vía Webhook.`);
-
-      if (newOrderStatus === 'paid' && previousStatus !== 'paid') {
-        shouldTriggerActions = true;
-        targetOrder = order;
-      }
-    });
-
-    // Execute secondary actions (email & NubeFact console output) AFTER transaction finishes cleanly
-    if (shouldTriggerActions && targetOrder) {
-      // Re-fetch order with associations for email & invoice generation
-      const fullOrder = await Order.findByPk(targetOrder.id, {
-        include: [
-          { model: OrderItem, as: 'items' },
-          { model: User, as: 'user' }
-        ]
-      });
-
-      // 1. Send Order Confirmation Email
-      try {
-        const recipientEmail = fullOrder?.user?.email;
-        if (recipientEmail && fullOrder) {
-          await emailService.sendOrderConfirmation(recipientEmail, fullOrder);
-        }
-      } catch (emailErr) {
-        logger.error('[PaymentController] Error enviando email de confirmación vía Webhook:', emailErr);
-      }
-
-      // 2. Trigger NubeFact Electronic Invoicing (Logs response to console)
-      try {
-        await nubeFactService.generateInvoiceForOrder(targetOrder.id);
-      } catch (invoiceErr) {
-        logger.error('[PaymentController] Error emitiendo factura NubeFact vía Webhook:', invoiceErr);
-      }
-    }
+    await processSuccessfulOrder(orderId, paymentData);
   } catch (error) {
     logger.error('❌ [PaymentController.handleWebhook Error]:', error);
   }

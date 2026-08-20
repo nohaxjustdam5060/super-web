@@ -49,11 +49,15 @@ class S3StorageProvider {
       ContentType: mimeType || 'image/jpeg'
     });
 
-    await this.s3Client.send(command);
-
-    const publicUrl = `${this.publicBaseUrl}/${fileName}`;
-    logger.info(`[S3StorageProvider] File uploaded successfully via S3. Public URL: "${publicUrl}"`);
-    return publicUrl;
+    try {
+      await this.s3Client.send(command);
+      const publicUrl = `${this.publicBaseUrl}/${fileName}`;
+      logger.info(`[S3StorageProvider] File uploaded successfully via S3. Public URL: "${publicUrl}"`);
+      return publicUrl;
+    } catch (err) {
+      logger.error(`[S3StorageProvider] Error uploading file "${fileName}" via S3:`, err);
+      throw err;
+    }
   }
 
   /**
