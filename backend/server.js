@@ -1,6 +1,7 @@
 const app = require('./src/app');
 const sequelize = require('./src/config/database');
 const logger = require('./src/config/logger');
+const orderExpirationService = require('./src/services/orderExpirationService');
 
 const PORT = process.env.PORT || 5000;
 let server = null;
@@ -17,6 +18,9 @@ async function startServer() {
   server = app.listen(PORT, '0.0.0.0', () => {
     logger.info(`🚀 SUPER Backend API Server running at http://localhost:${PORT}`);
     logger.info(`Healthcheck available at http://localhost:${PORT}/api/health`);
+
+    // Start 24-hour pending order auto-cancellation service
+    orderExpirationService.startExpirationCron();
   });
 }
 

@@ -36,14 +36,23 @@ async function processSuccessfulOrder(orderId, paymentData) {
 
     const previousStatus = order.status;
 
-    // Map Mercado Pago status to Order status
-    let newOrderStatus = 'pending';
+    // Map Mercado Pago status to Order status with 24-hour grace period for pending orders
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const isWithinGracePeriod = new Date(order.createdAt) > twentyFourHoursAgo;
+
+    let newOrderStatus = order.status;
     if (paymentData.status === 'approved') {
       newOrderStatus = 'paid';
     } else if (['in_process', 'pending', 'authorized'].includes(paymentData.status)) {
       newOrderStatus = 'payment_review';
     } else if (['rejected', 'cancelled'].includes(paymentData.status)) {
-      newOrderStatus = 'cancelled';
+      // Only mark as cancelled if 24 hours have passed since order creation
+      if (!isWithinGracePeriod) {
+        newOrderStatus = 'cancelled';
+      } else {
+        logger.info(`[PaymentController] Pago rechazado/cancelado para la orden #${order.order_number}. Se mantiene en 'pending' durante el periodo de reserva de 24h.`);
+        newOrderStatus = 'pending';
+      }
     } else if (['refunded', 'charged_back'].includes(paymentData.status)) {
       newOrderStatus = 'refunded';
     }
