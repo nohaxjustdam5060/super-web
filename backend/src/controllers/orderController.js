@@ -349,26 +349,21 @@ exports.verifyBankTransfer = async (req, res, next) => {
       created_by_user_id: req.user.id
     });
 
-    // Send order confirmation email
-    try {
-      const emailTemplates = require('../utils/emailTemplates');
-      const html = emailTemplates.generateOrderConfirmationHTML(order);
-      await emailService.sendEmail({
-        to: order.user?.email || req.user.email,
-        subject: `[SUPER Tech] Pago Verificado - Confirmación de Pedido #${order.order_number}`,
-        html
-      });
-    } catch (emailErr) {
-      console.error('[VerifyPaymentEmailError]', emailErr);
-    }
+    // Ejecutar envío de correo y emisión de boleta en paralelo para reducir latencia
+    const emailTemplates = require('../utils/emailTemplates');
+    const html = emailTemplates.generateOrderConfirmationHTML(order);
 
-    // Trigger NubeFact electronic invoicing (isolated try/catch so invoice errors never break verification)
-    try {
-      const nubeFactService = require('../services/nubeFactService');
-      await nubeFactService.generateInvoiceForOrder(order.id);
-    } catch (invoiceErr) {
-      console.error('[VerifyBankTransfer] Error emitting NubeFact invoice:', invoiceErr);
-    }
+    const emailPromise = emailService.sendEmail({
+      to: order.user?.email || req.user.email,
+      subject: `[SUPER Tech] Pago Verificado - Confirmación de Pedido #${order.order_number}`,
+      html
+    }).catch((emailErr) => console.error('[VerifyPaymentEmailError]', emailErr));
+
+    const nubeFactService = require('../services/nubeFactService');
+    const invoicePromise = nubeFactService.generateInvoiceForOrder(order.id)
+      .catch((invoiceErr) => console.error('[VerifyBankTransfer] Error emitting NubeFact invoice:', invoiceErr));
+
+    await Promise.allSettled([emailPromise, invoicePromise]);
 
     return res.json({
       success: true,

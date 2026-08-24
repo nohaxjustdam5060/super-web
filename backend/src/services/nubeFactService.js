@@ -35,8 +35,8 @@ function buildNubeFactPayload(order) {
 
   const cliente_email = order.user?.email || '';
 
-  // Today's date formatted as YYYY-MM-DD
-  const fecha_de_emision = new Date().toISOString().split('T')[0];
+  // Today's date formatted as YYYY-MM-DD in Peru Timezone (America/Lima) to avoid SUNAT rejection
+  const fecha_de_emision = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Lima' });
 
   const itemsPayload = [];
   let totalGravada = 0;

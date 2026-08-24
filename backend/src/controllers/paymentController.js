@@ -106,22 +106,18 @@ async function processSuccessfulOrder(orderId, paymentData) {
       ]
     });
 
-    // 1. Send Order Confirmation Email
-    try {
-      const recipientEmail = fullOrder?.user?.email;
-      if (recipientEmail && fullOrder) {
-        await emailService.sendOrderConfirmation(recipientEmail, fullOrder);
-      }
-    } catch (emailErr) {
-      logger.error('[PaymentController] Error enviando email de confirmación:', emailErr);
-    }
+    const recipientEmail = fullOrder?.user?.email;
 
-    // 2. Trigger NubeFact Electronic Invoicing (Logs response to console)
-    try {
-      await nubeFactService.generateInvoiceForOrder(targetOrder.id);
-    } catch (invoiceErr) {
-      logger.error('[PaymentController] Error emitiendo factura NubeFact:', invoiceErr);
-    }
+    // Ejecutar tareas secundarias en paralelo para reducir la latencia
+    const emailPromise = (recipientEmail && fullOrder)
+      ? emailService.sendOrderConfirmation(recipientEmail, fullOrder)
+          .catch((emailErr) => logger.error('[PaymentController] Error enviando email de confirmación:', emailErr))
+      : Promise.resolve();
+
+    const invoicePromise = nubeFactService.generateInvoiceForOrder(targetOrder.id)
+      .catch((invoiceErr) => logger.error('[PaymentController] Error emitiendo factura NubeFact:', invoiceErr));
+
+    await Promise.allSettled([emailPromise, invoicePromise]);
   }
 
   return {
@@ -311,16 +307,31 @@ exports.handleWebhook = async (req, res, next) => {
           if (key?.trim() === 'v1') hash = value?.trim() || '';
         });
 
-        const manifest = `id:${paymentId};request-id:${xRequestId};ts:${ts};`;
+        // Construir el manifiesto de manera dinámica omitiendo request-id si no existe
+        let manifest = `id:${paymentId};`;
+        if (xRequestId) {
+          manifest += `request-id:${xRequestId};`;
+        }
+        manifest += `ts:${ts};`;
+
+        // Calcular la firma usando la clave secreta directamente como string UTF-8
         const calculatedHash = crypto.createHmac('sha256', webhookSecret).update(manifest).digest('hex');
 
         if (calculatedHash !== hash) {
-          logger.warn('[PaymentController] Webhook signature mismatch! Calculated:', calculatedHash, 'Received:', hash);
+          logger.warn(`[PaymentController] Webhook signature mismatch! Calculated: ${calculatedHash}, Received: ${hash}`);
+          
+          if (process.env.NODE_ENV === 'production') {
+            logger.error('❌ [PaymentController] Rechazando webhook en producción debido a firma inválida.');
+            return; // Abortar ejecución del webhook en producción
+          }
         } else {
           logger.info('✅ [PaymentController] Webhook signature verified successfully.');
         }
       } catch (sigErr) {
         logger.error('[PaymentController] Error verifying webhook signature:', sigErr);
+        if (process.env.NODE_ENV === 'production') {
+          return; // Abortar ejecución del webhook en producción en caso de error
+        }
       }
     }
 
