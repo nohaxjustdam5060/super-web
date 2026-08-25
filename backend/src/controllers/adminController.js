@@ -120,3 +120,13 @@ exports.getAuditLogs = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.syncCuadradoCatalog = async (req, res, next) => {
+  try {
+    const cuadradoSyncService = require('../services/cuadradoSyncService');
+    const result = await cuadradoSyncService.syncCatalog();
+    return res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};

@@ -2,6 +2,7 @@ const app = require('./src/app');
 const sequelize = require('./src/config/database');
 const logger = require('./src/config/logger');
 const orderExpirationService = require('./src/services/orderExpirationService');
+const syncCron = require('./src/cron/syncCron');
 
 const PORT = process.env.PORT || 5000;
 let server = null;
@@ -21,6 +22,9 @@ async function startServer() {
 
     // Start 24-hour pending order auto-cancellation service
     orderExpirationService.startExpirationCron();
+
+    // Start 5-minute catalog sync Cron Job with cuadrado.pe
+    syncCron.startCron();
   });
 }
 
