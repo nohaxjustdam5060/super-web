@@ -63,10 +63,7 @@ class CuadradoSyncService {
 
   /**
    * Infer Category & Subcategory IDs based ONLY on official DB category tree
-   */
-  /**
-   * Infer Category & Subcategory IDs based ONLY on official DB category tree
-   * Applies Regex word boundaries (\b) and negative device exclusions to eliminate false positives
+   * Applies typo-resistant Regex word boundaries (\b), brand family names, and negative device exclusions
    */
   getOfficialCategoryForProduct(productName, attributes = []) {
     const name = String(productName || '').trim();
@@ -96,8 +93,7 @@ class CuadradoSyncService {
       SMARTWATCHES: 'af1a7db2-93e9-4756-a503-0b9ec8b84da7',
       MOUSE_TECLADOS: '4fa4ff3b-f3cb-4479-9e2d-bd483daf42cd',
       MOUSEPADS: '66c37083-273b-4411-a163-b47d923c0d72',
-      AUDIFONOS_GAMING: '0263753c-2869-49d4-9ed1-07ed778a1bf4',
-      AUDIFONOS_INALAMBRICOS: '303f39eb-dc47-4646-b25f-fa6ba898b338',
+      AUDIFONOS: '0263753c-2869-49d4-9ed1-07ed778a1bf4',
       PARLANTES_MICROFONOS: '11aabbb5-2104-4fb5-9928-727e31d85473',
       CARGADORES: 'bf6d7a45-60ee-4642-acc8-8ab0e57ba4ea',
       MOCHILAS: 'eaf9c812-8ec3-465a-ae6c-2a8f1ce90e5d',
@@ -108,89 +104,107 @@ class CuadradoSyncService {
       SOFTWARE: '9530d1dd-70dc-425f-b58d-2d82dac11c55'
     };
 
-    // Pre-detection of Whole Devices to prevent false positives in component/peripheral matching
-    const isPrinter = /\b(impresora|multifuncional|epson eco|laserjet|deskjet|smart tank|ecotank|pixma)\b/i.test(full);
-    const isLaptop = /\b(laptop|notebook|macbook|chromebook)\b/i.test(full);
+    // Pre-detection of Whole Devices with typo-resistant patterns (\s* for space tolerance)
+    const isPrinter = /\b(impresora|multifuncional|epson\s*eco|laserjet|deskjet|smart\s*tank|ecotank|pixma)\b/i.test(full);
+    const isDesktopOrMini = /\b(mini\s*pc|pro\s*mini|\bnuc\b|all[\s\-]*in[\s\-]*one|\baio\b|desktop|workstation|pc\s*gamer|prodesk|elitedesk|optiplex|thinkcentre|veriton|precision\s*tower|\bsff\b|\bmt\b|\btwr\b|\btorre\b)\b/i.test(full);
+
+    const isLaptop = !isDesktopOrMini && (
+      /\b(laptop|notebook|macbook|chromebook|omnibook|vivobook|zenbook|ideapad|thinkpad|matebook|surface|galaxy\s*book|tuf|nitro|thin|victus|legion|loq|omen|katana|cyborg|helios|strix|predator|swift|pavilion|aspire|modern|prestige|stealth|rog|vostro|probook|elitebook|latitude|expertbook|travelmate)\b/i.test(name) ||
+      (/\b(14"|15\.6"|16"|17\.3"|fhd|wuxga|qhd|uhd|144hz|165hz)\b/i.test(full) && /\b(intel|amd|ryzen|core|rtx|gtx|geforce|radeon)\b/i.test(full))
+    );
+
     const isTablet = /\b(tablet|ipad)\b/i.test(full) || (/\btab\b/i.test(name) && !/\btab\w+/i.test(name));
     const isPhone = /\b(celular|smartphone|iphone)\b/i.test(full);
-    const isDesktopOrMini = /\b(mini pc|pro mini|\bnuc\b|all in one|\baio\b|desktop|workstation|\bpc gamer\b)\b/i.test(full);
     const isMonitor = /\b(monitor|pantalla)\b/i.test(name) && !isLaptop && !isPhone && !isTablet && !isDesktopOrMini;
     const isProjector = /\b(proyector|projector)\b/i.test(full);
-    const isSoftware = /\b(software|antivirus|licencia|license|office|kaspersky|norton|eset|microsoft 365)\b/i.test(full);
+    const isSoftware = /\b(software|antivirus|licencia|license|office|kaspersky|norton|eset|microsoft\s*365)\b/i.test(full);
 
-    // 1. IMPRESORAS Y OFICINA (Máxima prioridad de dispositivo completo)
+    // Whole Device Flag
+    const isWholeDevice = isLaptop || isDesktopOrMini || isTablet || isPhone || isPrinter || isMonitor || isProjector || isSoftware;
+
+    // ==========================================
+    // 1. CLASIFICACIÓN DE DISPOSITIVOS COMPLETOS
+    // ==========================================
+
+    // Impresoras y Oficina
     if (isPrinter) return OFFICIAL.IMPRESORAS;
     if (isProjector) return OFFICIAL.PROYECTORES;
     if (isSoftware) return OFFICIAL.SOFTWARE;
 
-    // 2. LAPTOPS (Procesadas jerárquicamente por modelo)
-    if (isLaptop) {
-      if (/\b(2 en 1|convertible|x360|yoga|spectre|flex|flip)\b/i.test(full)) return OFFICIAL.CONVERTIBLES;
-      if (/\b(gaming|gamer|katana|cyborg|gf63|victus|legion|tuf|rog|nitro|predator|strix)\b/i.test(full)) return OFFICIAL.LAPTOPS_GAMING;
-      if (/\b(probook|elitebook|latitude|thinkpad|expertbook|travelmate|vostro)\b/i.test(full)) return OFFICIAL.LAPTOPS_EMPRESARIALES;
-      if (/\b(thinkbook|ultrabook|zenbook|swift|gram|slim|air)\b/i.test(full)) return OFFICIAL.THINBOOKS;
-      if (/\b(copilot|npu|intel core ultra|ryzen ai)\b/i.test(full)) return OFFICIAL.LAPTOPS_IA;
-      return OFFICIAL.LAPTOPS_CONSUMO;
-    }
-
-    // 3. COMPUTADORAS DE ESCRITORIO / MINI PCS / ALL IN ONE
+    // Computadoras de Escritorio / Mini PCs / AIO (Evaluado antes de laptops para evitar clasificación errónea de Mini PCs)
     if (isDesktopOrMini) {
-      if (/\b(mini pc|pro mini|\bnuc\b)\b/i.test(full)) return OFFICIAL.MINI_PCS;
-      if (/\b(all in one|\baio\b)\b/i.test(full)) return OFFICIAL.ALL_IN_ONE;
+      if (/\b(mini\s*pc|pro\s*mini|\bnuc\b)\b/i.test(full)) return OFFICIAL.MINI_PCS;
+      if (/\b(all[\s\-]*in[\s\-]*one|\baio\b)\b/i.test(full)) return OFFICIAL.ALL_IN_ONE;
       return OFFICIAL.PCS_ESCRITORIO;
     }
 
-    // 4. MOVILES Y WEARABLES
+    // Laptops (Procesadas jerárquicamente por modelo)
+    if (isLaptop) {
+      if (/\b(2\s*en\s*1|convertible|x360|yoga|spectre|flex|flip)\b/i.test(full)) return OFFICIAL.CONVERTIBLES;
+      if (/\b(gaming|essential|gamer|katana|cyborg|gf63|victus|legion|tuf|rog|nitro|predator|strix|thin|loq|omen|helios|rtx|gtx)\b/i.test(full)) return OFFICIAL.LAPTOPS_GAMING;
+      if (/\b(probook|elitebook|latitude|thinkpad|expertbook|travelmate|vostro)\b/i.test(full)) return OFFICIAL.LAPTOPS_EMPRESARIALES;
+      if (/\b(thinkbook|ultrabook|zenbook|swift|gram|slim|air|omnibook)\b/i.test(full)) return OFFICIAL.THINBOOKS;
+      if (/\b(copilot|npu|intel\s*core\s*ultra|ryzen\s*ai)\b/i.test(full)) return OFFICIAL.LAPTOPS_IA;
+      return OFFICIAL.LAPTOPS_CONSUMO;
+    }
+
+    // Móviles y Wearables
     if (isPhone) return OFFICIAL.CELULARES;
     if (isTablet) return OFFICIAL.TABLETS;
-    if (/\b(smartwatch|reloj inteligente|apple watch|galaxy watch)\b/i.test(full)) return OFFICIAL.SMARTWATCHES;
+    if (/\b(smartwatch|reloj\s*inteligente|apple\s*watch|galaxy\s*watch)\b/i.test(full)) return OFFICIAL.SMARTWATCHES;
 
-    // 5. MONITORES (Periférico visual independiente)
+    // Monitores
     if (isMonitor) return OFFICIAL.MONITORES;
 
-    // 6. COMPONENTES INDIVIDUALES (Solo si NO es un dispositivo completo)
-    const isWholeDevice = isLaptop || isDesktopOrMini || isTablet || isPhone || isPrinter || isMonitor || isProjector || isSoftware;
-
+    // ==========================================
+    // 2. COMPONENTES INDIVIDUALES (Solo si NO es Dispositivo Completo)
+    // ==========================================
     if (!isWholeDevice) {
-      if (/\b(tarjeta de video|gpu|geforce|radeon)\b/i.test(full)) return OFFICIAL.TARJETAS_VIDEO;
-      if (/\b(placa madre|motherboard|mainboard)\b/i.test(full)) return OFFICIAL.PLACAS_MADRE;
-      if (/\b(fuente de poder|power supply|psu)\b/i.test(full)) return OFFICIAL.FUENTES_PODER;
-      
-      // Standalone Processor (CPU)
-      if (/\b(procesador|cpu)\b/i.test(full) || (/\b(intel core|ryzen)\b/i.test(name) && !/\b(laptop|pc|mini|desktop|aio)\b/i.test(full))) {
+      if (/\b(tarjeta\s*de\s*video|gpu|geforce|radeon)\b/i.test(name) || (/\b(rtx|gtx)\b/i.test(name) && !isLaptop)) {
+        return OFFICIAL.TARJETAS_VIDEO;
+      }
+      if (/\b(placa\s*madre|motherboard|mainboard)\b/i.test(full)) return OFFICIAL.PLACAS_MADRE;
+      if (/\b(fuente\s*de\s*poder|power\s*supply|psu)\b/i.test(full)) return OFFICIAL.FUENTES_PODER;
+
+      // Procesadores (CPUs sueltas)
+      if (/\b(procesador|cpu)\b/i.test(name) || /\b(intel\s*core|ryzen|athlon|pentium|celeron)\b/i.test(name)) {
         return OFFICIAL.PROCESADORES;
       }
-      
-      // Standalone RAM Memory
-      if (/\b(memoria ram)\b/i.test(full) || (/\bram\b/i.test(full) && /\b(ddr4|ddr5|sodimm|udimm)\b/i.test(full))) {
+
+      // Memorias RAM sueltas
+      if (/\b(memoria\s*ram)\b/i.test(full) || (/\bram\b/i.test(name) && /\b(ddr4|ddr5|sodimm|udimm)\b/i.test(name))) {
         return OFFICIAL.MEMORIAS_RAM;
       }
-      
-      // Standalone Storage
-      if (/\b(disco duro|disco solido|\bssd\b|nvme|\bhdd\b)\b/i.test(full)) return OFFICIAL.ALMACENAMIENTO;
-      
-      // Standalone OEM Components
-      if (/\b(gabinete|case gamer|cooler|refrigeracion|fan rgb|oem)\b/i.test(full)) return OFFICIAL.COMPONENTES_OEM;
+
+      // Almacenamiento (SSD, HDD, NVMe, Discos Mecánicos, 5400RPM, 7200RPM, 2.5", 3.5")
+      if (/\b(disco|disco\s*duro|disco\s*solido|disco\s*mecanico|\bssd\b|nvme|\bhdd\b|5400\s*rpm|7200\s*rpm|2\.5"|3\.5")\b/i.test(name)) {
+        return OFFICIAL.ALMACENAMIENTO;
+      }
+
+      // Componentes OEM
+      if (/\b(gabinete|case\s*gamer|cooler|refrigeracion|fan\s*rgb|oem)\b/i.test(full)) return OFFICIAL.COMPONENTES_OEM;
     }
 
-    // 7. PERIFERICOS Y ACCESORIOS (Solo si NO es un dispositivo completo)
+    // ==========================================
+    // 3. PERIFÉRICOS Y ACCESORIOS (Solo si NO es Dispositivo Completo)
+    // ==========================================
     if (!isWholeDevice) {
-      if (/\b(mousepad|pad gamer)\b/i.test(full)) return OFFICIAL.MOUSEPADS;
-      if (/\b(mouse|teclado|keyboard|kit teclado)\b/i.test(full)) return OFFICIAL.MOUSE_TECLADOS;
-      if (/\b(audifonos gaming|headset gaming)\b/i.test(full)) return OFFICIAL.AUDIFONOS_GAMING;
-      if (/\b(audifonos inalambricos|airpods|earbuds|galaxy buds)\b/i.test(full)) return OFFICIAL.AUDIFONOS_INALAMBRICOS;
+      if (/\b(mousepad|pad\s*gamer)\b/i.test(full)) return OFFICIAL.MOUSEPADS;
+      if (/\b(mouse|teclado|keyboard|kit\s*teclado)\b/i.test(full)) return OFFICIAL.MOUSE_TECLADOS;
+      if (/\b(audifonos|audífonos|headset|airpods|earbuds|galaxy\s*buds)\b/i.test(full)) return OFFICIAL.AUDIFONOS;
       if (/\b(parlante|microfono|speaker|\bmic\b)\b/i.test(full)) return OFFICIAL.PARLANTES_MICROFONOS;
-      if (/\b(cargador|powerbank|bateria externa)\b/i.test(full)) return OFFICIAL.CARGADORES;
-      if (/\b(mochila|funda laptop|maletin)\b/i.test(full)) return OFFICIAL.MOCHILAS;
-      
-      // Standalone Networking (Only router, switch, wifi card, access point)
-      if (/\b(tarjeta wifi|adaptador wifi|router|switch|access point|\bredes\b)\b/i.test(full)) {
+      if (/\b(cargador|power\s*bank|bateria\s*externa)\b/i.test(full)) return OFFICIAL.CARGADORES;
+      if (/\b(mochila|funda\s*laptop|maletin)\b/i.test(full)) return OFFICIAL.MOCHILAS;
+
+      // Redes
+      if (/\b(tarjeta\s*wifi|adaptador\s*wifi|router|switch|access\s*point|\bredes\b)\b/i.test(full)) {
         return OFFICIAL.REDES;
       }
-      
-      if (/\b(cable|adaptador|hub usb|soporte)\b/i.test(full)) return OFFICIAL.ACCESORIOS_VARIOS;
+
+      if (/\b(cable|adaptador|hub\s*usb|soporte)\b/i.test(full)) return OFFICIAL.ACCESORIOS_VARIOS;
     }
 
+    // Fallback final
     return OFFICIAL.ACCESORIOS_VARIOS;
   }
 

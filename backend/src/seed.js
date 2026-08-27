@@ -59,8 +59,7 @@ async function seedInitialData() {
         subcategories: [
           { name: 'Mouse y Teclados', slug: 'mouse-y-teclados', icon_name: 'Keyboard' },
           { name: 'Mousepads', slug: 'mousepads', icon_name: 'Square' },
-          { name: 'Audífonos Gaming', slug: 'audifonos-gaming', icon_name: 'Headphones' },
-          { name: 'Audífonos Inalámbricos', slug: 'audifonos-inalambricos', icon_name: 'Radio' },
+          { name: 'Audífonos', slug: 'audifonos', icon_name: 'Headphones' },
           { name: 'Parlantes y Micrófonos', slug: 'parlantes-y-microfonos', icon_name: 'Mic' },
           { name: 'Cargadores & Powerbanks', slug: 'cargadores', icon_name: 'BatteryCharging' },
           { name: 'Mochilas y Fundas', slug: 'mochilas', icon_name: 'ShoppingBag' },
