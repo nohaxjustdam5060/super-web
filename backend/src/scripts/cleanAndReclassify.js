@@ -93,8 +93,8 @@ function classifyProductToOfficialCategory(productName, attributes = []) {
   // Laptops (Procesadas jerárquicamente por modelo)
   if (isLaptop) {
     if (/\b(2\s*en\s*1|convertible|x360|yoga|spectre|flex|flip)\b/i.test(full)) return OFFICIAL_IDS.CONVERTIBLES;
+    if (/\b(probook|elitebook|latitude|thinkpad|expertbook|travelmate|vostro|precision|zbook)\b/i.test(full)) return OFFICIAL_IDS.LAPTOPS_EMPRESARIALES;
     if (/\b(gaming|essential|gamer|katana|cyborg|gf63|victus|legion|tuf|rog|nitro|predator|strix|thin|loq|omen|helios|rtx|gtx)\b/i.test(full)) return OFFICIAL_IDS.LAPTOPS_GAMING;
-    if (/\b(probook|elitebook|latitude|thinkpad|expertbook|travelmate|vostro)\b/i.test(full)) return OFFICIAL_IDS.LAPTOPS_EMPRESARIALES;
     if (/\b(thinkbook|ultrabook|zenbook|swift|gram|slim|air|omnibook)\b/i.test(full)) return OFFICIAL_IDS.THINBOOKS;
     if (/\b(copilot|npu|intel\s*core\s*ultra|ryzen\s*ai)\b/i.test(full)) return OFFICIAL_IDS.LAPTOPS_IA;
     return OFFICIAL_IDS.LAPTOPS_CONSUMO;

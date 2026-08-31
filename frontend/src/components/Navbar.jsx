@@ -73,19 +73,19 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm" ref={navRef}>
       {/* Top Announcement Bar */}
-      <div className="bg-brand-dark text-white text-[11px] sm:text-xs py-1.5 px-3 sm:px-4">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-1 sm:gap-2">
-          <div className="flex items-center space-x-4 sm:space-x-6">
-            <span className="flex items-center text-gray-300 font-medium">
+      <div className="bg-brand-dark text-white text-[10px] sm:text-xs py-1.5 px-2.5 sm:px-4">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-1 sm:gap-2">
+          <div className="flex items-center space-x-2 sm:space-x-6 min-w-0">
+            <span className="flex items-center text-gray-300 font-medium truncate">
               <Truck className="w-3.5 h-3.5 mr-1.5 text-brand-red-accent flex-shrink-0" />
-              Envío Express a Todo el Perú (24-48h)
+              <span>Envío Express a Todo el Perú (24-48h)</span>
             </span>
             <span className="hidden sm:flex items-center text-gray-300 font-medium">
               <ShieldCheck className="w-3.5 h-3.5 mr-1.5 text-brand-blue-bright flex-shrink-0" />
               Garantía Oficial 100% E-Commerce
             </span>
           </div>
-          <div className="flex items-center space-x-3 text-gray-300">
+          <div className="flex items-center space-x-3 text-gray-300 text-[10px] sm:text-xs">
             <span>Atención: +51 933 347 488 </span>
             {user?.role === 'admin' || user?.role === 'super_admin' ? (
               <Link to="/admin" className="text-brand-red-accent font-bold hover:underline">
@@ -97,9 +97,9 @@ export default function Navbar() {
       </div>
 
       {/* Main Header */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-4">
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-4 py-2 sm:py-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-4">
         {/* Brand Logo */}
-        <Link to="/" className="flex items-center space-x-1.5 sm:space-x-2 group flex-shrink-0">
+        <Link to="/" className="flex items-center space-x-1.5 sm:space-x-2 group">
           <div className="bg-brand-red text-white px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl font-black tracking-widest text-base sm:text-xl shadow-md group-hover:scale-105 transition-transform">
             SUPER
           </div>
@@ -126,12 +126,12 @@ export default function Navbar() {
           </button>
         </form>
 
-        {/* Header Right Actions (CRITICAL ELEMENTS ALWAYS VISIBLE ACROSS ALL SCREEN SIZES) */}
-        <div className="flex items-center space-x-1.5 sm:space-x-3 flex-shrink-0">
-          {/* Compare Button */}
+        {/* Header Right Actions (Profile, Cart & Hamburger ALWAYS VISIBLE; Compare HIDDEN on mobile) */}
+        <div className="flex items-center space-x-1.5 sm:space-x-2.5 flex-wrap sm:flex-nowrap justify-end">
+          {/* Compare Button (HIDDEN ON MOBILE, VISIBLE ON SM+) */}
           <Link
             to="/compare"
-            className="flex items-center p-1.5 text-gray-700 hover:text-brand-red transition-colors relative"
+            className="hidden sm:flex items-center p-1.5 text-gray-700 hover:text-brand-red transition-colors relative"
             title="Comparar productos"
           >
             <Scale className="w-5 h-5" />
@@ -144,7 +144,7 @@ export default function Navbar() {
 
           {/* 1. User Profile / Login (ALWAYS VISIBLE) */}
           {user ? (
-            <Link to="/profile" className="flex items-center space-x-1.5 text-xs font-bold text-gray-700 hover:text-brand-red p-1" title="Mi Cuenta">
+            <Link to="/profile" className="flex items-center space-x-1 text-xs font-bold text-gray-700 hover:text-brand-red p-1" title="Mi Cuenta">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-brand-blue-light text-brand-blue font-black text-xs flex items-center justify-center border border-brand-blue/20">
                 {user.name.substring(0, 2).toUpperCase()}
               </div>
@@ -164,10 +164,10 @@ export default function Navbar() {
           {/* 2. Cart Button (ALWAYS VISIBLE) */}
           <button
             onClick={openCart}
-            className="relative bg-brand-red hover:bg-brand-red-hover text-white px-2.5 sm:px-3.5 py-1.5 rounded-xl flex items-center space-x-1 sm:space-x-1.5 shadow-md transition-transform active:scale-95"
+            className="relative bg-brand-red hover:bg-brand-red-hover text-white px-2.5 sm:px-3.5 py-1.5 rounded-xl flex items-center space-x-1 sm:space-x-1.5 shadow-md transition-transform active:scale-95 cursor-pointer"
             title="Ver Carrito"
           >
-            <ShoppingBag className="w-4 h-4 sm:w-4 h-4 flex-shrink-0" />
+            <ShoppingBag className="w-4 h-4 flex-shrink-0" />
             <span className="hidden sm:inline font-black text-xs uppercase tracking-wider">Carrito</span>
             {totalCartCount > 0 && (
               <span className="bg-white text-brand-red font-black text-xs px-1.5 py-0.5 rounded-full shadow">
@@ -179,7 +179,7 @@ export default function Navbar() {
           {/* 3. Hamburger Menu Button (ALWAYS VISIBLE across ALL screen widths) */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="text-gray-700 hover:text-brand-red p-1.5 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors flex items-center justify-center"
+            className="text-gray-700 hover:text-brand-red p-1.5 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors flex items-center justify-center cursor-pointer"
             aria-label="Abrir Menú de Categorías"
             title="Menú de Categorías"
           >

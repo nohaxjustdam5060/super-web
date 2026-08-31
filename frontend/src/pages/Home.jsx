@@ -44,7 +44,7 @@ export default function Home() {
               <Flame className="w-4 h-4 animate-bounce" />
               Nuevos Lanzamientos 2026
             </span>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none font-heading">
+            <h1 className="text-2xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight sm:leading-none font-heading break-words">
               POTENCIA TU RIG AL <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-red-accent to-amber-400">SIGUIENTE NIVEL.</span>
             </h1>
             <p className="text-gray-300 text-base sm:text-lg max-w-xl leading-relaxed">

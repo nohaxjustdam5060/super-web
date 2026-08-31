@@ -64,7 +64,7 @@ function categorizarProducto(productName, attributes = []) {
   if (isProjector) return OFFICIAL.PROYECTORES;
   if (isSoftware) return OFFICIAL.SOFTWARE;
 
-  // Computadoras de Escritorio / Mini PCs / AIO (Evaluado antes de laptops para evitar clasificación errónea de Mini PCs)
+  // Computadoras de Escritorio / Mini PCs / AIO
   if (isDesktopOrMini) {
     if (/\b(mini\s*pc|pro\s*mini|\bnuc\b)\b/i.test(full)) return OFFICIAL.MINI_PCS;
     if (/\b(all[\s\-]*in[\s\-]*one|\baio\b)\b/i.test(full)) return OFFICIAL.ALL_IN_ONE;
@@ -74,8 +74,9 @@ function categorizarProducto(productName, attributes = []) {
   // Laptops (Procesadas jerárquicamente por modelo)
   if (isLaptop) {
     if (/\b(2\s*en\s*1|convertible|x360|yoga|spectre|flex|flip)\b/i.test(full)) return OFFICIAL.CONVERTIBLES;
+    // LAPTOPS_EMPRESARIALES evaluated BEFORE LAPTOPS_GAMING to protect business laptops with workstation RTX GPUs (e.g. ThinkPad P16 RTX 5000 ADA)
+    if (/\b(probook|elitebook|latitude|thinkpad|expertbook|travelmate|vostro|precision|zbook)\b/i.test(full)) return OFFICIAL.LAPTOPS_EMPRESARIALES;
     if (/\b(gaming|essential|gamer|katana|cyborg|gf63|victus|legion|tuf|rog|nitro|predator|strix|thin|loq|omen|helios|rtx|gtx)\b/i.test(full)) return OFFICIAL.LAPTOPS_GAMING;
-    if (/\b(probook|elitebook|latitude|thinkpad|expertbook|travelmate|vostro)\b/i.test(full)) return OFFICIAL.LAPTOPS_EMPRESARIALES;
     if (/\b(thinkbook|ultrabook|zenbook|swift|gram|slim|air|omnibook)\b/i.test(full)) return OFFICIAL.THINBOOKS;
     if (/\b(copilot|npu|intel\s*core\s*ultra|ryzen\s*ai)\b/i.test(full)) return OFFICIAL.LAPTOPS_IA;
     return OFFICIAL.LAPTOPS_CONSUMO;
@@ -109,7 +110,7 @@ function categorizarProducto(productName, attributes = []) {
       return OFFICIAL.MEMORIAS_RAM;
     }
 
-    // Almacenamiento (SSD, HDD, NVMe, Discos Mecánicos, 5400RPM, 7200RPM, 2.5", 3.5")
+    // Almacenamiento
     if (/\b(disco|disco\s*duro|disco\s*solido|disco\s*mecanico|\bssd\b|nvme|\bhdd\b|5400\s*rpm|7200\s*rpm|2\.5"|3\.5")\b/i.test(name)) {
       return OFFICIAL.ALMACENAMIENTO;
     }
@@ -141,7 +142,7 @@ function categorizarProducto(productName, attributes = []) {
   return OFFICIAL.ACCESORIOS_VARIOS;
 }
 
-// Unit Tests for the 6 Cases
+// Unit Tests
 const testCases = [
   {
     name: 'ASUS TUF Gaming A15 FA506NCG-HN360W AMD Ryzen 7-8845HS 16GB 512GB SSD RTX 3050',
@@ -172,6 +173,11 @@ const testCases = [
     name: 'PC HP PRODESK PRO 400 G9 SFF INTEL I7-12700 2.10GHZ 8GB DDR4-3200MHZ 1TB SSD WIN 11 PRO',
     expected: OFFICIAL.PCS_ESCRITORIO,
     label: 'Case 6: PC HP PRODESK PRO 400 G9 SFF'
+  },
+  {
+    name: 'Lenovo ThinkPad P16 Gen 2 RTX 5000 ADA 64GB 1TB SSD 16" WQUXGA WIN11 PRO',
+    expected: OFFICIAL.LAPTOPS_EMPRESARIALES,
+    label: 'Case 7: Lenovo ThinkPad P16 RTX 5000 ADA'
   }
 ];
 

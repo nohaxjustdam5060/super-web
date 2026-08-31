@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Package, Check, X, ToggleLeft, ToggleRight, Sparkles, Filter, Trash2, UploadCloud, Star } from 'lucide-react';
+import { Plus, Edit2, Package, Check, X, ToggleLeft, ToggleRight, Sparkles, Filter, Trash2, UploadCloud, Star, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 
 export default function AdminProducts() {
@@ -9,7 +9,15 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingProductId, setEditingProductId] = useState(null);
+
+  // Pagination & Filtering State
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'active', 'inactive'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [totalProductsCount, setTotalProductsCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [statusCounts, setStatusCounts] = useState({ all: 0, active: 0, inactive: 0 });
 
   // Cascading Category State
   const [selectedParentCatId, setSelectedParentCatId] = useState('');
@@ -46,19 +54,50 @@ export default function AdminProducts() {
 
   const fetchProducts = () => {
     setLoading(true);
-    // Request include_inactive=true so admin can view and manage inactive products
-    axiosClient.get('/products?limit=100&include_inactive=true')
+    const params = new URLSearchParams();
+    params.set('page', String(currentPage));
+    params.set('limit', String(itemsPerPage));
+    params.set('include_inactive', 'true');
+
+    if (statusFilter !== 'all') {
+      params.set('status', statusFilter);
+    }
+    if (searchQuery.trim()) {
+      params.set('search', searchQuery.trim());
+    }
+
+    axiosClient.get(`/products?${params.toString()}`)
       .then((res) => {
         if (res.data.success) {
           setProducts(res.data.products || []);
+          setTotalProductsCount(res.data.total || 0);
+          setTotalPages(res.data.totalPages || 1);
         }
       })
       .catch((err) => console.error('[FETCH_ADMIN_PRODUCTS_ERROR]', err))
       .finally(() => setLoading(false));
   };
 
+  const fetchStatusCounts = () => {
+    Promise.all([
+      axiosClient.get('/products?limit=1&include_inactive=true'),
+      axiosClient.get('/products?limit=1&status=active'),
+      axiosClient.get('/products?limit=1&status=inactive')
+    ]).then(([allRes, actRes, inactRes]) => {
+      setStatusCounts({
+        all: allRes.data.total || 0,
+        active: actRes.data.total || 0,
+        inactive: inactRes.data.total || 0
+      });
+    }).catch((err) => console.error('[FETCH_STATUS_COUNTS_ERROR]', err));
+  };
+
   useEffect(() => {
     fetchProducts();
+  }, [currentPage, itemsPerPage, statusFilter, searchQuery]);
+
+  useEffect(() => {
+    fetchStatusCounts();
     axiosClient.get('/products/categories').then((res) => setCategories(res.data.categories || []));
     axiosClient.get('/products/brands').then((res) => setBrands(res.data.brands || []));
   }, []);
@@ -242,6 +281,7 @@ export default function AdminProducts() {
         if (res.data.success) {
           setShowModal(false);
           fetchProducts();
+          fetchStatusCounts();
         }
       } else {
         // Create Mode (POST)
@@ -249,6 +289,7 @@ export default function AdminProducts() {
         if (res.data.success) {
           setShowModal(false);
           fetchProducts();
+          fetchStatusCounts();
         }
       }
     } catch (err) {
@@ -269,6 +310,7 @@ export default function AdminProducts() {
 
     try {
       await axiosClient.put(`/products/${product.id}`, { is_active: newStatus });
+      fetchStatusCounts();
     } catch (err) {
       console.error('[TOGGLE_STATUS_ERROR]', err);
       // Revert on error
@@ -279,15 +321,59 @@ export default function AdminProducts() {
     }
   };
 
-  // Filtered Products
-  const filteredProducts = products.filter((p) => {
-    if (statusFilter === 'active') return p.is_active === true;
-    if (statusFilter === 'inactive') return p.is_active === false;
-    return true;
-  });
+  const handleStatusFilterChange = (newStatus) => {
+    setStatusFilter(newStatus);
+    setCurrentPage(1);
+  };
 
-  const activeCount = products.filter((p) => p.is_active).length;
-  const inactiveCount = products.filter((p) => !p.is_active).length;
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(Number(e.target.value));
+    setCurrentPage(1);
+  };
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+      let start = Math.max(2, currentPage - 1);
+      let end = Math.min(totalPages - 1, currentPage + 1);
+
+      if (currentPage <= 3) {
+        end = 4;
+      } else if (currentPage >= totalPages - 2) {
+        start = totalPages - 3;
+      }
+
+      if (start > 2) {
+        pages.push('...');
+      }
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+
+      if (end < totalPages - 1) {
+        pages.push('...');
+      }
+
+      pages.push(totalPages);
+    }
+    return pages;
+  };
+
+  const startIndex = totalProductsCount > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+  const endIndex = Math.min(currentPage * itemsPerPage, totalProductsCount);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
@@ -301,50 +387,59 @@ export default function AdminProducts() {
         </div>
         <button
           onClick={openCreateModal}
-          className="bg-brand-red hover:bg-brand-red-hover text-white font-extrabold text-xs px-5 py-3 rounded-2xl flex items-center shadow-lg transition-transform active:scale-95"
+          className="bg-brand-red hover:bg-brand-red-hover text-white font-extrabold text-xs px-5 py-3 rounded-2xl flex items-center shadow-lg transition-transform active:scale-95 cursor-pointer"
         >
           <Plus className="w-4 h-4 mr-1.5" /> Nuevo Producto
         </button>
       </div>
 
-      {/* Status Filter Tabs */}
-      <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
-        <div className="flex space-x-2">
+      {/* Status Filter Tabs & Search Bar */}
+      <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+        {/* Status Tabs */}
+        <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => setStatusFilter('all')}
-            className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
+            onClick={() => handleStatusFilterChange('all')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
               statusFilter === 'all'
                 ? 'bg-slate-900 text-white shadow-sm'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            Todos ({products.length})
+            Todos ({statusCounts.all})
           </button>
           <button
-            onClick={() => setStatusFilter('active')}
-            className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
+            onClick={() => handleStatusFilterChange('active')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
               statusFilter === 'active'
                 ? 'bg-emerald-600 text-white shadow-sm'
                 : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
             }`}
           >
-            Solo Activos ({activeCount})
+            Solo Activos ({statusCounts.active})
           </button>
           <button
-            onClick={() => setStatusFilter('inactive')}
-            className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
+            onClick={() => handleStatusFilterChange('inactive')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
               statusFilter === 'inactive'
                 ? 'bg-slate-600 text-white shadow-sm'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            Solo Inactivos ({inactiveCount})
+            Solo Inactivos ({statusCounts.inactive})
           </button>
         </div>
 
-        <span className="text-xs font-semibold text-gray-500">
-          Mostrando <strong className="text-gray-900">{filteredProducts.length}</strong> productos
-        </span>
+        {/* Search Box in Admin */}
+        <div className="relative w-full md:w-72">
+          <input
+            type="text"
+            placeholder="Buscar por nombre o SKU..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="w-full bg-gray-100 border border-gray-300 rounded-xl py-2 px-3 pl-9 text-xs focus:outline-none focus:ring-2 focus:ring-brand-red focus:bg-white transition-all"
+          />
+          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+        </div>
       </div>
 
       {/* Products Table */}
@@ -369,14 +464,14 @@ export default function AdminProducts() {
                   Cargando productos...
                 </td>
               </tr>
-            ) : filteredProducts.length === 0 ? (
+            ) : products.length === 0 ? (
               <tr>
                 <td colSpan={8} className="p-8 text-center text-gray-400 font-semibold">
-                  No se encontraron productos en este filtro.
+                  No se encontraron productos coincidentes.
                 </td>
               </tr>
             ) : (
-              filteredProducts.map((p) => (
+              products.map((p) => (
                 <tr key={p.id} className={`hover:bg-gray-50/80 transition-colors ${!p.is_active ? 'bg-slate-50/50 opacity-80' : ''}`}>
                   <td className="p-4 flex items-center space-x-3 min-w-[220px]">
                     <img
@@ -432,7 +527,66 @@ export default function AdminProducts() {
         </table>
       </div>
 
-      {/* Modal Form: Create / Edit Product */}
+      {/* Pagination Footer Controls */}
+      <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-semibold text-gray-600">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center space-x-2">
+            <span>Mostrar:</span>
+            <select
+              value={itemsPerPage}
+              onChange={handleItemsPerPageChange}
+              className="bg-gray-100 border border-gray-300 rounded-xl px-2.5 py-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-red cursor-pointer"
+            >
+              <option value={10}>10 por pág.</option>
+              <option value={20}>20 por pág.</option>
+              <option value={50}>50 por pág.</option>
+              <option value={100}>100 por pág.</option>
+            </select>
+          </div>
+          <span className="text-gray-500 font-medium">
+            Mostrando <strong className="text-gray-900">{startIndex} - {endIndex}</strong> de <strong className="text-gray-900">{totalProductsCount}</strong> productos
+          </span>
+        </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center space-x-1.5 flex-wrap justify-end">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed font-bold transition-all cursor-pointer flex items-center"
+            >
+              <ChevronLeft className="w-4 h-4 mr-0.5" />
+              <span>Anterior</span>
+            </button>
+
+            {getPageNumbers().map((page, idx) => (
+              <button
+                key={idx}
+                onClick={() => typeof page === 'number' && setCurrentPage(page)}
+                disabled={page === '...'}
+                className={`w-8 h-8 rounded-xl font-black transition-all flex items-center justify-center cursor-pointer ${
+                  page === currentPage
+                    ? 'bg-brand-red text-white shadow-md'
+                    : page === '...'
+                    ? 'bg-transparent text-gray-400 cursor-default'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed font-bold transition-all cursor-pointer flex items-center"
+            >
+              <span>Siguiente</span>
+              <ChevronRight className="w-4 h-4 ml-0.5" />
+            </button>
+          </div>
+        )}
+      </div>
       {showModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 max-w-xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto border border-gray-100">

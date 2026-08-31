@@ -1,18 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Filter, Grid, List, Search, RefreshCw, ChevronDown, CheckCircle } from 'lucide-react';
+import { Filter, Grid, List, Search, RefreshCw, ChevronDown, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import axiosClient from '../api/axiosClient';
 
 export default function Catalog() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
-  const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('grid');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  // Filter Options State
+  // Items per page limit (default 12)
+  const [itemsPerPage, setItemsPerPage] = useState(12);
+
+  // Pagination Metadata state returned from backend
+  const [paginationInfo, setPaginationInfo] = useState({
+    total: 0,
+    page: 1,
+    limit: 12,
+    totalPages: 1
+  });
+
+  // Filter Options State (Dynamic counts from backend)
   const [filterOptions, setFilterOptions] = useState({
     processors: [],
     ramOptions: [],
@@ -21,7 +31,7 @@ export default function Catalog() {
     brandOptions: []
   });
 
-  // Filter States
+  // Filter States from URL search params
   const search = searchParams.get('search') || '';
   const categoryId = searchParams.get('category_id') || '';
   const brandId = searchParams.get('brand_id') || '';
@@ -29,6 +39,7 @@ export default function Catalog() {
   const maxPrice = searchParams.get('max_price') || '';
   const inStock = searchParams.get('in_stock') || '';
   const sort = searchParams.get('sort') || 'newest';
+  const currentPage = parseInt(searchParams.get('page') || '1', 10);
 
   // Spec Multi-select filter values (comma-separated string in URL params)
   const selectedProcessors = (searchParams.get('processor_family') || '').split(',').filter(Boolean);
@@ -36,6 +47,9 @@ export default function Catalog() {
   const selectedStorage = (searchParams.get('storage') || '').split(',').filter(Boolean);
   const selectedScreen = (searchParams.get('screen_range') || '').split(',').filter(Boolean);
 
+  const [categoriesTree, setCategoriesTree] = useState([]);
+
+  // Fetch Filter Sidebar Options & Categories tree once on mount
   useEffect(() => {
     axiosClient.get('/products/filters')
       .then((res) => {
@@ -44,21 +58,51 @@ export default function Catalog() {
         }
       })
       .catch((err) => console.error('Error fetching filter options:', err));
+
+    axiosClient.get('/products/categories')
+      .then((res) => {
+        if (res.data.success && res.data.categories) {
+          setCategoriesTree(res.data.categories);
+        }
+      })
+      .catch((err) => console.error('Error fetching categories list:', err));
   }, []);
 
+  // Fetch Paginated Products from Backend whenever searchParams or itemsPerPage change
   useEffect(() => {
     setLoading(true);
-    const query = new URLSearchParams(searchParams).toString();
+    const params = new URLSearchParams(searchParams);
+    
+    // Ensure page and limit parameters are explicitly sent to backend
+    if (!params.has('page')) params.set('page', String(currentPage));
+    if (!params.has('limit')) params.set('limit', String(itemsPerPage));
+
+    const query = params.toString();
+
     axiosClient.get(`/products?${query}`)
       .then((res) => {
         if (res.data.success) {
           setProducts(res.data.products || []);
+          if (res.data.pagination) {
+            setPaginationInfo(res.data.pagination);
+          } else {
+            const tot = res.data.total || (res.data.products || []).length;
+            const lim = Number(params.get('limit')) || 12;
+            const pg = Number(params.get('page')) || 1;
+            setPaginationInfo({
+              total: tot,
+              page: pg,
+              limit: lim,
+              totalPages: Math.ceil(tot / lim) || 1
+            });
+          }
         }
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
-  }, [searchParams]);
+  }, [searchParams, itemsPerPage]);
 
+  // Handler for single-select filters (category, brand, min_price, max_price, sort)
   const handleFilterChange = (key, value) => {
     const newParams = new URLSearchParams(searchParams);
     if (value) {
@@ -66,9 +110,12 @@ export default function Catalog() {
     } else {
       newParams.delete(key);
     }
+    // Always reset to page 1 when changing any filter
+    newParams.delete('page');
     setSearchParams(newParams);
   };
 
+  // Handler for multi-select spec filters
   const handleMultiSelectFilter = (paramKey, value) => {
     const newParams = new URLSearchParams(searchParams);
     const currentValues = (newParams.get(paramKey) || '').split(',').filter(Boolean);
@@ -83,6 +130,29 @@ export default function Catalog() {
     } else {
       newParams.delete(paramKey);
     }
+    // Always reset to page 1 when changing any filter
+    newParams.delete('page');
+    setSearchParams(newParams);
+  };
+
+  // Handler for page navigation buttons
+  const handlePageChange = (newPage) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (newPage > 1) {
+      newParams.set('page', String(newPage));
+    } else {
+      newParams.delete('page');
+    }
+    setSearchParams(newParams);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Handler for changing items per page limit
+  const handleItemsPerPageChange = (newLimit) => {
+    setItemsPerPage(newLimit);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('limit', String(newLimit));
+    newParams.delete('page'); // Reset to page 1
     setSearchParams(newParams);
   };
 
@@ -98,14 +168,107 @@ export default function Catalog() {
     searchParams.get('screen_range')
   ].filter(Boolean).length;
 
+  // Pagination Display Calculations
+  const { total, page: backendPage, limit: backendLimit, totalPages } = paginationInfo;
+  const safeCurrentPage = Math.min(Math.max(backendPage || currentPage, 1), totalPages || 1);
+
+  const startIndex = total > 0 ? (safeCurrentPage - 1) * backendLimit + 1 : 0;
+  const endIndex = Math.min(safeCurrentPage * backendLimit, total);
+
+  // Helper to generate dynamic page numbers list with ellipsis
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+      let start = Math.max(2, safeCurrentPage - 1);
+      let end = Math.min(totalPages - 1, safeCurrentPage + 1);
+
+      if (safeCurrentPage <= 3) {
+        end = 4;
+      } else if (safeCurrentPage >= totalPages - 2) {
+        start = totalPages - 3;
+      }
+
+      if (start > 2) {
+        pages.push('...');
+      }
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+
+      if (end < totalPages - 1) {
+        pages.push('...');
+      }
+
+      pages.push(totalPages);
+    }
+    return pages;
+  };
+
+  // Lookup official Category or Subcategory Name by slug or id
+  const getCategoryName = (slugOrId) => {
+    if (!slugOrId) return '';
+    if (categoriesTree && categoriesTree.length > 0) {
+      for (const parent of categoriesTree) {
+        if (parent.slug === slugOrId || parent.id === slugOrId) return parent.name;
+        if (parent.subcategories) {
+          for (const sub of parent.subcategories) {
+            if (sub.slug === slugOrId || sub.id === slugOrId) return sub.name;
+          }
+        }
+      }
+    }
+    return slugOrId.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  };
+
+  // Lookup Brand Name by slug or id
+  const getBrandName = (brandSlugOrId) => {
+    if (!brandSlugOrId) return '';
+    const found = filterOptions.brandOptions?.find(
+      (b) => b.slug === brandSlugOrId || b.id === brandSlugOrId
+    );
+    if (found) return found.name;
+    return brandSlugOrId.replace(/-/g, ' ').toUpperCase();
+  };
+
+  // Dynamic Title h1 Computation
+  const getDynamicTitle = () => {
+    if (search) {
+      return `Resultados para: "${search}"`;
+    }
+    if (categoryId) {
+      const catName = getCategoryName(categoryId);
+      return catName.toUpperCase();
+    }
+    if (brandId) {
+      const bName = getBrandName(brandId);
+      return `PRODUCTOS ${bName.toUpperCase()}`;
+    }
+    if (searchParams.get('is_featured') === 'true') {
+      return 'OFERTAS TOP Y DESTACADOS';
+    }
+    return 'Catálogo de Productos';
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8 space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-sm">
         <div>
-          <h1 className="text-xl sm:text-3xl font-black text-gray-900">Catálogo de Hardware & Electrónica</h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            {search ? `Resultados de búsqueda para "${search}"` : categoryId ? `Filtrando por categoría: ${categoryId}` : 'Todos los productos disponibles'} ({products.length} encontrados)
+          <h1 className="text-xl sm:text-3xl font-black text-gray-900 uppercase tracking-tight">
+            {getDynamicTitle()}
+          </h1>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1 font-medium">
+            {total > 0
+              ? `Mostrando ${startIndex} - ${endIndex} de ${total} productos (pág. ${safeCurrentPage} de ${totalPages})`
+              : 'No se encontraron productos coincidentes'}
           </p>
         </div>
 
@@ -119,7 +282,7 @@ export default function Catalog() {
             <select
               value={sort}
               onChange={(e) => handleFilterChange('sort', e.target.value)}
-              className="bg-gray-100 border border-gray-300 text-[11px] sm:text-xs md:text-sm font-bold rounded-xl px-2.5 py-1.5 sm:py-2 focus:ring-2 focus:ring-brand-red max-w-[150px] sm:max-w-xs truncate text-gray-800"
+              className="bg-gray-100 border border-gray-300 text-[11px] sm:text-xs md:text-sm font-bold rounded-xl px-2.5 py-1.5 sm:py-2 focus:ring-2 focus:ring-brand-red max-w-[150px] sm:max-w-xs truncate text-gray-800 cursor-pointer"
             >
               <option value="newest">Más recientes</option>
               <option value="price_asc">Precio: Menor a Mayor</option>
@@ -172,25 +335,6 @@ export default function Catalog() {
               </button>
             )}
           </div>
-
-          {/* Availability Filter */}
-          {/*
-          <div>
-            <h4 className="font-bold text-xs sm:text-sm text-gray-800 mb-2">Disponibilidad</h4>
-            <label className="flex items-center space-x-2 text-xs font-semibold text-gray-700 cursor-pointer p-2 bg-gray-50 rounded-xl border border-gray-100">
-              <input
-                type="checkbox"
-                checked={inStock === 'true'}
-                onChange={(e) => handleFilterChange('in_stock', e.target.checked ? 'true' : '')}
-                className="rounded border-gray-300 text-brand-red focus:ring-brand-red"
-              />
-              <span className="flex items-center">
-                <CheckCircle className="w-3.5 h-3.5 mr-1.5 text-emerald-500" />
-                Solo en Stock Disponible
-              </span>
-            </label>
-          </div>
-          */}
 
           {/* Marcas Filter (Dynamic from getFilterOptions) */}
           {filterOptions.brandOptions && filterOptions.brandOptions.length > 0 && (
@@ -346,8 +490,8 @@ export default function Catalog() {
           </div>
         </aside>
 
-        {/* Product Grid */}
-        <main className="lg:col-span-3">
+        {/* Product Grid & Backend Pagination */}
+        <main className="lg:col-span-3 space-y-6">
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {[...Array(6)].map((_, i) => (
@@ -355,7 +499,7 @@ export default function Catalog() {
               ))}
             </div>
           ) : products.length === 0 ? (
-            <div className="bg-white p-8 sm:p-12 rounded-2xl border border-gray-200 text-center space-y-4">
+            <div className="bg-white p-8 sm:p-12 rounded-2xl border border-gray-200 text-center space-y-4 shadow-sm">
               <Search className="w-12 h-12 mx-auto text-gray-400" />
               <h3 className="text-lg sm:text-xl font-bold text-gray-800">No se encontraron productos</h3>
               <p className="text-gray-500 text-xs sm:text-sm">Intenta ajustar o limpiar tus filtros de búsqueda.</p>
@@ -367,11 +511,92 @@ export default function Catalog() {
               </button>
             </div>
           ) : (
-            <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6' : 'space-y-4'}>
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            <>
+              {/* Product Grid / List (Render directly from backend page slice) */}
+              <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6' : 'space-y-4'}>
+                {products.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+
+              {/* Pagination Controls Bar */}
+              {totalPages > 1 && (
+                <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm">
+                  {/* Items Counter Info */}
+                  <div className="text-xs font-bold text-gray-500 text-center sm:text-left">
+                    Mostrando <span className="text-gray-900 font-extrabold">{startIndex}</span> - <span className="text-gray-900 font-extrabold">{endIndex}</span> de <span className="text-gray-900 font-extrabold">{total}</span> productos
+                  </div>
+
+                  {/* Navigation Arrows & Number Buttons */}
+                  <div className="flex items-center space-x-1.5 sm:space-x-2">
+                    {/* Previous Button */}
+                    <button
+                      onClick={() => handlePageChange(safeCurrentPage - 1)}
+                      disabled={safeCurrentPage === 1}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center space-x-1 transition-all ${
+                        safeCurrentPage === 1
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
+                          : 'bg-gray-100 text-gray-700 hover:bg-brand-red hover:text-white shadow-sm active:scale-95 cursor-pointer'
+                      }`}
+                      aria-label="Página anterior"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      <span className="hidden sm:inline">Anterior</span>
+                    </button>
+
+                    {/* Page Numbers */}
+                    {getPageNumbers().map((pg, idx) => (
+                      typeof pg === 'number' ? (
+                        <button
+                          key={idx}
+                          onClick={() => handlePageChange(pg)}
+                          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                            safeCurrentPage === pg
+                              ? 'bg-brand-red text-white shadow-md shadow-brand-red/30 scale-105'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+                          }`}
+                        >
+                          {pg}
+                        </button>
+                      ) : (
+                        <span key={idx} className="w-8 h-9 flex items-center justify-center text-xs font-bold text-gray-400">
+                          ...
+                        </span>
+                      )
+                    ))}
+
+                    {/* Next Button */}
+                    <button
+                      onClick={() => handlePageChange(safeCurrentPage + 1)}
+                      disabled={safeCurrentPage === totalPages}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center space-x-1 transition-all ${
+                        safeCurrentPage === totalPages
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
+                          : 'bg-gray-100 text-gray-700 hover:bg-brand-red hover:text-white shadow-sm active:scale-95 cursor-pointer'
+                      }`}
+                      aria-label="Página siguiente"
+                    >
+                      <span className="hidden sm:inline">Siguiente</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Items Per Page Dropdown */}
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs font-bold text-gray-500">Por página:</span>
+                    <select
+                      value={itemsPerPage}
+                      onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                      className="bg-gray-100 border border-gray-300 text-xs font-bold rounded-xl px-2.5 py-1.5 focus:ring-2 focus:ring-brand-red text-gray-800 cursor-pointer"
+                    >
+                      <option value={12}>12</option>
+                      <option value={24}>24</option>
+                      <option value={48}>48</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </main>
       </div>

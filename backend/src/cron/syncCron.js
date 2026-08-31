@@ -11,14 +11,14 @@ class SyncCron {
     // Run initial sync 10 seconds after server startup to avoid startup congestion
     setTimeout(() => {
       cuadradoSyncService.syncCatalog().catch((err) => {
-        logger.error('[SyncCron] Error en sincronización inicial al arrancar:', err);
+        logger.warn(`[SyncCron] No se pudo realizar la sincronización inicial: ${err.message}. Se reintentará en el próximo intervalo.`);
       });
     }, 10000);
 
     // Schedule 5-minute interval
     const timer = setInterval(() => {
       cuadradoSyncService.syncCatalog().catch((err) => {
-        logger.error('[SyncCron] Error en intervalo de sincronización:', err);
+        logger.warn(`[SyncCron] Sincronización omitida por falla en servidor origen (cuadrado.pe): ${err.message}. Se reintentará en 5 minutos.`);
       });
     }, intervalMs);
 

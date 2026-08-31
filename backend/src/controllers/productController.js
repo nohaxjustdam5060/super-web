@@ -35,11 +35,21 @@ exports.getProducts = async (req, res, next) => {
       distinct: true
     });
 
+    const pageNum = Math.max(1, Number(page) || 1);
+    const limitNum = Math.max(1, Number(limit) || 12);
+    const totalPages = Math.ceil(count / limitNum) || 1;
+
     return res.json({
       success: true,
       total: count,
-      page: Number(page),
-      totalPages: Math.ceil(count / Number(limit)),
+      page: pageNum,
+      totalPages,
+      pagination: {
+        total: count,
+        page: pageNum,
+        limit: limitNum,
+        totalPages
+      },
       products
     });
   } catch (error) {

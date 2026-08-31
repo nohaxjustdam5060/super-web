@@ -141,8 +141,8 @@ class CuadradoSyncService {
     // Laptops (Procesadas jerárquicamente por modelo)
     if (isLaptop) {
       if (/\b(2\s*en\s*1|convertible|x360|yoga|spectre|flex|flip)\b/i.test(full)) return OFFICIAL.CONVERTIBLES;
+      if (/\b(probook|elitebook|latitude|thinkpad|expertbook|travelmate|vostro|precision|zbook)\b/i.test(full)) return OFFICIAL.LAPTOPS_EMPRESARIALES;
       if (/\b(gaming|essential|gamer|katana|cyborg|gf63|victus|legion|tuf|rog|nitro|predator|strix|thin|loq|omen|helios|rtx|gtx)\b/i.test(full)) return OFFICIAL.LAPTOPS_GAMING;
-      if (/\b(probook|elitebook|latitude|thinkpad|expertbook|travelmate|vostro)\b/i.test(full)) return OFFICIAL.LAPTOPS_EMPRESARIALES;
       if (/\b(thinkbook|ultrabook|zenbook|swift|gram|slim|air|omnibook)\b/i.test(full)) return OFFICIAL.THINBOOKS;
       if (/\b(copilot|npu|intel\s*core\s*ultra|ryzen\s*ai)\b/i.test(full)) return OFFICIAL.LAPTOPS_IA;
       return OFFICIAL.LAPTOPS_CONSUMO;
@@ -238,6 +238,59 @@ class CuadradoSyncService {
 
     brandCache.set(detectedBrand, brand.id);
     return brand.id;
+  }
+
+  /**
+   * Helper to extract all valid image URLs from supplier's JSON raw item
+   * Supports: rawItem.imagenes, rawItem.images, rawItem.galeria, rawItem.fotos,
+   * comma-separated strings, and sequential fields (imagen1, imagen2, etc.)
+   */
+  extractImageUrlsFromRawItem(rawItem) {
+    const urls = [];
+
+    const addUrl = (urlStr) => {
+      if (urlStr && typeof urlStr === 'string') {
+        const trimmed = urlStr.trim();
+        if (trimmed.startsWith('http') && !urls.includes(trimmed)) {
+          urls.push(trimmed);
+        }
+      }
+    };
+
+    if (!rawItem) return urls;
+
+    // 1. Array fields: rawItem.imagenes, rawItem.images, rawItem.galeria, rawItem.fotos
+    ['imagenes', 'images', 'galeria', 'fotos'].forEach((key) => {
+      if (Array.isArray(rawItem[key])) {
+        rawItem[key].forEach((imgObj) => {
+          if (typeof imgObj === 'string') addUrl(imgObj);
+          else if (imgObj && (imgObj.url || imgObj.image_url || imgObj.src || imgObj.href)) {
+            addUrl(imgObj.url || imgObj.image_url || imgObj.src || imgObj.href);
+          }
+        });
+      } else if (typeof rawItem[key] === 'string') {
+        rawItem[key].split(/[,;]/).forEach(addUrl);
+      }
+    });
+
+    // 2. Main scalar image field: rawItem.imagen (can be single URL or comma-separated string)
+    if (rawItem.imagen) {
+      if (typeof rawItem.imagen === 'string') {
+        rawItem.imagen.split(/[,;]/).forEach(addUrl);
+      } else if (Array.isArray(rawItem.imagen)) {
+        rawItem.imagen.forEach((img) => typeof img === 'string' && addUrl(img));
+      }
+    }
+
+    // 3. Sequential image fields: rawItem.imagen1, rawItem.imagen2, rawItem.imagen_1, rawItem.imagen_2, etc.
+    for (let i = 1; i <= 10; i++) {
+      if (rawItem[`imagen${i}`]) addUrl(rawItem[`imagen${i}`]);
+      if (rawItem[`imagen_${i}`]) addUrl(rawItem[`imagen_${i}`]);
+      if (rawItem[`image${i}`]) addUrl(rawItem[`image${i}`]);
+      if (rawItem[`image_${i}`]) addUrl(rawItem[`image_${i}`]);
+    }
+
+    return urls;
   }
 
   /**
@@ -394,14 +447,20 @@ class CuadradoSyncService {
               description: `Especificaciones del producto ${newItem.rawItem.nombre}`
             });
 
-            // Insert primary image if valid URL provided
-            if (newItem.rawItem.imagen && typeof newItem.rawItem.imagen === 'string' && newItem.rawItem.imagen.startsWith('http')) {
-              await ProductImage.create({
-                product_id: createdProduct.id,
-                image_url: newItem.rawItem.imagen.trim(),
-                is_primary: true,
-                order: 0
-              });
+            // Insert all extracted images for new product
+            const imageUrls = this.extractImageUrlsFromRawItem(newItem.rawItem);
+            if (imageUrls.length > 0) {
+              await Promise.all(
+                imageUrls.map((url, idx) =>
+                  ProductImage.create({
+                    product_id: createdProduct.id,
+                    image_url: url,
+                    is_primary: idx === 0,
+                    order: idx
+                  })
+                )
+              );
+              await createdProduct.update({ image_url: imageUrls[0] });
             }
 
             createdCount++;
