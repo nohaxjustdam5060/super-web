@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Cpu, Monitor, HardDrive, Database, Zap, Layers, ChevronRight, Flame, ArrowRight, Sparkles, Star } from 'lucide-react';
+import { Cpu, Monitor, HardDrive, Database, Zap, Layers, ChevronRight, Flame, ArrowRight, Sparkles, Star, Gamepad2, Laptop, Briefcase, RefreshCw } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import LocationMap from '../components/LocationMap';
+import HeroCarousel from '../components/HeroCarousel';
 import axiosClient from '../api/axiosClient';
 
 export default function Home() {
@@ -35,84 +36,75 @@ export default function Home() {
 
   return (
     <div className="space-y-12 pb-16">
-      {/* 1. Hero Banner Section */}
-      <section className="relative bg-gradient-to-r from-brand-dark via-slate-900 to-brand-blue text-white overflow-hidden py-16 px-4 rounded-3xl max-w-7xl mx-auto shadow-2xl mt-6 border border-slate-800">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-red/20 rounded-full blur-3xl -z-10" />
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-          <div className="space-y-6">
-            <span className="inline-flex items-center space-x-2 bg-brand-red/20 text-brand-red-accent border border-brand-red/40 text-xs font-black px-3.5 py-1.5 rounded-full uppercase tracking-wider">
-              <Flame className="w-4 h-4 animate-bounce" />
-              Nuevos Lanzamientos 2026
-            </span>
-            <h1 className="text-2xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight sm:leading-none font-heading break-words">
-              POTENCIA TU RIG AL <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-red-accent to-amber-400">SIGUIENTE NIVEL.</span>
-            </h1>
-            <p className="text-gray-300 text-base sm:text-lg max-w-xl leading-relaxed">
-              Consigue las últimas tarjetas gráficas RTX 4080/4090, procesadores AMD Ryzen 3D V-Cache y SSDs NVMe Gen 5 con garantía oficial en Perú.
-            </p>
-            <div className="flex flex-wrap gap-4 pt-2">
-              <Link
-                to="/catalog"
-                className="bg-brand-red hover:bg-brand-red-hover text-white font-extrabold px-8 py-3.5 rounded-2xl shadow-lg hover:shadow-brand-red/40 transition-all flex items-center space-x-2 text-base active:scale-95"
-              >
-                <span>Explorar Catálogo</span>
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-              <Link
-                to="/catalog?is_featured=true"
-                className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold px-6 py-3.5 rounded-2xl transition-colors text-base"
-              >
-                Ver Ofertas Top
-              </Link>
-            </div>
-          </div>
-          <div className="relative flex justify-center">
-            <img
-              src="https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=800&auto=format&fit=crop"
-              alt="NVIDIA RTX GPU SUPER"
-              className="w-full max-w-md object-contain drop-shadow-[0_20px_30px_rgba(220,38,38,0.3)] hover:scale-105 transition-transform duration-500 rounded-2xl"
-            />
-          </div>
-        </div>
-      </section>
+      {/* 1. Full-Width Edge-to-Edge Hero Slider Carousel */}
+      <HeroCarousel />
 
-      {/* 2. Categorías Principales */}
+      {/* 2. Categorías Principales (Estilo Circular con Imagen de Producto) */}
       <section className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-2">
           <div>
             <h2 className="text-2xl sm:text-3xl font-black text-gray-900">Categorías Principales</h2>
-            <p className="text-sm text-gray-500">Encuentra exactamente los componentes para tu ensamble</p>
+            <p className="text-sm text-gray-500">Encuentra el equipo ideal para tu trabajo, estudio o gaming</p>
           </div>
-          <Link to="/catalog" className="text-brand-red font-bold text-sm flex items-center hover:underline">
-            Ver todas <ChevronRight className="w-4 h-4 ml-1" />
+          <Link to="/catalog?category_id=laptops" className="text-brand-red font-bold text-sm flex items-center hover:underline">
+            Ver todas las laptops <ChevronRight className="w-4 h-4 ml-1" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 justify-items-center max-w-5xl mx-auto">
           {[
-            { name: 'Procesadores', slug: 'procesadores', icon: Cpu, color: 'text-blue-600 bg-blue-50' },
-            { name: 'Tarjetas Video', slug: 'tarjetas-de-video', icon: Monitor, color: 'text-red-600 bg-red-50' },
-            { name: 'Memorias RAM', slug: 'memorias-ram', icon: HardDrive, color: 'text-emerald-600 bg-emerald-50' },
-            { name: 'Almacenamiento', slug: 'almacenamiento', icon: Database, color: 'text-purple-600 bg-purple-50' },
-            { name: 'Placas Madre', slug: 'placas-madre', icon: Layers, color: 'text-amber-600 bg-amber-50' },
-            { name: 'Fuentes Poder', slug: 'fuentes-de-poder', icon: Zap, color: 'text-indigo-600 bg-indigo-50' },
-          ].map((cat, idx) => {
-            const IconComponent = cat.icon;
-            return (
-              <Link
-                key={idx}
-                to={`/catalog?category_id=${cat.slug}`}
-                className="bg-white p-5 rounded-2xl border border-gray-200 hover:border-brand-red/40 hover:shadow-lg transition-all text-center group flex flex-col items-center justify-center space-y-3"
-              >
-                <div className={`p-4 rounded-2xl ${cat.color} group-hover:scale-110 transition-transform`}>
-                  <IconComponent className="w-7 h-7" />
-                </div>
-                <span className="font-bold text-sm text-gray-800 group-hover:text-brand-red transition-colors">
+            {
+              name: 'Laptops Gaming',
+              slug: 'laptops-gaming',
+              image: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=500&auto=format&fit=crop',
+              badge: 'Alto Rendimiento'
+            },
+            {
+              name: 'Laptops de Consumo',
+              slug: 'laptops-consumo',
+              image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500&auto=format&fit=crop',
+              badge: 'Estudio y Trabajo'
+            },
+            {
+              name: 'Laptops Empresariales',
+              slug: 'laptops-empresariales',
+              image: 'https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=500&auto=format&fit=crop',
+              badge: 'Seguridad & Pro'
+            },
+            {
+              name: '2 en 1 / Convertibles',
+              slug: 'convertibles',
+              image: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=500&auto=format&fit=crop',
+              badge: 'Pantalla Táctil 360°'
+            }
+          ].map((cat, idx) => (
+            <Link
+              key={idx}
+              to={`/catalog?category_id=${cat.slug}`}
+              className="group flex flex-col items-center cursor-pointer w-full max-w-[200px]"
+            >
+              {/* Circular Product Image Container */}
+              <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-gradient-to-b from-slate-100 to-gray-200/80 border border-gray-200/80 shadow-sm p-4 flex items-center justify-center overflow-hidden group-hover:scale-105 group-hover:shadow-xl group-hover:border-brand-red/40 transition-all duration-300">
+                <img
+                  src={cat.image}
+                  alt={cat.name}
+                  className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
+                />
+                {/* Subtle Inner Ring Glow */}
+                <div className="absolute inset-0 rounded-full ring-1 ring-inset ring-black/5" />
+              </div>
+
+              {/* Title & Badge Underneath */}
+              <div className="mt-4 text-center space-y-1">
+                <h3 className="font-extrabold text-sm sm:text-base text-slate-800 group-hover:text-brand-red transition-colors leading-tight">
                   {cat.name}
+                </h3>
+                <span className="text-[11px] font-semibold text-gray-400 block">
+                  {cat.badge}
                 </span>
-              </Link>
-            );
-          })}
+              </div>
+            </Link>
+          ))}
         </div>
       </section>
 

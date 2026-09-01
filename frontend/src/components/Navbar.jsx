@@ -68,10 +68,39 @@ export default function Navbar() {
     navigate(`/catalog?category_id=${slug}`);
   };
 
+  const [displayedCategory, setDisplayedCategory] = useState(null);
+  const [menuHeight, setMenuHeight] = useState(0);
+  const menuContentRef = useRef(null);
+
   const activeCategory = categories.find((c) => c.slug === activeParentSlug);
 
+  useEffect(() => {
+    if (activeCategory && activeCategory.subcategories && activeCategory.subcategories.length > 0) {
+      setDisplayedCategory(activeCategory);
+    }
+  }, [activeCategory]);
+
+  const isMenuOpen = Boolean(activeCategory && activeCategory.subcategories && activeCategory.subcategories.length > 0);
+  const currentCategory = isMenuOpen ? activeCategory : displayedCategory;
+
+  // Dynamic Height calculation via ResizeObserver for smooth dimension transition
+  useEffect(() => {
+    if (menuContentRef.current) {
+      setMenuHeight(menuContentRef.current.offsetHeight);
+      const observer = new ResizeObserver((entries) => {
+        for (let entry of entries) {
+          if (entry.target) {
+            setMenuHeight(entry.target.offsetHeight);
+          }
+        }
+      });
+      observer.observe(menuContentRef.current);
+      return () => observer.disconnect();
+    }
+  }, [currentCategory, displayedCategory]);
+
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm" ref={navRef}>
+    <header className="sticky top-0 z-50 bg-white border-b border-blue-900 shadow-sm" ref={navRef}>
       {/* Top Announcement Bar */}
       <div className="bg-brand-dark text-white text-[10px] sm:text-xs py-1.5 px-2.5 sm:px-4">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-1 sm:gap-2">
@@ -100,7 +129,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-2.5 sm:px-4 py-2 sm:py-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-4">
         {/* Brand Logo */}
         <Link to="/" className="flex items-center space-x-1.5 sm:space-x-2 group">
-          <div className="bg-brand-red text-white px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl font-black tracking-widest text-base sm:text-xl shadow-md group-hover:scale-105 transition-transform">
+          <div className="bg-brand-red text-white px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md font-black tracking-widest text-base sm:text-xl shadow-md group-hover:scale-105 transition-transform">
             SUPER
           </div>
           <span className="text-base sm:text-xl font-black tracking-tight text-brand-blue">
@@ -115,11 +144,11 @@ export default function Navbar() {
             placeholder="Buscar laptops, procesadores, tarjetas gráficas, monitores..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-gray-100 border border-gray-300 rounded-l-xl py-2 px-3.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:bg-white transition-all"
+            className="w-full bg-gray-100 border border-gray-300 rounded-l-md py-2 px-3.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:bg-white transition-all"
           />
           <button
             type="submit"
-            className="bg-brand-red hover:bg-brand-red-hover text-white px-4 rounded-r-xl font-bold text-sm flex items-center justify-center transition-colors shadow"
+            className="bg-brand-red hover:bg-brand-red-hover text-white px-4 rounded-r-md font-bold text-sm flex items-center justify-center transition-colors shadow"
           >
             <Search className="w-4 h-4 mr-1.5" />
             Buscar
@@ -153,7 +182,7 @@ export default function Navbar() {
           ) : (
             <Link
               to="/login"
-              className="flex items-center space-x-1 text-xs font-bold text-gray-700 hover:text-brand-red transition-colors bg-gray-100 px-2 sm:px-3 py-1.5 rounded-xl"
+              className="flex items-center space-x-1 text-xs font-bold text-gray-700 hover:text-brand-red transition-colors bg-gray-100 px-2 sm:px-3 py-1.5 rounded-md"
               title="Iniciar Sesión"
             >
               <User className="w-4 h-4 flex-shrink-0" />
@@ -164,7 +193,7 @@ export default function Navbar() {
           {/* 2. Cart Button (ALWAYS VISIBLE) */}
           <button
             onClick={openCart}
-            className="relative bg-brand-red hover:bg-brand-red-hover text-white px-2.5 sm:px-3.5 py-1.5 rounded-xl flex items-center space-x-1 sm:space-x-1.5 shadow-md transition-transform active:scale-95 cursor-pointer"
+            className="relative bg-brand-red hover:bg-brand-red-hover text-white px-2.5 sm:px-3.5 py-1.5 rounded-md flex items-center space-x-1 sm:space-x-1.5 shadow-md transition-transform active:scale-95 cursor-pointer"
             title="Ver Carrito"
           >
             <ShoppingBag className="w-4 h-4 flex-shrink-0" />
@@ -179,7 +208,7 @@ export default function Navbar() {
           {/* 3. Hamburger Menu Button (ALWAYS VISIBLE across ALL screen widths) */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="text-gray-700 hover:text-brand-red p-1.5 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors flex items-center justify-center cursor-pointer"
+            className="text-gray-700 hover:text-brand-red p-1.5 rounded-md border border-gray-200 hover:bg-gray-100 transition-colors flex items-center justify-center cursor-pointer"
             aria-label="Abrir Menú de Categorías"
             title="Menú de Categorías"
           >
@@ -198,7 +227,7 @@ export default function Navbar() {
             {/* Catalog Link */}
             <Link
               to="/catalog"
-              className="px-3 py-2.5 text-xs font-extrabold text-white bg-brand-red hover:bg-brand-red-hover flex items-center transition-colors uppercase tracking-wider rounded-lg flex-shrink-0"
+              className="px-3 py-2.5 text-xs font-extrabold text-white bg-brand-red hover:bg-brand-red-hover flex items-center transition-colors uppercase tracking-wider rounded-md flex-shrink-0"
               onMouseEnter={() => setActiveParentSlug(null)}
             >
               <Cpu className="w-4 h-4 mr-1.5" /> Todo el Catálogo
@@ -217,8 +246,10 @@ export default function Navbar() {
                 >
                   <button
                     onClick={() => handleSubcategoryClick(parentCat.slug)}
-                    className={`px-3 py-2.5 text-xs font-bold flex items-center transition-all rounded-lg ${
-                      isActive ? 'text-white bg-gray-800 border-b-2 border-brand-red' : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
+                    className={`px-3 py-2.5 text-xs font-bold flex items-center transition-all ${
+                      isActive
+                        ? 'text-white bg-gray-800 border-b-2 border-brand-red rounded-t-md rounded-b-none'
+                        : 'text-gray-300 hover:text-white hover:bg-gray-800/60 rounded-md'
                     }`}
                   >
                     <DynamicIcon name={parentCat.icon_name} className="w-4 h-4 mr-1.5 text-brand-red-accent flex-shrink-0" />
@@ -232,7 +263,7 @@ export default function Navbar() {
             {/* Integrated "Ofertas" Button (In same row) */}
             <Link
               to="/catalog?is_featured=true"
-              className="px-3 py-2.5 text-xs font-black text-amber-400 hover:text-amber-300 flex items-center space-x-1 uppercase tracking-wider flex-shrink-0 rounded-lg hover:bg-gray-800/60 transition-colors"
+              className="px-3 py-2.5 text-xs font-black text-amber-400 hover:text-amber-300 flex items-center space-x-1 uppercase tracking-wider flex-shrink-0 rounded-md hover:bg-gray-800/60 transition-colors"
               onMouseEnter={() => setActiveParentSlug(null)}
             >
               <Flame className="w-4 h-4 mr-1 text-amber-400 animate-pulse" />
@@ -241,50 +272,59 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* FULL-WIDTH CENTERED MEGA-MENU PANEL */}
-        {activeCategory && activeCategory.subcategories && activeCategory.subcategories.length > 0 && (
-          <div
-            className="absolute left-0 right-0 top-full w-full bg-white text-gray-900 shadow-2xl border-b border-gray-200 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
-            onMouseEnter={() => setActiveParentSlug(activeCategory.slug)}
-            onMouseLeave={() => setActiveParentSlug(null)}
-          >
-            <div className="max-w-7xl mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* FULL-WIDTH CENTERED MEGA-MENU PANEL WITH SMOOTH DROPDOWN & HEIGHT TRANSITION */}
+        <div
+          className={`absolute left-0 right-0 top-full w-full bg-white text-gray-900 shadow-2xl z-50 overflow-hidden transition-[height,opacity,transform] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] transform rounded-b-md ${
+            isMenuOpen
+              ? 'opacity-100 translate-y-0 pointer-events-auto visible border-b border-gray-200'
+              : 'opacity-0 -translate-y-2 pointer-events-none invisible border-b-0'
+          }`}
+          style={{ height: isMenuOpen ? `${menuHeight}px` : '0px' }}
+          onMouseEnter={() => currentCategory && setActiveParentSlug(currentCategory.slug)}
+          onMouseLeave={() => setActiveParentSlug(null)}
+        >
+          {currentCategory && currentCategory.subcategories && currentCategory.subcategories.length > 0 && (
+            <div
+              ref={menuContentRef}
+              key={currentCategory.id}
+              className="max-w-7xl mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-4 gap-6 animate-in fade-in duration-200"
+            >
               {/* Left Parent Category Featured Card */}
-              <div className="bg-gradient-to-br from-brand-dark to-slate-800 text-white rounded-2xl p-6 flex flex-col justify-between space-y-4 shadow-lg border border-slate-700">
+              <div className="bg-gradient-to-br from-brand-dark to-slate-800 text-white rounded-lg p-6 flex flex-col justify-between space-y-4 shadow-lg border border-slate-700">
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2">
-                    <span className="p-2.5 bg-brand-red text-white rounded-xl shadow-md">
-                      <DynamicIcon name={activeCategory.icon_name} className="w-6 h-6" />
+                    <span className="p-2.5 bg-brand-red text-white rounded-md shadow-md">
+                      <DynamicIcon name={currentCategory.icon_name} className="w-6 h-6" />
                     </span>
                     <span className="text-[10px] font-black uppercase tracking-widest text-brand-red-accent bg-brand-red/10 px-2.5 py-0.5 rounded-md border border-brand-red/20">
                       Categoría Principal
                     </span>
                   </div>
-                  <h3 className="text-xl font-black leading-snug">{activeCategory.name}</h3>
+                  <h3 className="text-xl font-black leading-snug">{currentCategory.name}</h3>
                   <p className="text-xs text-gray-300 leading-relaxed">
-                    {activeCategory.description || 'Componentes informáticos seleccionados con la mejor garantía oficial en Perú.'}
+                    {currentCategory.description || 'Componentes informáticos seleccionados con la mejor garantía oficial en Perú.'}
                   </p>
                 </div>
 
                 <Link
-                  to={`/catalog?category_id=${activeCategory.slug}`}
+                  to={`/catalog?category_id=${currentCategory.slug}`}
                   onClick={() => setActiveParentSlug(null)}
-                  className="bg-brand-red hover:bg-brand-red-hover text-white text-xs font-extrabold px-4 py-3 rounded-xl flex items-center justify-between shadow transition-all active:scale-95 group/link"
+                  className="bg-brand-red hover:bg-brand-red-hover text-white text-xs font-extrabold px-4 py-3 rounded-md flex items-center justify-between shadow transition-all active:scale-95 group/link"
                 >
-                  <span>Ver todo en {activeCategory.name}</span>
+                  <span>Ver todo en {currentCategory.name}</span>
                   <ChevronRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
                 </Link>
               </div>
 
               {/* Right Subcategories Grid (Spans 3 Columns) */}
               <div className="lg:col-span-3 grid grid-cols-2 sm:grid-cols-3 gap-3 items-start">
-                {activeCategory.subcategories.map((sub) => (
+                {currentCategory.subcategories.map((sub) => (
                   <button
                     key={sub.id}
                     onClick={() => handleSubcategoryClick(sub.slug)}
-                    className="flex items-center space-x-3 p-3 rounded-2xl bg-gray-50 hover:bg-white border border-gray-100 hover:border-brand-red/40 hover:shadow-md transition-all text-left group/item"
+                    className="flex items-center space-x-3 p-3 rounded-md bg-gray-50 hover:bg-white border border-gray-100 hover:border-brand-red/40 hover:shadow-md transition-all text-left group/item cursor-pointer"
                   >
-                    <span className="p-2.5 bg-white text-gray-700 rounded-xl group-hover/item:bg-brand-red group-hover/item:text-white transition-colors shadow-sm flex-shrink-0 border border-gray-200/60">
+                    <span className="p-2.5 bg-white text-gray-700 rounded-md group-hover/item:bg-brand-red group-hover/item:text-white transition-colors shadow-sm flex-shrink-0 border border-gray-200/60">
                       <DynamicIcon name={sub.icon_name} className="w-4 h-4" />
                     </span>
                     <div className="overflow-hidden">
@@ -299,8 +339,8 @@ export default function Navbar() {
                 ))}
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </nav>
 
       {/* Mobile Drawer Navigation (Accordion Style) */}
