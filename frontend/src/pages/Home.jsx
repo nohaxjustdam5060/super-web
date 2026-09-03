@@ -126,7 +126,7 @@ export default function Home() {
         {loadingFeatured ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-gray-200 animate-pulse h-80 rounded-2xl" />
+              <div key={i} className="bg-gray-200 animate-pulse h-80 rounded-lg" />
             ))}
           </div>
         ) : (
@@ -141,12 +141,12 @@ export default function Home() {
       {/* 4. Bloques Promocionales Grandes (2 Banners) */}
       <section className="max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Promo Banner 1: Laptops Gamer Pro */}
-          <div className="relative rounded-3xl overflow-hidden shadow-2xl min-h-[340px] sm:min-h-[380px] group border border-slate-800 flex flex-col justify-end p-8 text-white">
+          {/* Promo Banner 1: Tablets & Móviles */}
+          <div className="relative rounded-lg overflow-hidden shadow-2xl min-h-[340px] sm:min-h-[380px] group border border-slate-800 flex flex-col justify-end p-8 text-white">
             {/* Background Image */}
             <img
-              src="/images/laptop_banner.jpg"
-              alt="Laptops Gamer Pro"
+              src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=800&auto=format&fit=crop"
+              alt="Tablets & Móviles"
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 z-0"
             />
             {/* Gradient Overlay */}
@@ -156,19 +156,19 @@ export default function Home() {
 
             {/* Content */}
             <div className="space-y-3 max-w-md z-20">
-              <span className="inline-block text-[11px] font-black text-brand-red-accent uppercase tracking-widest bg-brand-red/20 border border-brand-red/30 px-3 py-1 rounded-full">
+              <span className="inline-block text-[11px] font-black text-brand-red-accent uppercase tracking-widest bg-brand-red/20 border border-brand-red/30 px-3 py-1 rounded-md">
                 LO MÁS NUEVO EN
               </span>
               <h3 className="text-3xl sm:text-4xl font-black tracking-tight leading-none font-heading text-white">
-                Laptops Gamer Pro
+                Tablets & Móviles
               </h3>
               <p className="text-gray-300 text-xs sm:text-sm line-clamp-2 leading-relaxed">
-                Potencia portátil con procesadores i7/i9/Ryzen y gráficos dedicados de última generación.
+                Tablets táctiles, celulares inteligentes y dispositivos móviles para máxima productividad y entretenimiento.
               </p>
               <div className="pt-2">
                 <Link
-                  to="/catalog?search=laptop"
-                  className="inline-flex items-center space-x-2 bg-brand-blue-bright hover:bg-brand-blue-hover text-white font-black text-xs px-6 py-2.5 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 uppercase tracking-wider"
+                  to="/catalog?category_id=moviles-y-wearables"
+                  className="inline-flex items-center space-x-2 bg-brand-blue-bright hover:bg-brand-blue-hover text-white font-black text-xs px-6 py-2.5 rounded-md shadow-lg transition-all transform hover:scale-105 active:scale-95 uppercase tracking-wider"
                 >
                   <span>VER TODO</span>
                   <ChevronRight className="w-4 h-4" />
@@ -178,7 +178,7 @@ export default function Home() {
           </div>
 
           {/* Promo Banner 2: Workstations & All in One */}
-          <div className="relative rounded-3xl overflow-hidden shadow-2xl min-h-[340px] sm:min-h-[380px] group border border-slate-800 flex flex-col justify-end p-8 text-white">
+          <div className="relative rounded-lg overflow-hidden shadow-2xl min-h-[340px] sm:min-h-[380px] group border border-slate-800 flex flex-col justify-end p-8 text-white">
             {/* Background Image */}
             <img
               src="/images/laptop_hogar_banner.jpg"
@@ -192,7 +192,7 @@ export default function Home() {
 
             {/* Content */}
             <div className="space-y-3 max-w-md z-20">
-              <span className="inline-block text-[11px] font-black text-amber-400 uppercase tracking-widest bg-amber-500/20 border border-amber-500/30 px-3 py-1 rounded-full">
+              <span className="inline-block text-[11px] font-black text-amber-400 uppercase tracking-widest bg-amber-500/20 border border-amber-500/30 px-3 py-1 rounded-md">
                 EQUIPAMIENTO PROFESIONAL
               </span>
               <h3 className="text-3xl sm:text-4xl font-black tracking-tight leading-none font-heading text-white">
@@ -203,8 +203,8 @@ export default function Home() {
               </p>
               <div className="pt-2">
                 <Link
-                  to="/catalog?ram_gb=32,64"
-                  className="inline-flex items-center space-x-2 bg-brand-blue-bright hover:bg-brand-blue-hover text-white font-black text-xs px-6 py-2.5 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 uppercase tracking-wider"
+                  to="/catalog?category_id=computadoras-y-componentes"
+                  className="inline-flex items-center space-x-2 bg-brand-blue-bright hover:bg-brand-blue-hover text-white font-black text-xs px-6 py-2.5 rounded-md shadow-lg transition-all transform hover:scale-105 active:scale-95 uppercase tracking-wider"
                 >
                   <span>VER TODO</span>
                   <ChevronRight className="w-4 h-4" />

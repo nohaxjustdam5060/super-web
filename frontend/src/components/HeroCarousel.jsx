@@ -105,7 +105,7 @@ export default function HeroCarousel() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full py-8">
                   {/* Left Column: Headline & Action Buttons */}
                   <div className="lg:col-span-8 space-y-4 sm:space-y-6">
-                    <span className="inline-flex items-center space-x-2 bg-brand-red/20 text-brand-red-accent border border-brand-red/40 text-xs font-black px-3.5 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                    <span className="inline-flex items-center space-x-2 bg-brand-red/20 text-brand-red-accent border border-brand-red/40 text-xs font-black px-3.5 py-1.5 rounded-md uppercase tracking-wider shadow-sm">
                       <BadgeIcon className="w-4 h-4 animate-bounce" />
                       <span>{slide.badge}</span>
                     </span>
@@ -124,7 +124,7 @@ export default function HeroCarousel() {
                     <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-2">
                       <Link
                         to={slide.primaryBtnLink}
-                        className="bg-brand-red hover:bg-brand-red-hover text-white font-extrabold px-6 sm:px-8 py-3 sm:py-3.5 rounded-2xl shadow-lg hover:shadow-brand-red/40 transition-all flex items-center space-x-2 text-sm sm:text-base active:scale-95 cursor-pointer"
+                        className="bg-brand-red hover:bg-brand-red-hover text-white font-extrabold px-6 sm:px-8 py-3 sm:py-3.5 rounded-md shadow-lg hover:shadow-brand-red/40 transition-all flex items-center space-x-2 text-sm sm:text-base active:scale-95 cursor-pointer"
                       >
                         <span>{slide.primaryBtnText}</span>
                         <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -132,7 +132,7 @@ export default function HeroCarousel() {
 
                       <Link
                         to={slide.secondaryBtnLink}
-                        className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold px-5 sm:px-6 py-3 sm:py-3.5 rounded-2xl transition-colors text-sm sm:text-base cursor-pointer backdrop-blur-sm"
+                        className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold px-5 sm:px-6 py-3 sm:py-3.5 rounded-md transition-colors text-sm sm:text-base cursor-pointer backdrop-blur-sm"
                       >
                         {slide.secondaryBtnText}
                       </Link>
@@ -142,11 +142,11 @@ export default function HeroCarousel() {
                   {/* Right Column: Featured Image Graphic (Hidden on mobile for clean vertical alignment) */}
                   <div className="hidden lg:flex lg:col-span-4 justify-center items-center">
                     <div className="relative group">
-                      <div className="absolute inset-0 bg-brand-red/20 rounded-3xl blur-2xl group-hover:bg-brand-red/30 transition-colors" />
+                      <div className="absolute inset-0 bg-brand-red/20 rounded-lg blur-2xl group-hover:bg-brand-red/30 transition-colors" />
                       <img
                         src={slide.image}
                         alt={slide.title}
-                        className="relative z-10 w-full max-w-sm object-contain rounded-2xl border border-white/10 shadow-2xl drop-shadow-[0_20px_30px_rgba(0,0,0,0.5)] transform transition-transform duration-500"
+                        className="relative z-10 max-h-[340px] lg:max-h-[380px] w-auto max-w-full object-contain rounded-lg border border-white/10 shadow-2xl drop-shadow-[0_20px_30px_rgba(0,0,0,0.5)] transform transition-transform duration-500"
                       />
                     </div>
                   </div>
@@ -160,7 +160,7 @@ export default function HeroCarousel() {
         <button
           onClick={prevSlide}
           aria-label="Diapositiva Anterior"
-          className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-900/60 hover:bg-brand-red text-white border border-white/10 flex items-center justify-center backdrop-blur-md shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer"
+          className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-md bg-slate-900/60 hover:bg-brand-red text-white border border-white/10 flex items-center justify-center backdrop-blur-md shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
@@ -169,7 +169,7 @@ export default function HeroCarousel() {
         <button
           onClick={nextSlide}
           aria-label="Siguiente Diapositiva"
-          className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-900/60 hover:bg-brand-red text-white border border-white/10 flex items-center justify-center backdrop-blur-md shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer"
+          className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-md bg-slate-900/60 hover:bg-brand-red text-white border border-white/10 flex items-center justify-center backdrop-blur-md shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer"
         >
           <ChevronRight className="w-6 h-6" />
         </button>
@@ -190,14 +190,14 @@ export default function HeroCarousel() {
       </div>
 
       {/* Full-Width Informative Value Proposition Bar (Edge-to-Edge) */}
-      <div className="w-full bg-slate-900 border-t border-b border-slate-800/80 py-3.5 px-4 overflow-hidden">
+      <div className="w-full bg-slate-900 border-t border-b border-blue-800 py-2 px-4 overflow-hidden">
         {/* Mobile View: Continuous Infinite Marquee Loop (< sm) */}
         <div className="md:hidden overflow-hidden w-full">
           <div className="flex w-max animate-marquee hover:[animation-play-state:paused] active:[animation-play-state:paused] cursor-pointer">
             {/* Track Set 1 */}
             <div className="flex items-center space-x-8 pr-8">
               <div className="flex items-center space-x-3 text-gray-300 flex-shrink-0">
-                <div className="p-2 bg-brand-red/10 text-brand-red-accent rounded-xl border border-brand-red/20 flex-shrink-0">
+                <div className="p-2 bg-brand-red/10 text-brand-red-accent rounded-md border border-brand-red/20 flex-shrink-0">
                   <Truck className="w-5 h-5" />
                 </div>
                 <div>
@@ -207,7 +207,7 @@ export default function HeroCarousel() {
               </div>
 
               <div className="flex items-center space-x-3 text-gray-300 flex-shrink-0">
-                <div className="p-2 bg-brand-blue/10 text-brand-blue-bright rounded-xl border border-brand-blue/20 flex-shrink-0">
+                <div className="p-2 bg-brand-blue/10 text-brand-blue-bright rounded-md border border-brand-blue/20 flex-shrink-0">
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
@@ -217,7 +217,7 @@ export default function HeroCarousel() {
               </div>
 
               <div className="flex items-center space-x-3 text-gray-300 flex-shrink-0">
-                <div className="p-2 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20 flex-shrink-0">
+                <div className="p-2 bg-amber-500/10 text-amber-400 rounded-md border border-amber-500/20 flex-shrink-0">
                   <CreditCard className="w-5 h-5" />
                 </div>
                 <div>
@@ -230,7 +230,7 @@ export default function HeroCarousel() {
             {/* Track Set 2 (Identical Duplicate for Seamless Infinite Loop) */}
             <div className="flex items-center space-x-8 pr-8">
               <div className="flex items-center space-x-3 text-gray-300 flex-shrink-0">
-                <div className="p-2 bg-brand-red/10 text-brand-red-accent rounded-xl border border-brand-red/20 flex-shrink-0">
+                <div className="p-2 bg-brand-red/10 text-brand-red-accent rounded-md border border-brand-red/20 flex-shrink-0">
                   <Truck className="w-5 h-5" />
                 </div>
                 <div>
@@ -240,7 +240,7 @@ export default function HeroCarousel() {
               </div>
 
               <div className="flex items-center space-x-3 text-gray-300 flex-shrink-0">
-                <div className="p-2 bg-brand-blue/10 text-brand-blue-bright rounded-xl border border-brand-blue/20 flex-shrink-0">
+                <div className="p-2 bg-brand-blue/10 text-brand-blue-bright rounded-md border border-brand-blue/20 flex-shrink-0">
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
@@ -250,7 +250,7 @@ export default function HeroCarousel() {
               </div>
 
               <div className="flex items-center space-x-3 text-gray-300 flex-shrink-0">
-                <div className="p-2 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20 flex-shrink-0">
+                <div className="p-2 bg-amber-500/10 text-amber-400 rounded-md border border-amber-500/20 flex-shrink-0">
                   <CreditCard className="w-5 h-5" />
                 </div>
                 <div>
@@ -265,7 +265,7 @@ export default function HeroCarousel() {
         {/* Desktop View: Centered Static 3-Column Grid (sm:) */}
         <div className="hidden md:grid sm:grid-cols-3 gap-4 max-w-7xl mx-auto">
           <div className="flex items-center justify-start space-x-3 text-gray-300">
-            <div className="p-2 bg-brand-red/10 text-brand-red-accent rounded-xl border border-brand-red/20 flex-shrink-0">
+            <div className="p-2 bg-brand-red/10 text-brand-red-accent rounded-md border border-brand-red/20 flex-shrink-0">
               <Truck className="w-5 h-5" />
             </div>
             <div>
@@ -275,7 +275,7 @@ export default function HeroCarousel() {
           </div>
 
           <div className="flex items-center justify-start space-x-3 text-gray-300 border-l border-slate-800 pl-6">
-            <div className="p-2 bg-brand-blue/10 text-brand-blue-bright rounded-xl border border-brand-blue/20 flex-shrink-0">
+            <div className="p-2 bg-brand-blue/10 text-brand-blue-bright rounded-md border border-brand-blue/20 flex-shrink-0">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
@@ -285,7 +285,7 @@ export default function HeroCarousel() {
           </div>
 
           <div className="flex items-center justify-start space-x-3 text-gray-300 border-l border-slate-800 pl-6">
-            <div className="p-2 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20 flex-shrink-0">
+            <div className="p-2 bg-amber-500/10 text-amber-400 rounded-md border border-amber-500/20 flex-shrink-0">
               <CreditCard className="w-5 h-5" />
             </div>
             <div>

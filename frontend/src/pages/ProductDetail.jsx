@@ -231,10 +231,10 @@ export default function ProductDetail() {
       </div>
 
       {/* Main Detail Grid Card */}
-      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm grid grid-cols-1 lg:grid-cols-2 gap-10">
+      <div className="bg-white p-6 sm:p-8 rounded-lg border border-gray-200 shadow-sm grid grid-cols-1 lg:grid-cols-2 gap-10">
         {/* Images Gallery Carousel */}
         <div className="space-y-4">
-          <div className="bg-gray-50 rounded-2xl p-4 sm:p-6 border border-gray-100 flex items-center justify-center h-64 sm:h-96 relative overflow-hidden group select-none">
+          <div className="bg-gray-50 rounded-lg p-4 sm:p-6 border border-gray-100 flex items-center justify-center h-64 sm:h-96 relative overflow-hidden group select-none">
             <img
               src={imagesList[currentImageIndex]?.image_url || product.image_url}
               alt={product.name}
@@ -247,7 +247,7 @@ export default function ProductDetail() {
                 <button
                   type="button"
                   onClick={handlePrevImage}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-900/60 hover:bg-brand-red text-white flex items-center justify-center backdrop-blur-md shadow-lg transition-all active:scale-95 z-10 opacity-90 group-hover:opacity-100 cursor-pointer"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-md bg-slate-900/60 hover:bg-brand-red text-white flex items-center justify-center backdrop-blur-md shadow-lg transition-all active:scale-95 z-10 opacity-90 group-hover:opacity-100 cursor-pointer"
                   aria-label="Imagen anterior"
                 >
                   <ChevronLeft className="w-6 h-6" />
@@ -256,14 +256,14 @@ export default function ProductDetail() {
                 <button
                   type="button"
                   onClick={handleNextImage}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-900/60 hover:bg-brand-red text-white flex items-center justify-center backdrop-blur-md shadow-lg transition-all active:scale-95 z-10 opacity-90 group-hover:opacity-100 cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-md bg-slate-900/60 hover:bg-brand-red text-white flex items-center justify-center backdrop-blur-md shadow-lg transition-all active:scale-95 z-10 opacity-90 group-hover:opacity-100 cursor-pointer"
                   aria-label="Siguiente imagen"
                 >
                   <ChevronRight className="w-6 h-6" />
                 </button>
 
                 {/* Counter indicator */}
-                <span className="absolute bottom-3 right-3 bg-slate-900/70 text-white text-[10px] font-bold px-2.5 py-1 rounded-full backdrop-blur-sm z-10 shadow">
+                <span className="absolute bottom-3 right-3 bg-slate-900/70 text-white text-[10px] font-bold px-2.5 py-1 rounded-md backdrop-blur-sm z-10 shadow">
                   {currentImageIndex + 1} / {imagesList.length}
                 </span>
               </>
@@ -277,7 +277,7 @@ export default function ProductDetail() {
                 <button
                   key={idx}
                   onClick={() => setCurrentImageIndex(idx)}
-                  className={`w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-xl p-1.5 sm:p-2 border-2 transition-all flex-shrink-0 relative cursor-pointer ${
+                  className={`w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-md p-1.5 sm:p-2 border-2 transition-all flex-shrink-0 relative cursor-pointer ${
                     currentImageIndex === idx
                       ? 'border-brand-red ring-2 ring-brand-red/30 scale-105 shadow-md'
                       : 'border-gray-200 hover:border-gray-300'
@@ -285,7 +285,7 @@ export default function ProductDetail() {
                 >
                   <img src={img.image_url} alt={`Miniatura ${idx + 1}`} className="w-full h-full object-contain" />
                   {img.is_primary && (
-                    <span className="absolute top-1 left-1 bg-brand-red text-white text-[8px] font-black px-1 rounded shadow" title="Imagen Principal">
+                    <span className="absolute top-1 left-1 bg-brand-red text-white text-[8px] font-black px-1 rounded-sm shadow" title="Imagen Principal">
                       ★
                     </span>
                   )}
@@ -301,23 +301,23 @@ export default function ProductDetail() {
             {/* Header Meta: Brand, SKU & Stock Status Badge */}
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                <span className="text-xs font-bold text-brand-blue uppercase bg-brand-blue-light px-3 py-1 rounded-full border border-brand-blue/20">
+                <span className="text-xs font-bold text-brand-blue uppercase bg-brand-blue-light px-3 py-1 rounded-md border border-brand-blue/20">
                   {product.brand?.name || 'SUPER Tech'}
                 </span>
 
                 {/* DYNAMIC STOCK BADGE */}
                 {stockCount > 3 ? (
-                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm">
+                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-md text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm">
                     <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
                     <span>Disponible en Stock ({stockCount} unids)</span>
                   </span>
                 ) : stockCount > 0 ? (
-                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-200 shadow-sm">
+                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-md text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-200 shadow-sm">
                     <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
                     <span>¡Últimas {stockCount} unidades disponibles!</span>
                   </span>
                 ) : (
-                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-red-100 text-red-800 border border-red-200 shadow-sm">
+                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-md text-xs font-extrabold bg-red-100 text-red-800 border border-red-200 shadow-sm">
                     <XCircle className="w-3.5 h-3.5 text-red-600" />
                     <span>Agotado / Sin Stock</span>
                   </span>
@@ -342,7 +342,7 @@ export default function ProductDetail() {
             </div>
 
             {/* Price Container with Offer Highlights */}
-            <div className="bg-gray-50 p-4 sm:p-5 rounded-2xl border border-gray-100 flex flex-wrap items-baseline justify-between gap-3">
+            <div className="bg-gray-50 p-4 sm:p-5 rounded-lg border border-gray-100 flex flex-wrap items-baseline justify-between gap-3">
               <div className="flex flex-wrap items-baseline gap-2 sm:gap-3">
                 {hasOffer ? (
                   <>
@@ -383,7 +383,7 @@ export default function ProductDetail() {
           <div className="space-y-3 sm:space-y-4 pt-4 border-t border-gray-100">
             <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-4">
               {/* Quantity Selector */}
-              <div className="flex items-center border border-gray-300 rounded-xl bg-gray-50 flex-shrink-0">
+              <div className="flex items-center border border-gray-300 rounded-md bg-gray-50 flex-shrink-0">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   disabled={!isAvailable}
@@ -407,7 +407,7 @@ export default function ProductDetail() {
               <button
                 onClick={() => addItem(product, quantity)}
                 disabled={!isAvailable}
-                className={`flex-1 font-extrabold py-2.5 sm:py-3.5 px-3 sm:px-6 rounded-xl flex items-center justify-center space-x-1.5 sm:space-x-2 shadow-lg transition-transform active:scale-95 text-[11px] sm:text-xs md:text-sm text-center leading-tight whitespace-normal break-words min-h-[44px] ${
+                className={`flex-1 font-extrabold py-2.5 sm:py-3.5 px-3 sm:px-6 rounded-md flex items-center justify-center space-x-1.5 sm:space-x-2 shadow-lg transition-transform active:scale-95 text-[11px] sm:text-xs md:text-sm text-center leading-tight whitespace-normal break-words min-h-[44px] ${
                   isAvailable
                     ? 'bg-brand-red hover:bg-brand-red-hover text-white cursor-pointer'
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
@@ -420,7 +420,7 @@ export default function ProductDetail() {
               {/* Compare Button */}
               <button
                 onClick={() => toggleCompare(product)}
-                className={`p-2.5 sm:p-3.5 rounded-xl border transition-colors cursor-pointer flex-shrink-0 ${
+                className={`p-2.5 sm:p-3.5 rounded-md border transition-colors cursor-pointer flex-shrink-0 ${
                   isCompared ? 'bg-brand-blue text-white border-brand-blue' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                 }`}
                 title="Comparar producto"
@@ -439,7 +439,7 @@ export default function ProductDetail() {
               }])}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold py-2.5 sm:py-3.5 px-3 sm:px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-[11px] sm:text-xs md:text-sm text-center leading-tight whitespace-normal break-words min-h-[44px]"
+              className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold py-2.5 sm:py-3.5 px-3 sm:px-6 rounded-md flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-[11px] sm:text-xs md:text-sm text-center leading-tight whitespace-normal break-words min-h-[44px]"
             >
               <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
               <span className="break-words">Consultar / Comprar por WhatsApp</span>
@@ -447,11 +447,11 @@ export default function ProductDetail() {
 
             {/* Service Highlights */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-[10px] sm:text-xs pt-1">
-              <div className="flex items-center space-x-2 text-gray-600 bg-gray-50 p-2 sm:p-2.5 rounded-xl border border-gray-100 min-w-0">
+              <div className="flex items-center space-x-2 text-gray-600 bg-gray-50 p-2 sm:p-2.5 rounded-md border border-gray-100 min-w-0">
                 <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-blue flex-shrink-0" />
                 <span className="break-words leading-tight">Envío express en 24 horas</span>
               </div>
-              <div className="flex items-center space-x-2 text-gray-600 bg-gray-50 p-2 sm:p-2.5 rounded-xl border border-gray-100 min-w-0">
+              <div className="flex items-center space-x-2 text-gray-600 bg-gray-50 p-2 sm:p-2.5 rounded-md border border-gray-100 min-w-0">
                 <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 flex-shrink-0" />
                 <span className="break-words leading-tight">Garantía Oficial SUPER Tech</span>
               </div>
@@ -461,15 +461,15 @@ export default function ProductDetail() {
       </div>
 
       {/* TECHNICAL SPECIFICATIONS & REVIEWS SECTION */}
-      <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden space-y-6">
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden space-y-6">
         {/* Navigation Tabs Header */}
-        <div className="flex border-b border-gray-200 bg-gray-50/80 px-6 pt-4 space-x-4">
+        <div className="flex border-b border-gray-200 bg-gray-50/80 px-6 pt-4 space-x-2">
           <button
             onClick={() => setActiveTab('specs')}
-            className={`pb-4 text-sm sm:text-base font-extrabold flex items-center space-x-2 border-b-2 transition-colors cursor-pointer ${
+            className={`px-4 py-3 text-sm sm:text-base font-extrabold flex items-center space-x-2 transition-colors cursor-pointer ${
               activeTab === 'specs'
-                ? 'border-brand-red text-brand-red'
-                : 'border-transparent text-gray-500 hover:text-gray-800'
+                ? 'border-b-2 border-brand-red text-brand-red bg-white rounded-t-md rounded-b-none'
+                : 'border-b-2 border-transparent text-gray-500 hover:text-gray-800 rounded-md'
             }`}
           >
             <FileText className="w-4 h-4" />
@@ -478,10 +478,10 @@ export default function ProductDetail() {
 
           <button
             onClick={() => setActiveTab('reviews')}
-            className={`pb-4 text-sm sm:text-base font-extrabold flex items-center space-x-2 border-b-2 transition-colors cursor-pointer ${
+            className={`px-4 py-3 text-sm sm:text-base font-extrabold flex items-center space-x-2 transition-colors cursor-pointer ${
               activeTab === 'reviews'
-                ? 'border-brand-red text-brand-red'
-                : 'border-transparent text-gray-500 hover:text-gray-800'
+                ? 'border-b-2 border-brand-red text-brand-red bg-white rounded-t-md rounded-b-none'
+                : 'border-b-2 border-transparent text-gray-500 hover:text-gray-800 rounded-md'
             }`}
           >
             <Star className="w-4 h-4" />
@@ -502,8 +502,8 @@ export default function ProductDetail() {
                   {highlightedSpecs.map((sp, idx) => {
                     const IconComp = sp.icon;
                     return (
-                      <div key={idx} className="bg-slate-900 text-white p-3.5 sm:p-4 rounded-2xl flex flex-col justify-between space-y-2 shadow-md hover:scale-102 transition-transform min-w-0">
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-brand-red flex items-center justify-center flex-shrink-0">
+                      <div key={idx} className="bg-slate-900 text-white p-3.5 sm:p-4 rounded-md flex flex-col justify-between space-y-2 shadow-md hover:scale-102 transition-transform min-w-0">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-brand-red flex items-center justify-center flex-shrink-0">
                           <IconComp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                         </div>
                         <div className="min-w-0">
@@ -523,7 +523,7 @@ export default function ProductDetail() {
                 <Layers className="w-4 h-4 mr-2 text-brand-red" /> Ficha Técnica Detallada
               </h4>
 
-              <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-xs w-full bg-white">
+              <div className="border border-gray-200 rounded-lg overflow-hidden shadow-xs w-full bg-white">
                 <div className="divide-y divide-gray-100">
                   {specsData.map((item, idx) => {
                     const IconC = item.icon;
@@ -556,7 +556,7 @@ export default function ProductDetail() {
               <h4 className="text-xs font-black text-gray-400 uppercase tracking-wider">
                 Descripción Completa del Fabricante
               </h4>
-              <div className="bg-gray-50 p-4 sm:p-5 rounded-2xl border border-gray-100 text-xs sm:text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+              <div className="bg-gray-50 p-4 sm:p-5 rounded-lg border border-gray-100 text-xs sm:text-sm text-gray-700 leading-relaxed whitespace-pre-line">
                 {product.description || 'Este producto cuenta con todas las especificaciones y características oficiales homologadas por el fabricante. Para consultas técnicas avanzadas o cotizaciones corporativas, puedes comunicarte directamente con nuestro equipo de atención.'}
               </div>
             </div>
@@ -572,7 +572,7 @@ export default function ProductDetail() {
             <div className="space-y-3">
               {product.reviews && product.reviews.length > 0 ? (
                 product.reviews.map((rev) => (
-                  <div key={rev.id} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-1.5">
+                  <div key={rev.id} className="p-4 bg-gray-50 rounded-md border border-gray-100 space-y-1.5">
                     <div className="flex justify-between items-center">
                       <span className="font-bold text-xs text-gray-900">{rev.user?.name || 'Cliente Verificado'}</span>
                       <div className="flex text-amber-400">
@@ -585,17 +585,17 @@ export default function ProductDetail() {
                   </div>
                 ))
               ) : (
-                <div className="p-6 bg-gray-50 rounded-2xl text-center border border-gray-100">
+                <div className="p-6 bg-gray-50 rounded-md text-center border border-gray-100">
                   <p className="text-xs text-gray-500 italic">Aún no hay reseñas registradas para este producto. ¡Sé el primero en dejar una opinión!</p>
                 </div>
               )}
             </div>
 
             {/* Add Review Form */}
-            <form onSubmit={handleAddReview} className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
+            <form onSubmit={handleAddReview} className="bg-slate-50 p-5 rounded-lg border border-slate-200 space-y-3">
               <h4 className="font-extrabold text-xs text-gray-900">Escribir una valoración</h4>
               {reviewSuccess && (
-                <div className="p-3 bg-emerald-100 text-emerald-800 text-xs rounded-xl font-bold flex items-center">
+                <div className="p-3 bg-emerald-100 text-emerald-800 text-xs rounded-md font-bold flex items-center">
                   <CheckCircle className="w-4 h-4 mr-2 text-emerald-600" />
                   ¡Gracias! Tu reseña ha sido enviada para moderación.
                 </div>
@@ -605,7 +605,7 @@ export default function ProductDetail() {
                 <select
                   value={reviewRating}
                   onChange={(e) => setReviewRating(Number(e.target.value))}
-                  className="bg-white border border-gray-300 rounded-lg p-1.5 text-xs font-bold text-gray-800 focus:ring-2 focus:ring-brand-red"
+                  className="bg-white border border-gray-300 rounded-md p-1.5 text-xs font-bold text-gray-800 focus:ring-2 focus:ring-brand-red"
                 >
                   {[5, 4, 3, 2, 1].map((r) => (
                     <option key={r} value={r}>{r} Estrellas</option>
@@ -618,11 +618,11 @@ export default function ProductDetail() {
                 placeholder="Comparte tu experiencia con este producto..."
                 value={reviewComment}
                 onChange={(e) => setReviewComment(e.target.value)}
-                className="w-full bg-white border border-gray-300 rounded-xl p-3 text-xs focus:ring-2 focus:ring-brand-red font-medium text-gray-800"
+                className="w-full bg-white border border-gray-300 rounded-md p-3 text-xs focus:ring-2 focus:ring-brand-red font-medium text-gray-800"
               />
               <button
                 type="submit"
-                className="bg-brand-dark hover:bg-slate-800 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-colors cursor-pointer shadow"
+                className="bg-brand-dark hover:bg-slate-800 text-white font-bold text-xs px-5 py-2.5 rounded-md transition-colors cursor-pointer shadow"
               >
                 Publicar Reseña
               </button>

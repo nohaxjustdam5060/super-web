@@ -72,7 +72,7 @@ export default function CheckoutSuccess() {
               ¡PAGO CONFIRMADO Y PEDIDO REGISTRADO!
             </h1>
             <p className="text-sm text-gray-600 max-w-md mx-auto">
-              Tu compra ha sido verificada en tiempo real. Hemos recibido tu pago y estamos preparando el envío de tu paquete.
+              Tu compra ha sido verificada. Hemos recibido tu pago y estamos preparando el envío de tu paquete.
             </p>
           </>
         ) : isReview ? (

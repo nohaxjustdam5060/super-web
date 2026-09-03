@@ -5,7 +5,7 @@ import {
   ChevronDown, ChevronRight, Laptop, Gamepad2, Briefcase, Smile, Feather, RefreshCw,
   Monitor, Tv, Box, HardDrive, Database, Layers, Zap, Settings, Smartphone, Tablet,
   Watch, Keyboard, Square, Radio, Mic, BatteryCharging, Wifi, Sliders, Printer,
-  Projector, Sparkles, Flame
+  Projector, Sparkles, Flame, Loader2
 } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
@@ -32,6 +32,12 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedMobileCategory, setExpandedMobileCategory] = useState(null);
 
+  // Live Search States & Ref
+  const [liveSearchResults, setLiveSearchResults] = useState([]);
+  const [loadingLiveSearch, setLoadingLiveSearch] = useState(false);
+  const [showLiveSearch, setShowLiveSearch] = useState(false);
+  const searchContainerRef = useRef(null);
+
   const navigate = useNavigate();
   const navRef = useRef(null);
 
@@ -53,13 +59,74 @@ export default function Navbar() {
       .catch((err) => console.error('[Navbar] Error loading categories:', err));
   }, []);
 
+  // Live Search Debounce Effect (280ms)
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (trimmed.length < 2) {
+      setLiveSearchResults([]);
+      setShowLiveSearch(false);
+      return;
+    }
+
+    setLoadingLiveSearch(true);
+    setShowLiveSearch(true);
+
+    const timer = setTimeout(() => {
+      axiosClient
+        .get(`/products?search=${encodeURIComponent(trimmed)}&limit=6`)
+        .then((res) => {
+          if (res.data.success) {
+            setLiveSearchResults(res.data.products || []);
+          } else {
+            setLiveSearchResults([]);
+          }
+        })
+        .catch((err) => {
+          console.error('[LiveSearch] Error fetching results:', err);
+          setLiveSearchResults([]);
+        })
+        .finally(() => {
+          setLoadingLiveSearch(false);
+        });
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Click Outside & Escape key listener to close Live Search dropdown
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
+        setShowLiveSearch(false);
+      }
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowLiveSearch(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   const handleSearchSubmit = (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (searchQuery.trim()) {
+      setShowLiveSearch(false);
       navigate(`/catalog?search=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery('');
       setMobileMenuOpen(false);
     }
+  };
+
+  const handleSelectProduct = (productSlug) => {
+    setShowLiveSearch(false);
+    navigate(`/product/${productSlug}`);
   };
 
   const handleSubcategoryClick = (slug) => {
@@ -100,7 +167,7 @@ export default function Navbar() {
   }, [currentCategory, displayedCategory]);
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-blue-900 shadow-sm" ref={navRef}>
+    <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm transition-all" ref={navRef}>
       {/* Top Announcement Bar */}
       <div className="bg-brand-dark text-white text-[10px] sm:text-xs py-1.5 px-2.5 sm:px-4">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-1 sm:gap-2">
@@ -137,22 +204,104 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* Search Bar Desktop */}
-        <form onSubmit={handleSearchSubmit} className="hidden md:flex flex-1 max-w-2xl relative mx-2">
+        {/* Search Bar Desktop (Cohesive Unified Input with Live Search Autocomplete Dropdown) */}
+        <form
+          ref={searchContainerRef}
+          onSubmit={handleSearchSubmit}
+          className="hidden md:flex flex-1 max-w-2xl relative mx-2 items-center"
+        >
           <input
             type="text"
             placeholder="Buscar laptops, procesadores, tarjetas gráficas, monitores..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-gray-100 border border-gray-300 rounded-l-md py-2 px-3.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:bg-white transition-all"
+            onFocus={() => {
+              if (searchQuery.trim().length >= 2) setShowLiveSearch(true);
+            }}
+            className="w-full bg-white border-2 border-brand-red rounded-md py-2 pl-4 pr-11 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-red/30 shadow-sm transition-all"
           />
           <button
             type="submit"
-            className="bg-brand-red hover:bg-brand-red-hover text-white px-4 rounded-r-md font-bold text-sm flex items-center justify-center transition-colors shadow"
+            className="absolute right-2 text-brand-red hover:text-brand-red-hover p-1.5 rounded-md transition-colors flex items-center justify-center cursor-pointer"
+            title="Buscar"
+            aria-label="Buscar"
           >
-            <Search className="w-4 h-4 mr-1.5" />
-            Buscar
+            <Search className="w-5 h-5 text-brand-red" />
           </button>
+
+          {/* Live Search Predictively Suggested Dropdown Menu */}
+          {showLiveSearch && searchQuery.trim().length >= 2 && (
+            <div className="absolute top-full left-0 w-full mt-2 bg-slate-900 border border-slate-700/80 rounded-lg shadow-2xl z-50 overflow-hidden max-h-[420px] overflow-y-auto font-sans">
+              {loadingLiveSearch ? (
+                <div className="p-4 flex items-center justify-center space-x-2.5 text-gray-300">
+                  <Loader2 className="w-5 h-5 animate-spin text-brand-red-accent" />
+                  <span className="text-xs font-semibold">Buscando productos ...</span>
+                </div>
+              ) : liveSearchResults.length > 0 ? (
+                <div className="divide-y divide-slate-800">
+                  {liveSearchResults.map((prod) => {
+                    const img = prod.images?.find((i) => i.is_primary)?.image_url || prod.images?.[0]?.image_url || prod.image_url || 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=300&auto=format&fit=crop';
+                    const isOffer = Boolean(prod.offer_price && Number(prod.offer_price) < Number(prod.price));
+                    const currentPrice = Number(isOffer ? prod.offer_price : prod.price);
+                    const formattedPrice = `S/ ${currentPrice.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+                    return (
+                      <button
+                        key={prod.id}
+                        type="button"
+                        onClick={() => handleSelectProduct(prod.slug || prod.id)}
+                        className="w-full text-left p-3 hover:bg-slate-800/80 transition-colors flex items-center space-x-3.5 group cursor-pointer"
+                      >
+                        <div className="w-11 h-11 bg-white rounded-md p-1 flex-shrink-0 flex items-center justify-center border border-slate-700/60 overflow-hidden">
+                          <img src={img} alt={prod.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-xs font-extrabold text-white group-hover:text-brand-red-accent transition-colors truncate">
+                            {prod.name}
+                          </h4>
+                          <div className="flex items-center space-x-2 mt-0.5">
+                            <span className="text-[10px] text-gray-400 font-medium truncate">
+                              {prod.brand?.name || prod.category?.name || 'Super Tech'}
+                            </span>
+                            {prod.sku && (
+                              <span className="text-[9px] text-gray-500 font-mono">
+                                SKU: {prod.sku}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <span className="text-xs font-black text-brand-red-accent block">
+                            {formattedPrice}
+                          </span>
+                          {isOffer && (
+                            <span className="text-[10px] text-gray-400 line-through block">
+                              S/ {Number(prod.price).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+
+                  {/* Footer: View all results in Catalog */}
+                  <button
+                    type="button"
+                    onClick={handleSearchSubmit}
+                    className="w-full bg-slate-950 hover:bg-slate-800 text-brand-red-accent hover:text-white p-3 text-xs font-extrabold flex items-center justify-center space-x-1.5 transition-colors border-t border-slate-800 cursor-pointer"
+                  >
+                    <span>Ver todos los resultados para "{searchQuery}"</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="p-6 text-center text-gray-400 space-y-1">
+                  <p className="text-xs font-bold text-gray-200">No se encontraron productos para "{searchQuery}"</p>
+                  <p className="text-[11px] text-gray-400">Prueba con términos como "Laptop", "RTX", "Ryzen" o "Monitor"</p>
+                </div>
+              )}
+            </div>
+          )}
         </form>
 
         {/* Header Right Actions (Profile, Cart & Hamburger ALWAYS VISIBLE; Compare HIDDEN on mobile) */}

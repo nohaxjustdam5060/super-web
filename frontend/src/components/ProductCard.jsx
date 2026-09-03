@@ -17,7 +17,7 @@ export default function ProductCard({ product }) {
   const discountPercent = hasOffer ? Math.round(((price - offerPrice) / price) * 100) : 0;
 
   return (
-    <div className="group bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-xl hover:border-brand-red/40 transition-all duration-300 flex flex-col justify-between overflow-hidden relative">
+    <div className="group bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-xl hover:border-brand-red/40 transition-all duration-300 flex flex-col justify-between overflow-hidden relative">
       {/* Top Badges */}
       <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
         {hasOffer && (
@@ -36,7 +36,7 @@ export default function ProductCard({ product }) {
       <button
         onClick={() => toggleCompare(product)}
         title={isCompared ? "Quitar de comparación" : "Comparar producto"}
-        className={`absolute top-3 right-3 z-10 p-2 rounded-full shadow-md backdrop-blur-md transition-colors ${
+        className={`absolute top-3 right-3 z-10 p-2 rounded-md shadow-md backdrop-blur-md transition-colors ${
           isCompared ? 'bg-brand-blue text-white' : 'bg-white/80 text-gray-600 hover:text-brand-blue'
         }`}
       >
@@ -103,7 +103,7 @@ export default function ProductCard({ product }) {
 
           <button
             onClick={() => addItem(product, 1)}
-            className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-bold py-2.5 px-4 rounded-xl flex items-center justify-center space-x-2 shadow-md active:scale-95 transition-all"
+            className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-bold py-2.5 px-4 rounded-md flex items-center justify-center space-x-2 shadow-md active:scale-95 transition-all"
           >
             <ShoppingBag className="w-4 h-4" />
             <span>Agregar al Carrito</span>

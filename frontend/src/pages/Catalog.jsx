@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Filter, Grid, List, Search, RefreshCw, ChevronDown, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Filter, Grid, List, Search, RefreshCw, ChevronDown, CheckCircle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import axiosClient from '../api/axiosClient';
 
@@ -71,6 +71,7 @@ export default function Catalog() {
   // Fetch Paginated Products from Backend whenever searchParams or itemsPerPage change
   useEffect(() => {
     setLoading(true);
+    setProducts([]); // Immediately clear previous products to prevent flash
     const params = new URLSearchParams(searchParams);
     
     // Ensure page and limit parameters are explicitly sent to backend
@@ -493,26 +494,40 @@ export default function Catalog() {
         {/* Product Grid & Backend Pagination */}
         <main className="lg:col-span-3 space-y-6">
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-gray-200 animate-pulse h-80 rounded-2xl" />
-              ))}
+            <div className="space-y-6">
+              {/* Centered Fluid Loading State Indicator */}
+              <div className="bg-white p-8 sm:p-12 rounded-lg border border-gray-200 text-center py-10 flex flex-col items-center justify-center space-y-3 shadow-sm">
+                <Loader2 className="w-10 h-10 text-brand-red animate-spin" />
+                <p className="text-sm sm:text-base font-extrabold text-gray-900">Cargando productos...</p>
+                <p className="text-xs text-gray-500 font-medium">Buscando los mejores equipos disponibles en el catálogo</p>
+              </div>
+
+              {/* Grid of Skeleton Placeholder Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="bg-gray-200/80 animate-pulse h-80 rounded-lg border border-gray-200" />
+                ))}
+              </div>
             </div>
           ) : products.length === 0 ? (
-            <div className="bg-white p-8 sm:p-12 rounded-2xl border border-gray-200 text-center space-y-4 shadow-sm">
+            <div className="bg-white p-8 sm:p-12 rounded-lg border border-gray-200 text-center space-y-4 shadow-sm">
               <Search className="w-12 h-12 mx-auto text-gray-400" />
-              <h3 className="text-lg sm:text-xl font-bold text-gray-800">No se encontraron productos</h3>
-              <p className="text-gray-500 text-xs sm:text-sm">Intenta ajustar o limpiar tus filtros de búsqueda.</p>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-800">
+                {search ? `No se encontraron productos para "${search}"` : categoryId ? `No hay productos disponibles en esta categoría` : brandId ? `No hay productos de esta marca` : 'No se encontraron productos'}
+              </h3>
+              <p className="text-gray-500 text-xs sm:text-sm">
+                No se encontraron productos que coincidan con los filtros seleccionados. Intenta ajustar o limpiar tu búsqueda.
+              </p>
               <button
                 onClick={clearFilters}
-                className="bg-brand-red text-white font-bold px-6 py-2.5 rounded-xl text-xs sm:text-sm hover:bg-brand-red-hover shadow"
+                className="bg-brand-red text-white font-bold px-6 py-2.5 rounded-md text-xs sm:text-sm hover:bg-brand-red-hover shadow active:scale-95 transition-all cursor-pointer"
               >
                 Limpiar Filtros
               </button>
             </div>
           ) : (
             <>
-              {/* Product Grid / List (Render directly from backend page slice) */}
+              {/* Product Grid / List */}
               <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6' : 'space-y-4'}>
                 {products.map((product) => (
                   <ProductCard key={product.id} product={product} />
