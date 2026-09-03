@@ -167,7 +167,7 @@ export default function Navbar() {
   }, [currentCategory, displayedCategory]);
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm transition-all" ref={navRef}>
+    <header className="sticky top-0 z-50 bg-white border-b border-slate-700 shadow-sm transition-all" ref={navRef}>
       {/* Top Announcement Bar */}
       <div className="bg-brand-dark text-white text-[10px] sm:text-xs py-1.5 px-2.5 sm:px-4">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-1 sm:gap-2">
