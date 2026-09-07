@@ -213,11 +213,18 @@ class CuadradoSyncService {
    */
   async getOrCreateBrandForProduct(productName, brandCache) {
     const name = (productName || '').toUpperCase();
-    const knownBrands = ['HP', 'LENOVO', 'ASUS', 'DELL', 'APPLE', 'ACER', 'MSI', 'SAMSUNG', 'LOGITECH', 'TEROS', 'KINGSTON', 'CRUCIAL', 'GIGABYTE', 'AMD', 'INTEL', 'WESTERN DIGITAL', 'SEAGATE', 'TP-LINK'];
+    const knownBrands = [
+      'EPSON', 'HP', 'LENOVO', 'ASUS', 'DELL', 'APPLE', 'ACER', 'MSI', 'SAMSUNG',
+      'LOGITECH', 'TEROS', 'KINGSTON', 'CRUCIAL', 'GIGABYTE', 'AMD', 'INTEL',
+      'WESTERN DIGITAL', 'SEAGATE', 'TP-LINK', 'CANON', 'BROTHER', 'LG', 'XIAOMI',
+      'MOTOROLA', 'COUGAR', 'CORSAIR', 'RAZER', 'REDRAGON', 'HAVIT', 'VSG', 'T-FORCE',
+      'PATRIOT', 'EVGA', 'ZOTAC', 'PALIT', 'PNY', 'ASROCK', 'BIOSTAR', 'BENQ',
+      'VIEWSONIC', 'MERCUSYS', 'DLINK', 'NEXXT', 'CYBERTEL', 'HALION', 'KOLINK'
+    ];
 
     let detectedBrand = null;
     for (const b of knownBrands) {
-      const regex = new RegExp(`\\b${b}\\b`, 'i');
+      const regex = new RegExp(`\\b${b.replace('-', '\\-')}\\b`, 'i');
       if (regex.test(name)) {
         detectedBrand = b;
         break;
@@ -226,7 +233,7 @@ class CuadradoSyncService {
 
     if (!detectedBrand) return null;
 
-    if (brandCache.has(detectedBrand)) {
+    if (brandCache && brandCache.has(detectedBrand)) {
       return brandCache.get(detectedBrand);
     }
 
@@ -236,7 +243,7 @@ class CuadradoSyncService {
       defaults: { name: detectedBrand, slug: brandSlug }
     });
 
-    brandCache.set(detectedBrand, brand.id);
+    if (brandCache) brandCache.set(detectedBrand, brand.id);
     return brand.id;
   }
 

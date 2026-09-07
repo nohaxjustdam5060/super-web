@@ -49,16 +49,8 @@ export default function Catalog() {
 
   const [categoriesTree, setCategoriesTree] = useState([]);
 
-  // Fetch Filter Sidebar Options & Categories tree once on mount
+  // Fetch Categories tree once on mount
   useEffect(() => {
-    axiosClient.get('/products/filters')
-      .then((res) => {
-        if (res.data.success && res.data.filters) {
-          setFilterOptions(res.data.filters);
-        }
-      })
-      .catch((err) => console.error('Error fetching filter options:', err));
-
     axiosClient.get('/products/categories')
       .then((res) => {
         if (res.data.success && res.data.categories) {
@@ -67,6 +59,21 @@ export default function Catalog() {
       })
       .catch((err) => console.error('Error fetching categories list:', err));
   }, []);
+
+  // Fetch Contextual Filter Options whenever active category or search query changes
+  useEffect(() => {
+    const params = {};
+    if (categoryId) params.category_id = categoryId;
+    if (search) params.search = search;
+
+    axiosClient.get('/products/filters', { params })
+      .then((res) => {
+        if (res.data.success && res.data.filters) {
+          setFilterOptions(res.data.filters);
+        }
+      })
+      .catch((err) => console.error('Error fetching filter options:', err));
+  }, [categoryId, search]);
 
   // Fetch Paginated Products from Backend whenever searchParams or itemsPerPage change
   useEffect(() => {
@@ -116,24 +123,95 @@ export default function Catalog() {
     setSearchParams(newParams);
   };
 
-  // Handler for multi-select spec filters
-  const handleMultiSelectFilter = (paramKey, value) => {
+  // Helper to test if a multi-select filter option is checked (with URI decoding and case normalization)
+  const isOptionChecked = (paramKey, rawOptionValue) => {
+    if (!rawOptionValue) return false;
+    const target = String(rawOptionValue).trim().toLowerCase();
+    const currentValues = (searchParams.get(paramKey) || '')
+      .split(',')
+      .map((v) => decodeURIComponent(v).trim())
+      .filter(Boolean);
+    return currentValues.some((v) => v.toLowerCase() === target);
+  };
+
+  // Handler for multi-select spec filters with normalized toggle and clean parameter removal
+  const handleMultiSelectFilter = (paramKey, rawValue) => {
+    if (!rawValue) return;
     const newParams = new URLSearchParams(searchParams);
-    const currentValues = (newParams.get(paramKey) || '').split(',').filter(Boolean);
+    const targetVal = String(rawValue).trim();
+    const targetValLower = targetVal.toLowerCase();
+
+    const currentValues = (newParams.get(paramKey) || '')
+      .split(',')
+      .map((v) => decodeURIComponent(v).trim())
+      .filter(Boolean);
+
+    const existingIndex = currentValues.findIndex((v) => v.toLowerCase() === targetValLower);
+
     let updated;
-    if (currentValues.includes(value)) {
-      updated = currentValues.filter((v) => v !== value);
+    if (existingIndex > -1) {
+      updated = currentValues.filter((_, idx) => idx !== existingIndex);
     } else {
-      updated = [...currentValues, value];
+      updated = [...currentValues, targetVal];
     }
+
     if (updated.length > 0) {
       newParams.set(paramKey, updated.join(','));
     } else {
       newParams.delete(paramKey);
     }
-    // Always reset to page 1 when changing any filter
+
     newParams.delete('page');
     setSearchParams(newParams);
+  };
+
+  // Helper to detect if active category belongs to Laptop family
+  const isLaptopCategory = () => {
+    if (!categoryId) return false;
+    const catLower = categoryId.toLowerCase();
+    if (
+      catLower.includes('laptop') ||
+      catLower.includes('thinbook') ||
+      catLower.includes('convertible') ||
+      catLower.includes('2-en-1') ||
+      catLower === 'laptops'
+    ) {
+      return true;
+    }
+
+    const findCategory = (items) => {
+      for (const item of items) {
+        if (item.id === categoryId || item.slug === categoryId) return item;
+        if (item.subcategories?.length) {
+          const found = findCategory(item.subcategories);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    const target = findCategory(categoriesTree);
+    if (target) {
+      const nameL = target.name.toLowerCase();
+      const slugL = target.slug.toLowerCase();
+      if (
+        nameL.includes('laptop') || nameL.includes('thinbook') || nameL.includes('convertible') || nameL.includes('2 en 1') ||
+        slugL.includes('laptop') || slugL.includes('thinbook') || slugL.includes('convertible')
+      ) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // Helper to extract specific dynamic JSON attribute by potential key names
+  const getDynamicAttributeGroup = (possibleKeys) => {
+    if (!filterOptions.attributeOptions) return null;
+    const foundKey = Object.keys(filterOptions.attributeOptions).find((k) =>
+      possibleKeys.some((p) => k.toUpperCase().includes(p.toUpperCase()))
+    );
+    if (!foundKey) return null;
+    return { name: foundKey, list: filterOptions.attributeOptions[foundKey] };
   };
 
   // Handler for page navigation buttons
@@ -337,158 +415,290 @@ export default function Catalog() {
             )}
           </div>
 
-          {/* Marcas Filter (Dynamic from getFilterOptions) */}
-          {filterOptions.brandOptions && filterOptions.brandOptions.length > 0 && (
-            <div>
-              <h4 className="font-bold text-xs sm:text-sm text-gray-800 mb-2">Marca</h4>
-              <div className="space-y-2 text-xs max-h-48 overflow-y-auto pr-2 border border-gray-100 p-2 rounded-xl bg-gray-50">
-                {filterOptions.brandOptions.map((b) => (
-                  <label key={b.id} className="flex items-center justify-between font-medium text-gray-700 cursor-pointer hover:text-brand-red transition-colors">
-                    <span className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={brandId === b.slug || brandId === b.id}
-                        onChange={(e) => handleFilterChange('brand_id', e.target.checked ? b.slug : '')}
-                        className="rounded border-gray-300 text-brand-red focus:ring-brand-red"
-                      />
-                      <span>{b.name}</span>
-                    </span>
-                    <span className="text-[10px] font-bold text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded-full">
-                      {b.count}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Render Filter Sidebar based on strict Laptop Whitelist or Default Category options */}
+          {(() => {
+            const isLaptop = isLaptopCategory();
 
-          {/* Procesador Filter */}
-          {filterOptions.processors && filterOptions.processors.length > 0 && (
-            <div>
-              <h4 className="font-bold text-xs sm:text-sm text-gray-800 mb-2">Procesador</h4>
-              <div className="space-y-2 text-xs max-h-48 overflow-y-auto pr-2 border border-gray-100 p-2 rounded-xl bg-gray-50">
-                {filterOptions.processors.map((p) => (
-                  <label key={p.value} className="flex items-center justify-between font-medium text-gray-700 cursor-pointer hover:text-brand-red transition-colors">
-                    <span className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedProcessors.includes(p.value)}
-                        onChange={() => handleMultiSelectFilter('processor_family', p.value)}
-                        className="rounded border-gray-300 text-brand-red focus:ring-brand-red"
-                      />
-                      <span>{p.value}</span>
-                    </span>
-                    <span className="text-[10px] font-bold text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded-full">
-                      {p.count}
-                    </span>
-                  </label>
-                ))}
+            // Renderers for individual filter blocks
+            const renderPriceFilter = () => (
+              <div key="price_filter">
+                <h4 className="font-bold text-xs sm:text-sm text-gray-800 mb-2">Rango de Precio (S/)</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="number"
+                    placeholder="Mín"
+                    value={minPrice}
+                    onChange={(e) => handleFilterChange('min_price', e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-300 rounded-xl py-2 px-3 text-xs focus:ring-2 focus:ring-brand-red"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Máx"
+                    value={maxPrice}
+                    onChange={(e) => handleFilterChange('max_price', e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-300 rounded-xl py-2 px-3 text-xs focus:ring-2 focus:ring-brand-red"
+                  />
+                </div>
               </div>
-            </div>
-          )}
+            );
 
-          {/* Memoria RAM Filter */}
-          {filterOptions.ramOptions && filterOptions.ramOptions.length > 0 && (
-            <div>
-              <h4 className="font-bold text-xs sm:text-sm text-gray-800 mb-2">Memoria RAM</h4>
-              <div className="space-y-2 text-xs max-h-48 overflow-y-auto pr-2 border border-gray-100 p-2 rounded-xl bg-gray-50">
-                {filterOptions.ramOptions.map((r) => {
-                  const valStr = String(r.value);
-                  return (
-                    <label key={r.value} className="flex items-center justify-between font-medium text-gray-700 cursor-pointer hover:text-brand-red transition-colors">
-                      <span className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedRam.includes(valStr)}
-                          onChange={() => handleMultiSelectFilter('ram_gb', valStr)}
-                          className="rounded border-gray-300 text-brand-red focus:ring-brand-red"
-                        />
-                        <span>{r.value} GB</span>
-                      </span>
-                      <span className="text-[10px] font-bold text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded-full">
-                        {r.count}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+            const renderBrandFilter = () => {
+              if (!filterOptions.brandOptions || filterOptions.brandOptions.length === 0) return null;
+              return (
+                <div key="brand_filter">
+                  <h4 className="font-bold text-xs sm:text-sm text-gray-800 mb-2">Marca</h4>
+                  <div className="space-y-2 text-xs max-h-48 overflow-y-auto pr-2 border border-gray-100 p-2 rounded-xl bg-gray-50">
+                    {filterOptions.brandOptions.map((b) => {
+                      const isChecked = isOptionChecked('brand_id', b.slug) || isOptionChecked('brand_id', b.id);
+                      return (
+                        <label key={b.id} className="flex items-center justify-between font-medium text-gray-700 cursor-pointer hover:text-brand-red transition-colors">
+                          <span className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => handleMultiSelectFilter('brand_id', b.slug)}
+                              className="rounded border-gray-300 text-brand-red focus:ring-brand-red cursor-pointer"
+                            />
+                            <span>{b.name}</span>
+                          </span>
+                          <span className="text-[10px] font-bold text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded-full">
+                            {b.count}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            };
 
-          {/* Almacenamiento Filter */}
-          {filterOptions.storageOptions && filterOptions.storageOptions.length > 0 && (
-            <div>
-              <h4 className="font-bold text-xs sm:text-sm text-gray-800 mb-2">Almacenamiento</h4>
-              <div className="space-y-2 text-xs max-h-48 overflow-y-auto pr-2 border border-gray-100 p-2 rounded-xl bg-gray-50">
-                {filterOptions.storageOptions.map((s) => {
-                  const storageKey = `${s.storage_gb}_${s.storage_type}`;
-                  const displayCap = s.storage_gb >= 1024 ? `${s.storage_gb / 1024} TB` : `${s.storage_gb} GB`;
-                  return (
-                    <label key={storageKey} className="flex items-center justify-between font-medium text-gray-700 cursor-pointer hover:text-brand-red transition-colors">
-                      <span className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedStorage.includes(storageKey)}
-                          onChange={() => handleMultiSelectFilter('storage', storageKey)}
-                          className="rounded border-gray-300 text-brand-red focus:ring-brand-red"
-                        />
-                        <span>{displayCap} {s.storage_type}</span>
-                      </span>
-                      <span className="text-[10px] font-bold text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded-full">
-                        {s.count}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+            const renderProcessorFilter = () => {
+              if (filterOptions.processors && filterOptions.processors.length > 0) {
+                return (
+                  <div key="processor_filter">
+                    <h4 className="font-bold text-xs sm:text-sm text-gray-800 mb-2">Procesador</h4>
+                    <div className="space-y-2 text-xs max-h-48 overflow-y-auto pr-2 border border-gray-100 p-2 rounded-xl bg-gray-50">
+                      {filterOptions.processors.map((p) => {
+                        const isChecked = isOptionChecked('processor_family', p.value);
+                        return (
+                          <label key={p.value} className="flex items-center justify-between font-medium text-gray-700 cursor-pointer hover:text-brand-red transition-colors">
+                            <span className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => handleMultiSelectFilter('processor_family', p.value)}
+                                className="rounded border-gray-300 text-brand-red focus:ring-brand-red cursor-pointer"
+                              />
+                              <span>{p.value}</span>
+                            </span>
+                            <span className="text-[10px] font-bold text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded-full">
+                              {p.count}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              }
+              return renderDynamicAttributeFilter(['PROCESADOR', 'PROCESADOR / CPU'], 'Procesador', 'processor_family');
+            };
 
-          {/* Tamaños de Pantalla Filter */}
-          {filterOptions.screenOptions && filterOptions.screenOptions.length > 0 && (
-            <div>
-              <h4 className="font-bold text-xs sm:text-sm text-gray-800 mb-2">Tamaño de Pantalla</h4>
-              <div className="space-y-2 text-xs max-h-48 overflow-y-auto pr-2 border border-gray-100 p-2 rounded-xl bg-gray-50">
-                {filterOptions.screenOptions.map((sc) => (
-                  <label key={sc.range} className="flex items-center justify-between font-medium text-gray-700 cursor-pointer hover:text-brand-red transition-colors">
-                    <span className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedScreen.includes(sc.range)}
-                        onChange={() => handleMultiSelectFilter('screen_range', sc.range)}
-                        className="rounded border-gray-300 text-brand-red focus:ring-brand-red"
-                      />
-                      <span>{sc.range}</span>
-                    </span>
-                    <span className="text-[10px] font-bold text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded-full">
-                      {sc.count}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
+            const renderStorageFilter = () => {
+              if (filterOptions.storageOptions && filterOptions.storageOptions.length > 0) {
+                return (
+                  <div key="storage_filter">
+                    <h4 className="font-bold text-xs sm:text-sm text-gray-800 mb-2">Almacenamiento</h4>
+                    <div className="space-y-2 text-xs max-h-48 overflow-y-auto pr-2 border border-gray-100 p-2 rounded-xl bg-gray-50">
+                      {filterOptions.storageOptions.map((s) => {
+                        const storageKey = `${s.storage_gb}_${s.storage_type}`;
+                        const displayCap = s.storage_gb >= 1024 ? `${s.storage_gb / 1024} TB` : `${s.storage_gb} GB`;
+                        const isChecked = isOptionChecked('storage', storageKey);
+                        return (
+                          <label key={storageKey} className="flex items-center justify-between font-medium text-gray-700 cursor-pointer hover:text-brand-red transition-colors">
+                            <span className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => handleMultiSelectFilter('storage', storageKey)}
+                                className="rounded border-gray-300 text-brand-red focus:ring-brand-red cursor-pointer"
+                              />
+                              <span>{displayCap} {s.storage_type}</span>
+                            </span>
+                            <span className="text-[10px] font-bold text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded-full">
+                              {s.count}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              }
+              return renderDynamicAttributeFilter(['ALMACENAMIENTO', 'DISCO'], 'Almacenamiento', 'storage');
+            };
 
-          {/* Rango de Precios Filter */}
-          <div>
-            <h4 className="font-bold text-xs sm:text-sm text-gray-800 mb-2">Rango de Precio (S/)</h4>
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                type="number"
-                placeholder="Mín"
-                value={minPrice}
-                onChange={(e) => handleFilterChange('min_price', e.target.value)}
-                className="w-full bg-gray-50 border border-gray-300 rounded-xl py-2 px-3 text-xs focus:ring-2 focus:ring-brand-red"
-              />
-              <input
-                type="number"
-                placeholder="Máx"
-                value={maxPrice}
-                onChange={(e) => handleFilterChange('max_price', e.target.value)}
-                className="w-full bg-gray-50 border border-gray-300 rounded-xl py-2 px-3 text-xs focus:ring-2 focus:ring-brand-red"
-              />
-            </div>
-          </div>
+            const renderRamFilter = () => {
+              if (filterOptions.ramOptions && filterOptions.ramOptions.length > 0) {
+                return (
+                  <div key="ram_filter">
+                    <h4 className="font-bold text-xs sm:text-sm text-gray-800 mb-2">Memoria RAM</h4>
+                    <div className="space-y-2 text-xs max-h-48 overflow-y-auto pr-2 border border-gray-100 p-2 rounded-xl bg-gray-50">
+                      {filterOptions.ramOptions.map((r) => {
+                        const valStr = String(r.value);
+                        const isChecked = isOptionChecked('ram_gb', valStr);
+                        return (
+                          <label key={r.value} className="flex items-center justify-between font-medium text-gray-700 cursor-pointer hover:text-brand-red transition-colors">
+                            <span className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => handleMultiSelectFilter('ram_gb', valStr)}
+                                className="rounded border-gray-300 text-brand-red focus:ring-brand-red cursor-pointer"
+                              />
+                              <span>{r.value} {String(r.value).toLowerCase().includes('gb') ? '' : 'GB'}</span>
+                            </span>
+                            <span className="text-[10px] font-bold text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded-full">
+                              {r.count}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              }
+              return renderDynamicAttributeFilter(['MEMORIA RAM', 'RAM'], 'Memoria RAM', 'ram_gb');
+            };
+
+            const renderDynamicAttributeFilter = (possibleKeys, labelTitle, paramName) => {
+              const group = getDynamicAttributeGroup(possibleKeys);
+              if (!group || !group.list || group.list.length === 0) return null;
+              const paramKey = paramName || group.name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+              return (
+                <div key={group.name}>
+                  <h4 className="font-bold text-xs sm:text-sm text-gray-800 mb-2">{labelTitle || group.name}</h4>
+                  <div className="space-y-2 text-xs max-h-48 overflow-y-auto pr-2 border border-gray-100 p-2 rounded-xl bg-gray-50">
+                    {group.list.map((item) => {
+                      const isChecked = isOptionChecked(paramKey, item.value);
+                      return (
+                        <label key={item.value} className="flex items-center justify-between font-medium text-gray-700 cursor-pointer hover:text-brand-red transition-colors">
+                          <span className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => handleMultiSelectFilter(paramKey, item.value)}
+                              className="rounded border-gray-300 text-brand-red focus:ring-brand-red cursor-pointer"
+                            />
+                            <span>{item.value}</span>
+                          </span>
+                          <span className="text-[10px] font-bold text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded-full">
+                            {item.count}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            };
+
+            const renderScreenFilter = () => {
+              if (filterOptions.screenOptions && filterOptions.screenOptions.length > 0) {
+                return (
+                  <div key="screen_filter">
+                    <h4 className="font-bold text-xs sm:text-sm text-gray-800 mb-2">Tamaño de Pantalla</h4>
+                    <div className="space-y-2 text-xs max-h-48 overflow-y-auto pr-2 border border-gray-100 p-2 rounded-xl bg-gray-50">
+                      {filterOptions.screenOptions.map((sc) => {
+                        const isChecked = isOptionChecked('screen_range', sc.range);
+                        return (
+                          <label key={sc.range} className="flex items-center justify-between font-medium text-gray-700 cursor-pointer hover:text-brand-red transition-colors">
+                            <span className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => handleMultiSelectFilter('screen_range', sc.range)}
+                                className="rounded border-gray-300 text-brand-red focus:ring-brand-red cursor-pointer"
+                              />
+                              <span>{sc.range}</span>
+                            </span>
+                            <span className="text-[10px] font-bold text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded-full">
+                              {sc.count}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              }
+              return renderDynamicAttributeFilter(['TAMAÑO DE PANTALLA', 'PANTALLA'], 'Tamaño de Pantalla', 'screen_range');
+            };
+
+            if (isLaptop) {
+              // STRICT ORDER FOR LAPTOPS:
+              // 1. Precio, 2. Marca, 3. Procesador, 4. Almacenamiento, 5. Memoria RAM,
+              // 6. Tarjeta de Video, 7. Color, 8. Tamaño de Pantalla, 9. Teclado
+              return [
+                renderPriceFilter(),
+                renderBrandFilter(),
+                renderProcessorFilter(),
+                renderStorageFilter(),
+                renderRamFilter(),
+                renderDynamicAttributeFilter(['TARJETA GRAFICA', 'TARJETA DE VIDEO', 'GPU', 'VIDEO'], 'Tarjeta de Video', 'tarjeta_grafica'),
+                renderDynamicAttributeFilter(['COLOR', 'COLORES'], 'Color', 'color'),
+                renderScreenFilter(),
+                renderDynamicAttributeFilter(['TECLADO', 'DISTRIBUCION TECLADO'], 'Teclado', 'teclado')
+              ].filter(Boolean);
+            }
+
+            // DEFAULT RENDERER FOR OTHER CATEGORIES (Monitors, Peripherals, Components, etc.)
+            const reservedKeys = ['PROCESADOR', 'MEMORIA RAM', 'RAM', 'ALMACENAMIENTO'];
+            return (
+              <>
+                {renderPriceFilter()}
+                {renderBrandFilter()}
+                {renderProcessorFilter()}
+                {renderRamFilter()}
+                {renderStorageFilter()}
+                {renderScreenFilter()}
+
+                {/* Additional Dynamic Attributes for non-Laptop categories */}
+                {filterOptions.attributeOptions && Object.keys(filterOptions.attributeOptions).length > 0 && (
+                  Object.entries(filterOptions.attributeOptions).map(([attrName, attrList]) => {
+                    if (reservedKeys.includes(attrName.toUpperCase())) return null;
+                    const keySlug = attrName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+                    return (
+                      <div key={attrName}>
+                        <h4 className="font-bold text-xs sm:text-sm text-gray-800 mb-2">{attrName}</h4>
+                        <div className="space-y-2 text-xs max-h-48 overflow-y-auto pr-2 border border-gray-100 p-2 rounded-xl bg-gray-50">
+                          {attrList.map((item) => {
+                            const isChecked = isOptionChecked(keySlug, item.value);
+                            return (
+                              <label key={item.value} className="flex items-center justify-between font-medium text-gray-700 cursor-pointer hover:text-brand-red transition-colors">
+                                <span className="flex items-center space-x-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={() => handleMultiSelectFilter(keySlug, item.value)}
+                                    className="rounded border-gray-300 text-brand-red focus:ring-brand-red cursor-pointer"
+                                  />
+                                  <span>{item.value}</span>
+                                </span>
+                                <span className="text-[10px] font-bold text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded-full">
+                                  {item.count}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </>
+            );
+          })()}
         </aside>
 
         {/* Product Grid & Backend Pagination */}

@@ -54,16 +54,34 @@ class SearchService {
     }
 
     if (brand_id) {
-      if (UUID_REGEX.test(brand_id)) {
-        where.brand_id = brand_id;
-      } else {
-        const brand = await Brand.findOne({ where: { slug: brand_id } });
-        if (brand) {
-          where.brand_id = brand.id;
+      const brandItems = Array.isArray(brand_id)
+        ? brand_id
+        : String(brand_id).split(',').map((s) => s.trim()).filter(Boolean);
+
+      const foundBrandIds = [];
+      for (const item of brandItems) {
+        if (UUID_REGEX.test(item)) {
+          foundBrandIds.push(item);
         } else {
-          // If brand slug does not exist, return non-matching UUID for empty list
-          where.brand_id = '00000000-0000-0000-0000-000000000000';
+          const brand = await Brand.findOne({
+            where: {
+              [Op.or]: [
+                { slug: item },
+                { slug: item.toLowerCase() },
+                { name: { [Op.iLike]: item } }
+              ]
+            }
+          });
+          if (brand && !foundBrandIds.includes(brand.id)) {
+            foundBrandIds.push(brand.id);
+          }
         }
+      }
+
+      if (foundBrandIds.length > 0) {
+        where.brand_id = { [Op.in]: foundBrandIds };
+      } else {
+        where.brand_id = '00000000-0000-0000-0000-000000000000';
       }
     }
 
@@ -81,25 +99,57 @@ class SearchService {
       where.is_featured = true;
     }
 
-    // Spec Filters: AND between different categories, OR within same category
+    // Spec Filters: Hybrid querying over both relational columns and technical_specs JSONB field
 
-    // 1. Processor Family Filter (e.g. processor_family=I5,I7)
+    // 1. Processor Family Filter
     if (specs?.processor_family) {
       const procList = Array.isArray(specs.processor_family)
         ? specs.processor_family
         : String(specs.processor_family).split(',').map((s) => s.trim()).filter(Boolean);
+
+      const sequelize = require('../config/database');
+
       if (procList.length > 0) {
-        where.processor_family = { [Op.in]: procList };
+        const procConditions = procList.map((proc) => {
+          const escaped = sequelize.escape(`%${proc}%`);
+          return {
+            [Op.or]: [
+              { processor_family: proc },
+              sequelize.literal(`"Product"."technical_specs"->'specs_map'->>'PROCESADOR' ILIKE ${escaped}`),
+              sequelize.literal(`"Product"."technical_specs"->'specs_map'->>'PROCESADOR / CPU' ILIKE ${escaped}`)
+            ]
+          };
+        });
+
+        where[Op.and] = where[Op.and] || [];
+        where[Op.and].push({ [Op.or]: procConditions });
       }
     }
 
-    // 2. RAM GB Filter (e.g. ram_gb=8,16)
+    // 2. RAM GB Filter
     if (specs?.ram_gb) {
       const ramList = Array.isArray(specs.ram_gb)
-        ? specs.ram_gb.map(Number)
-        : String(specs.ram_gb).split(',').map((s) => Number(s.trim())).filter((n) => !isNaN(n));
+        ? specs.ram_gb
+        : String(specs.ram_gb).split(',').map((s) => s.trim()).filter(Boolean);
+
+      const sequelize = require('../config/database');
+
       if (ramList.length > 0) {
-        where.ram_gb = { [Op.in]: ramList };
+        const ramConditions = ramList.map((ramVal) => {
+          const num = Number(ramVal.replace(/[^0-9]/g, ''));
+          const escaped = sequelize.escape(`%${ramVal}%`);
+          const conds = [
+            sequelize.literal(`"Product"."technical_specs"->'specs_map'->>'MEMORIA RAM' ILIKE ${escaped}`),
+            sequelize.literal(`"Product"."technical_specs"->'specs_map'->>'RAM' ILIKE ${escaped}`)
+          ];
+          if (!isNaN(num) && num > 0) {
+            conds.push({ ram_gb: num });
+          }
+          return { [Op.or]: conds };
+        });
+
+        where[Op.and] = where[Op.and] || [];
+        where[Op.and].push({ [Op.or]: ramConditions });
       }
     }
 
@@ -109,15 +159,26 @@ class SearchService {
         ? specs.storage
         : String(specs.storage).split(',').map((s) => s.trim()).filter(Boolean);
 
+      const sequelize = require('../config/database');
+
       const storageConditions = storageList.map((item) => {
         const parts = item.split('_');
         const gb = Number(parts[0]);
         const type = parts[1] ? parts[1].toUpperCase() : null;
-        const cond = {};
-        if (!isNaN(gb)) cond.storage_gb = gb;
-        if (type) cond.storage_type = type;
-        return cond;
-      }).filter((c) => Object.keys(c).length > 0);
+
+        const conds = [];
+        if (!isNaN(gb)) {
+          const cond = { storage_gb: gb };
+          if (type) cond.storage_type = type;
+          conds.push(cond);
+        }
+
+        const escaped = sequelize.escape(`%${parts[0]}%`);
+        conds.push(sequelize.literal(`"Product"."technical_specs"->'specs_map'->>'ALMACENAMIENTO' ILIKE ${escaped}`));
+        conds.push(sequelize.literal(`"Product"."technical_specs"->'specs_map'->>'DISCO' ILIKE ${escaped}`));
+
+        return { [Op.or]: conds };
+      });
 
       if (storageConditions.length > 0) {
         where[Op.and] = where[Op.and] || [];
@@ -131,29 +192,61 @@ class SearchService {
         ? specs.screen_range
         : String(specs.screen_range).split(',').map((s) => s.trim()).filter(Boolean);
 
+      const sequelize = require('../config/database');
+
       const screenConditions = ranges.map((r) => {
+        const conds = [];
+
         if (r === 'lt13' || r === 'Menos de 13"') {
-          return { screen_size: { [Op.lt]: 13.0 } };
+          conds.push({ screen_size: { [Op.lt]: 13.0 } });
+        } else if (r === '13-13.9' || r === '13" - 13.9"') {
+          conds.push({ screen_size: { [Op.gte]: 13.0, [Op.lt]: 14.0 } });
+        } else if (r === '14-14.9' || r === '14" - 14.9"') {
+          conds.push({ screen_size: { [Op.gte]: 14.0, [Op.lt]: 15.0 } });
+        } else if (r === '15-15.9' || r === '15" - 15.9"') {
+          conds.push({ screen_size: { [Op.gte]: 15.0, [Op.lt]: 16.0 } });
+        } else if (r === 'gte16' || r === '16" o más') {
+          conds.push({ screen_size: { [Op.gte]: 16.0 } });
         }
-        if (r === '13-13.9' || r === '13" - 13.9"') {
-          return { screen_size: { [Op.gte]: 13.0, [Op.lt]: 14.0 } };
-        }
-        if (r === '14-14.9' || r === '14" - 14.9"') {
-          return { screen_size: { [Op.gte]: 14.0, [Op.lt]: 15.0 } };
-        }
-        if (r === '15-15.9' || r === '15" - 15.9"') {
-          return { screen_size: { [Op.gte]: 15.0, [Op.lt]: 16.0 } };
-        }
-        if (r === 'gte16' || r === '16" o más') {
-          return { screen_size: { [Op.gte]: 16.0 } };
-        }
-        return null;
-      }).filter(Boolean);
+
+        const escaped = sequelize.escape(`%${r}%`);
+        conds.push(sequelize.literal(`"Product"."technical_specs"->'specs_map'->>'TAMAÑO DE PANTALLA' ILIKE ${escaped}`));
+        conds.push(sequelize.literal(`"Product"."technical_specs"->'specs_map'->>'PANTALLA' ILIKE ${escaped}`));
+
+        return { [Op.or]: conds };
+      });
 
       if (screenConditions.length > 0) {
         where[Op.and] = where[Op.and] || [];
         where[Op.and].push({ [Op.or]: screenConditions });
       }
+    }
+
+    // 5. Dynamic JSONB Spec Filters from remaining query params
+    if (specs && typeof specs === 'object') {
+      const knownKeys = ['processor_family', 'ram_gb', 'storage', 'screen_range', 'page', 'limit', 'sort', 'search', 'category_id', 'brand_id', 'min_price', 'max_price', 'in_stock', 'is_featured', 'include_inactive', 'status'];
+      
+      const sequelize = require('../config/database');
+
+      Object.entries(specs).forEach(([k, v]) => {
+        if (knownKeys.includes(k) || !v) return;
+        const valList = Array.isArray(v)
+          ? v
+          : String(v).split(',').map((s) => s.trim()).filter(Boolean);
+
+        if (valList.length === 0) return;
+
+        const attrUpper = k.toUpperCase().replace(/_/g, ' ');
+        const jsonConditions = valList.map((val) => {
+          const escapedVal = sequelize.escape(`%${val}%`);
+          return sequelize.literal(`"Product"."technical_specs"->'specs_map'->>'${attrUpper}' ILIKE ${escapedVal}`);
+        });
+
+        if (jsonConditions.length > 0) {
+          where[Op.and] = where[Op.and] || [];
+          where[Op.and].push({ [Op.or]: jsonConditions });
+        }
+      });
     }
 
     return where;
