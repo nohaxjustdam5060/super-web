@@ -400,166 +400,241 @@ exports.getFilterOptions = async (req, res, next) => {
       count: parseInt(r.count, 10)
     }));
 
-    // 2. Contextual Processors
-    const procRows = await Product.findAll({
-      where: {
-        ...where,
-        processor_family: { [Op.ne]: null }
-      },
-      attributes: [
-        'processor_family',
-        [sequelize.fn('COUNT', sequelize.col('id')), 'count']
-      ],
-      group: ['processor_family'],
-      order: [['processor_family', 'ASC']],
-      raw: true
-    });
-    const processors = procRows.map((r) => ({
-      value: r.processor_family,
-      count: parseInt(r.count, 10)
-    }));
-
-    // 3. Contextual RAM
-    const ramRows = await Product.findAll({
-      where: {
-        ...where,
-        ram_gb: { [Op.ne]: null }
-      },
-      attributes: [
-        'ram_gb',
-        [sequelize.fn('COUNT', sequelize.col('id')), 'count']
-      ],
-      group: ['ram_gb'],
-      order: [['ram_gb', 'ASC']],
-      raw: true
-    });
-    const ramOptions = ramRows.map((r) => ({
-      value: r.ram_gb,
-      count: parseInt(r.count, 10)
-    }));
-
-    // 4. Contextual Storage
-    const storageRows = await Product.findAll({
-      where: {
-        ...where,
-        storage_gb: { [Op.ne]: null }
-      },
-      attributes: [
-        'storage_gb',
-        'storage_type',
-        [sequelize.fn('COUNT', sequelize.col('id')), 'count']
-      ],
-      group: ['storage_gb', 'storage_type'],
-      order: [['storage_gb', 'ASC'], ['storage_type', 'ASC']],
-      raw: true
-    });
-    const storageOptions = storageRows.map((r) => ({
-      storage_gb: r.storage_gb,
-      storage_type: r.storage_type,
-      count: parseInt(r.count, 10)
-    }));
-
-    // 5. Contextual Screen Size Ranges
-    const productsWithScreen = await Product.findAll({
-      where: {
-        ...where,
-        screen_size: { [Op.ne]: null }
-      },
-      attributes: ['screen_size'],
+    // 2. Fetch all matching products in scope to calculate consolidated facets in a single pass
+    const matchingProducts = await Product.findAll({
+      where,
+      attributes: ['id', 'name', 'processor_family', 'ram_gb', 'storage_gb', 'storage_type', 'screen_size', 'technical_specs'],
       raw: true
     });
 
-    const screenBuckets = {};
-    productsWithScreen.forEach((p) => {
-      const size = parseFloat(p.screen_size);
-      if (isNaN(size)) return;
-      let range = '16" o más';
-      if (size < 13) range = 'Menos de 13"';
-      else if (size >= 13 && size < 14) range = '13" - 13.9"';
-      else if (size >= 14 && size < 15) range = '14" - 14.9"';
-      else if (size >= 15 && size < 16) range = '15" - 15.9"';
-      screenBuckets[range] = (screenBuckets[range] || 0) + 1;
-    });
+    const procMap = {};
+    const ramMap = {};
+    const storageMap = {};
+    const screenMap = {};
+    const gpuMap = {};
+    const kbMap = {};
+    const osMap = {};
+    const colorMap = {};
+    const batteryMap = {};
+    const connMap = {};
 
-    const screenRangeOrder = ['Menos de 13"', '13" - 13.9"', '14" - 14.9"', '15" - 15.9"', '16" o más'];
-    const screenOptions = screenRangeOrder
-      .filter((r) => screenBuckets[r] > 0)
-      .map((r) => ({ range: r, count: screenBuckets[r] }));
+    matchingProducts.forEach((p) => {
+      const specs = p.technical_specs?.specs_map || {};
+      const name = p.name || '';
 
-    // 6. Dynamic Attributes from technical_specs JSONB field
-    const productsWithSpecs = await Product.findAll({
-      where: {
-        ...where,
-        technical_specs: { [Op.ne]: null }
-      },
-      attributes: ['technical_specs'],
-      raw: true
-    });
+      // 1. PROCESADORES (Familias base limpias)
+      const procRaw = (p.processor_family || '') + ' ' + (specs['PROCESADOR'] || specs['PROCESADOR / CPU'] || '') + ' ' + name;
+      let procGroup = null;
+      if (/core\s*ultra|ultra\s*[579]/i.test(procRaw)) procGroup = 'Intel Core Ultra';
+      else if (/ryzen\s*ai/i.test(procRaw)) procGroup = 'AMD Ryzen AI';
+      else if (/\b(core\s*i9|i9[- ]\d+|intel\s*i9)\b/i.test(procRaw) || p.processor_family === 'I9') procGroup = 'Intel Core i9';
+      else if (/\b(core\s*i7|i7[- ]\d+|intel\s*i7)\b/i.test(procRaw) || p.processor_family === 'I7') procGroup = 'Intel Core i7';
+      else if (/\b(core\s*i5|i5[- ]\d+|intel\s*i5)\b/i.test(procRaw) || p.processor_family === 'I5') procGroup = 'Intel Core i5';
+      else if (/\b(core\s*i3|i3[- ]\d+|intel\s*i3)\b/i.test(procRaw) || p.processor_family === 'I3') procGroup = 'Intel Core i3';
+      else if (/ryzen\s*9/i.test(procRaw)) procGroup = 'AMD Ryzen 9';
+      else if (/ryzen\s*7/i.test(procRaw)) procGroup = 'AMD Ryzen 7';
+      else if (/ryzen\s*5/i.test(procRaw)) procGroup = 'AMD Ryzen 5';
+      else if (/ryzen\s*3/i.test(procRaw)) procGroup = 'AMD Ryzen 3';
+      else if (/intel\s*core\s*9/i.test(procRaw)) procGroup = 'Intel Core i9';
+      else if (/intel\s*core\s*7/i.test(procRaw)) procGroup = 'Intel Core i7';
+      else if (/intel\s*core\s*5/i.test(procRaw)) procGroup = 'Intel Core i5';
+      else if (/intel\s*core\s*3/i.test(procRaw)) procGroup = 'Intel Core i3';
+      else if (/celeron|pentium|intel\s*n\d+|n150|n100/i.test(procRaw)) procGroup = 'Intel Celeron / N-Series';
 
-    const attributeCounts = {};
+      if (procGroup) procMap[procGroup] = (procMap[procGroup] || 0) + 1;
 
-    productsWithSpecs.forEach((p) => {
-      const specs = p.technical_specs;
-      if (!specs) return;
+      // 2. MEMORIA RAM (Solo capacidades totales)
+      let ramCap = null;
+      if (p.ram_gb) {
+        ramCap = `${p.ram_gb} GB`;
+      } else {
+        const ramRaw = (specs['RAM'] || specs['MEMORIA RAM'] || '') + ' ' + name;
+        const m = ramRaw.match(/\b(4|8|12|16|24|32|64|128)\s*GB\b/i);
+        if (m) ramCap = `${m[1]} GB`;
+      }
+      if (ramCap) ramMap[ramCap] = (ramMap[ramCap] || 0) + 1;
 
-      if (specs.specs_map && typeof specs.specs_map === 'object') {
-        Object.entries(specs.specs_map).forEach(([attrKey, attrVal]) => {
-          if (!attrKey || !attrVal) return;
-          const key = String(attrKey).trim().toUpperCase();
-          const val = String(attrVal).trim();
-          if (!key || !val) return;
+      // 3. ALMACENAMIENTO (Solo capacidades)
+      let storageCap = null;
+      if (p.storage_gb) {
+        storageCap = p.storage_gb >= 1024 ? `${p.storage_gb / 1024} TB` : `${p.storage_gb} GB`;
+      } else {
+        const storRaw = (specs['ALMACENAMIENTO'] || specs['DISCO'] || '') + ' ' + name;
+        if (/\b2\s*TB\b/i.test(storRaw)) storageCap = '2 TB';
+        else if (/\b1\s*TB\b/i.test(storRaw)) storageCap = '1 TB';
+        else if (/\b512\s*GB\b/i.test(storRaw) || /\b512\s*SSD\b/i.test(storRaw)) storageCap = '512 GB';
+        else if (/\b256\s*GB\b/i.test(storRaw)) storageCap = '256 GB';
+        else if (/\b128\s*GB\b/i.test(storRaw)) storageCap = '128 GB';
+        else if (/\b64\s*GB\b/i.test(storRaw)) storageCap = '64 GB';
+      }
+      if (storageCap) storageMap[storageCap] = (storageMap[storageCap] || 0) + 1;
 
-          if (!attributeCounts[key]) attributeCounts[key] = {};
-          attributeCounts[key][val] = (attributeCounts[key][val] || 0) + 1;
-        });
-      } else if (Array.isArray(specs.atributos)) {
-        specs.atributos.forEach((item) => {
-          if (!item || !item.nombre || !item.valor) return;
-          const key = String(item.nombre).trim().toUpperCase();
-          const val = String(item.valor).trim();
-          if (!key || !val) return;
+      // 4. PANTALLA (Solo diagonales limpias)
+      let screenSize = null;
+      let sizeNum = p.screen_size ? parseFloat(p.screen_size) : null;
+      if (!sizeNum) {
+        const scRaw = (specs['PANTALLA'] || specs['TAMAÑO DE PANTALLA'] || '') + ' ' + name;
+        const m = scRaw.match(/(\d+\.?\d*)\s*(?:"|pulgadas|pulg)/i);
+        if (m) sizeNum = parseFloat(m[1]);
+      }
+      if (sizeNum && sizeNum >= 10) {
+        if (Math.abs(sizeNum - 10.1) < 0.2) screenSize = '10.1"';
+        else if (Math.abs(sizeNum - 11.6) < 0.2) screenSize = '11.6"';
+        else if (Math.abs(sizeNum - 13.3) < 0.3) screenSize = '13.3"';
+        else if (Math.abs(sizeNum - 14.0) < 0.3) screenSize = '14"';
+        else if (Math.abs(sizeNum - 15.6) < 0.3) screenSize = '15.6"';
+        else if (Math.abs(sizeNum - 16.0) < 0.3) screenSize = '16"';
+        else if (Math.abs(sizeNum - 17.3) < 0.3) screenSize = '17.3"';
+        else if (sizeNum >= 23 && sizeNum <= 25) screenSize = '24"';
+        else if (sizeNum >= 26 && sizeNum <= 28) screenSize = '27"';
+        else if (sizeNum >= 31 && sizeNum <= 34) screenSize = '32"';
+      }
+      if (screenSize) screenMap[screenSize] = (screenMap[screenSize] || 0) + 1;
 
-          if (!attributeCounts[key]) attributeCounts[key] = {};
-          attributeCounts[key][val] = (attributeCounts[key][val] || 0) + 1;
-        });
+      // 5. TECLADOS (Solo tipos clave: Latinoamericano/Español, Retroiluminado, Inglés/US)
+      const kbRaw = (specs['TECLADO'] || specs['DISTRIBUCION TECLADO'] || '').toUpperCase();
+      if (kbRaw) {
+        if (/LATINO|ESPAÑOL|ESP\b|LATAM/i.test(kbRaw)) kbMap['Latinoamericano / Español'] = (kbMap['Latinoamericano / Español'] || 0) + 1;
+        if (/INGLES|AMERICANO|ENGLISH|\bUS\b/i.test(kbRaw)) kbMap['Inglés / US'] = (kbMap['Inglés / US'] || 0) + 1;
+        if (/RETROILUMINADO|BACKLIT|\bRGB\b/i.test(kbRaw)) kbMap['Retroiluminado'] = (kbMap['Retroiluminado'] || 0) + 1;
+      }
+
+      // 6. TARJETA GRAFICA (Solo chipsets/series base)
+      const gpuRaw = ((specs['TARJETA GRAFICA'] || specs['TARJETA DE VIDEO'] || specs['GPU'] || '') + ' ' + name).toUpperCase();
+      if (gpuRaw.trim()) {
+        let gpuGroup = null;
+        if (/RTX\s*5090/i.test(gpuRaw)) gpuGroup = 'NVIDIA RTX 5090';
+        else if (/RTX\s*5080/i.test(gpuRaw)) gpuGroup = 'NVIDIA RTX 5080';
+        else if (/RTX\s*5070/i.test(gpuRaw)) gpuGroup = 'NVIDIA RTX 5070';
+        else if (/RTX\s*5060/i.test(gpuRaw)) gpuGroup = 'NVIDIA RTX 5060';
+        else if (/RTX\s*5050/i.test(gpuRaw)) gpuGroup = 'NVIDIA RTX 5050';
+        else if (/RTX\s*4090/i.test(gpuRaw)) gpuGroup = 'NVIDIA RTX 4090';
+        else if (/RTX\s*4080/i.test(gpuRaw)) gpuGroup = 'NVIDIA RTX 4080';
+        else if (/RTX\s*4070/i.test(gpuRaw)) gpuGroup = 'NVIDIA RTX 4070';
+        else if (/RTX\s*4060/i.test(gpuRaw)) gpuGroup = 'NVIDIA RTX 4060';
+        else if (/RTX\s*4050/i.test(gpuRaw)) gpuGroup = 'NVIDIA RTX 4050';
+        else if (/RTX\s*3080/i.test(gpuRaw)) gpuGroup = 'NVIDIA RTX 3080';
+        else if (/RTX\s*3070/i.test(gpuRaw)) gpuGroup = 'NVIDIA RTX 3070';
+        else if (/RTX\s*3060/i.test(gpuRaw)) gpuGroup = 'NVIDIA RTX 3060';
+        else if (/RTX\s*3050/i.test(gpuRaw)) gpuGroup = 'NVIDIA RTX 3050';
+        else if (/RTX\s*2050/i.test(gpuRaw)) gpuGroup = 'NVIDIA RTX 2050';
+        else if (/RTX\s*(ADA|A\d{3,4}|QUADRO)/i.test(gpuRaw)) gpuGroup = 'NVIDIA RTX ADA / Quadro';
+        else if (/IRIS\s*XE/i.test(gpuRaw)) gpuGroup = 'Intel Iris Xe';
+        else if (/ARC\b/i.test(gpuRaw)) gpuGroup = 'Intel Arc';
+        else if (/INTEL\s*(UHD|HD|GRAPHICS)/i.test(gpuRaw)) gpuGroup = 'Intel UHD / HD Graphics';
+        else if (/RADEON/i.test(gpuRaw)) gpuGroup = 'AMD Radeon Graphics';
+
+        if (gpuGroup) gpuMap[gpuGroup] = (gpuMap[gpuGroup] || 0) + 1;
+      }
+
+      // 7. SISTEMA OPERATIVO
+      const osRaw = (specs['SISTEMA OPERATIVO'] || '').toUpperCase();
+      if (osRaw) {
+        let osGroup = null;
+        if (/WINDOWS\s*11\s*PRO/i.test(osRaw)) osGroup = 'Windows 11 Pro';
+        else if (/WINDOWS\s*11\s*HOME/i.test(osRaw)) osGroup = 'Windows 11 Home';
+        else if (/WINDOWS\s*10/i.test(osRaw)) osGroup = 'Windows 10 Pro';
+        else if (/FREE\s*DOS|SIN\s*SISTEMA/i.test(osRaw)) osGroup = 'FreeDOS / Sin Sistema Operativo';
+        else if (/ANDROID/i.test(osRaw)) osGroup = 'Android';
+        if (osGroup) osMap[osGroup] = (osMap[osGroup] || 0) + 1;
+      }
+
+      // 8. COLOR
+      const colorRaw = (specs['COLOR'] || '').toUpperCase();
+      if (colorRaw) {
+        let colorGroup = null;
+        if (/NEGRO|BLACK/i.test(colorRaw)) colorGroup = 'Negro';
+        else if (/GRIS|GREY|SILVER|PLATA|MECHA|GRAPHITE/i.test(colorRaw)) colorGroup = 'Gris / Plateado';
+        else if (/BLANCO|WHITE/i.test(colorRaw)) colorGroup = 'Blanco';
+        else if (/AZUL|BLUE/i.test(colorRaw)) colorGroup = 'Azul';
+        if (colorGroup) colorMap[colorGroup] = (colorMap[colorGroup] || 0) + 1;
+      }
+
+      // 9. BATERIA
+      const batRaw = (specs['BATERIA'] || specs['BATERÍA'] || '').toUpperCase();
+      if (batRaw) {
+        if (/4\s*(CELL|CELDA)/i.test(batRaw) || /7\d\s*WH|8\d\s*WH|9\d\s*WH/i.test(batRaw)) batteryMap['4 Celdas'] = (batteryMap['4 Celdas'] || 0) + 1;
+        else if (/3\s*(CELL|CELDA)/i.test(batRaw) || /4\d\s*WH|5\d\s*WH/i.test(batRaw)) batteryMap['3 Celdas'] = (batteryMap['3 Celdas'] || 0) + 1;
+      }
+
+      // 10. CONECTIVIDAD
+      const connRaw = (specs['CONECTIVIDAD'] || specs['REDES'] || '').toUpperCase();
+      if (connRaw) {
+        if (/WIFI\s*6E?/i.test(connRaw) || /AX/i.test(connRaw)) connMap['Wi-Fi 6 / 6E'] = (connMap['Wi-Fi 6 / 6E'] || 0) + 1;
+        if (/WIFI\s*5|AC\b/i.test(connRaw)) connMap['Wi-Fi 5 (AC)'] = (connMap['Wi-Fi 5 (AC)'] || 0) + 1;
+        if (/BLUETOOTH|\bBT\b/i.test(connRaw)) connMap['Bluetooth'] = (connMap['Bluetooth'] || 0) + 1;
+        if (/RJ45|GIGABIT|ETHERNET/i.test(connRaw)) connMap['Ethernet (RJ45)'] = (connMap['Ethernet (RJ45)'] || 0) + 1;
       }
     });
 
-    const attributeOptions = {};
-    Object.keys(attributeCounts).sort().forEach((attrKey) => {
-      attributeOptions[attrKey] = Object.entries(attributeCounts[attrKey])
-        .map(([val, count]) => ({ value: val, count }))
-        .sort((a, b) => b.count - a.count);
-    });
+    // Formatting & Ordering Helpers
+    const procPriority = [
+      'Intel Core i3', 'Intel Core i5', 'Intel Core i7', 'Intel Core i9', 'Intel Core Ultra',
+      'AMD Ryzen 3', 'AMD Ryzen 5', 'AMD Ryzen 7', 'AMD Ryzen 9', 'AMD Ryzen AI',
+      'Intel Celeron / N-Series'
+    ];
+    const processors = Object.keys(procMap)
+      .sort((a, b) => {
+        const idxA = procPriority.indexOf(a);
+        const idxB = procPriority.indexOf(b);
+        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+        if (idxA !== -1) return -1;
+        if (idxB !== -1) return 1;
+        return a.localeCompare(b);
+      })
+      .map((val) => ({ value: val, count: procMap[val] }));
 
-    // Consolidated Fallback: If relational column arrays are empty, populate from JSONB attributeOptions
-    let finalProcessors = processors;
-    if (!finalProcessors || finalProcessors.length === 0) {
-      const jsonProc = attributeOptions['PROCESADOR'] || attributeOptions['PROCESADOR / CPU'] || [];
-      finalProcessors = jsonProc.map((item) => ({ value: item.value, count: item.count }));
-    }
+    const ramOptions = Object.keys(ramMap)
+      .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
+      .map((val) => ({ value: val, count: ramMap[val] }));
 
-    let finalRamOptions = ramOptions;
-    if (!finalRamOptions || finalRamOptions.length === 0) {
-      const jsonRam = attributeOptions['MEMORIA RAM'] || attributeOptions['RAM'] || [];
-      finalRamOptions = jsonRam.map((item) => ({ value: item.value, count: item.count }));
-    }
+    const storageWeight = (s) => (s.includes('TB') ? parseInt(s, 10) * 1024 : parseInt(s, 10));
+    const storageOptions = Object.keys(storageMap)
+      .sort((a, b) => storageWeight(a) - storageWeight(b))
+      .map((val) => ({ value: val, count: storageMap[val] }));
 
-    let finalScreenOptions = screenOptions;
-    if (!finalScreenOptions || finalScreenOptions.length === 0) {
-      const jsonScreen = attributeOptions['TAMAÑO DE PANTALLA'] || attributeOptions['PANTALLA'] || attributeOptions['PANTALLA (PULGADAS)'] || [];
-      finalScreenOptions = jsonScreen.map((item) => ({ range: item.value, count: item.count }));
-    }
+    const screenOptions = Object.keys(screenMap)
+      .sort((a, b) => parseFloat(a) - parseFloat(b))
+      .map((val) => ({ range: val, count: screenMap[val] }));
+
+    const keyboardOptions = ['Latinoamericano / Español', 'Retroiluminado', 'Inglés / US']
+      .filter((k) => kbMap[k] > 0)
+      .map((k) => ({ value: k, count: kbMap[k] }));
+
+    const gpuOptions = Object.keys(gpuMap)
+      .sort((a, b) => gpuMap[b] - gpuMap[a])
+      .map((val) => ({ value: val, count: gpuMap[val] }));
+
+    const osOptions = ['Windows 11 Home', 'Windows 11 Pro', 'Windows 10 Pro', 'FreeDOS / Sin Sistema Operativo', 'Android']
+      .filter((k) => osMap[k] > 0)
+      .map((k) => ({ value: k, count: osMap[k] }));
+
+    const colorOptions = ['Negro', 'Gris / Plateado', 'Blanco', 'Azul']
+      .filter((k) => colorMap[k] > 0)
+      .map((k) => ({ value: k, count: colorMap[k] }));
+
+    const batteryOptions = ['3 Celdas', '4 Celdas']
+      .filter((k) => batteryMap[k] > 0)
+      .map((k) => ({ value: k, count: batteryMap[k] }));
+
+    const connectivityOptions = ['Wi-Fi 6 / 6E', 'Wi-Fi 5 (AC)', 'Ethernet (RJ45)', 'Bluetooth']
+      .filter((k) => connMap[k] > 0)
+      .map((k) => ({ value: k, count: connMap[k] }));
 
     return res.json({
       success: true,
       filters: {
-        processors: finalProcessors,
-        ramOptions: finalRamOptions,
-        storageOptions,
-        screenOptions: finalScreenOptions,
         brandOptions,
-        attributeOptions
+        processors,
+        ramOptions,
+        storageOptions,
+        screenOptions,
+        keyboardOptions,
+        gpuOptions,
+        osOptions,
+        colorOptions,
+        batteryOptions,
+        connectivityOptions
       }
     });
   } catch (error) {

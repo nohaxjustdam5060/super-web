@@ -38,7 +38,7 @@ export default function Login() {
             <LogIn className="w-6 h-6" />
           </div>
           <h2 className="text-2xl font-black text-gray-900">Iniciar Sesión</h2>
-          <p className="text-xs text-gray-500">Accede a tus pedidos, direcciones y lista de deseos en SUPER Tech</p>
+          <p className="text-xs text-gray-500">Accede a tus pedidos, direcciones y lista de deseos en SUPERLAPTOP</p>
         </div>
 
         {errorMsg && (

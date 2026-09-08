@@ -481,7 +481,7 @@ export default function AdminProducts() {
                     />
                     <div>
                       <span className="font-bold text-gray-900 line-clamp-1 max-w-xs">{p.name}</span>
-                      <span className="text-[10px] text-gray-400 block">{p.brand?.name || 'SUPER Tech'}</span>
+                      <span className="text-[10px] text-gray-400 block">{p.brand?.name || 'SUPERLAPTOP'}</span>
                     </div>
                   </td>
                   <td className="p-4 font-mono text-gray-500 whitespace-nowrap">{p.sku}</td>

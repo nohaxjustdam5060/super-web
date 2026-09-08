@@ -117,7 +117,7 @@ export default function Checkout() {
               Inicia sesión para continuar con tu compra
             </h2>
             <p className="text-sm text-gray-600 max-w-md mx-auto leading-relaxed">
-              Para asegurar tu pedido, emitir tu comprobante (Boleta o Factura) y poder realizar el seguimiento de tu envío en <strong>SUPER Tech</strong>, necesitas contar con una cuenta activa.
+              Para asegurar tu pedido, emitir tu comprobante (Boleta o Factura) y poder realizar el seguimiento de tu envío en <strong>SUPERLAPTOP</strong>, necesitas contar con una cuenta activa.
             </p>
           </div>
 
@@ -146,10 +146,11 @@ export default function Checkout() {
   }
 
   const applyCoupon = () => {
-    if (couponCode.toUpperCase() === 'SUPERTECH10') {
+    const upper = couponCode.trim().toUpperCase();
+    if (upper === 'SUPERLAPTOP10' || upper === 'SUPERTECH10') {
       const disc = (subtotal * 10) / 100;
       setDiscountAmount(disc);
-      alert('¡Cupon SUPERTECH10 aplicado! 10% de descuento.');
+      alert(`¡Cupón ${upper} aplicado! 10% de descuento.`);
     } else {
       alert('Cupón no válido');
     }
@@ -228,7 +229,7 @@ export default function Checkout() {
   };
 
   const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '51978529826';
-  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Hola SUPER Tech, adjunto mi comprobante de transferencia para el pedido #${createdOrder?.order_number || ''}`)}`;
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Hola SUPERLAPTOP, adjunto mi comprobante de transferencia para el pedido #${createdOrder?.order_number || ''}`)}`;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
@@ -303,7 +304,7 @@ export default function Checkout() {
               </div>
             </div>
             <p className="text-[11px] text-gray-500 font-semibold pt-1">
-              Titular de la cuenta: <strong>SUPER TECH E-COMMERCE S.A.C.</strong> | Monto exacto: <strong className="text-brand-red font-black">S/ {Number(createdOrder?.total || total).toFixed(2)}</strong>
+              Titular de la cuenta: <strong>SUPERLAPTOP E-COMMERCE S.A.C.</strong> | Monto exacto: <strong className="text-brand-red font-black">S/ {Number(createdOrder?.total || total).toFixed(2)}</strong>
             </p>
           </div>
 
@@ -629,7 +630,7 @@ export default function Checkout() {
                   <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-4">
                     <div className="flex items-center space-x-2 text-brand-red">
                       <Building2 className="w-5 h-5" />
-                      <h4 className="font-black text-sm">Cuentas Bancarias Oficiales de SUPER Tech</h4>
+                      <h4 className="font-black text-sm">Cuentas Bancarias Oficiales de SUPERLAPTOP</h4>
                     </div>
 
                     <p className="text-xs text-gray-600">
@@ -700,7 +701,7 @@ export default function Checkout() {
             <div className="pt-3 border-t border-gray-100 flex space-x-2">
               <input
                 type="text"
-                placeholder="Código de cupón (ej: SUPERTECH10)"
+                placeholder="Código de cupón (ej: SUPERLAPTOP10)"
                 value={couponCode}
                 onChange={(e) => setCouponCode(e.target.value)}
                 className="flex-1 bg-gray-50 border border-gray-300 rounded-xl px-3 py-1.5 text-xs font-semibold"

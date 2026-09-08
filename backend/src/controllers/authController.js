@@ -183,11 +183,11 @@ exports.changePassword = async (req, res, next) => {
     // Security alert email via Resend
     await emailService.sendEmail({
       to: user.email,
-      subject: 'Notificación de Cambio de Contraseña - SUPER Tech Store',
+      subject: 'Notificación de Cambio de Contraseña - SUPERLAPTOP Store',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
           <div style="background-color: #0F172A; color: white; padding: 15px; text-align: center; border-radius: 6px;">
-            <h2 style="color: #EF4444; margin: 0;">SUPER TECH STORE</h2>
+            <h2 style="color: #EF4444; margin: 0;">SUPERLAPTOP STORE</h2>
           </div>
           <div style="padding: 20px 0;">
             <h3 style="color: #1F2937;">Cambio de Contraseña Confirmado</h3>
@@ -267,10 +267,10 @@ exports.resetPassword = async (req, res, next) => {
 
     await emailService.sendEmail({
       to: user.email,
-      subject: 'Contraseña Restablecida Con Éxito - SUPER Tech Store',
+      subject: 'Contraseña Restablecida Con Éxito - SUPERLAPTOP Store',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
-          <h2 style="color: #DC2626;">SUPER TECH STORE</h2>
+          <h2 style="color: #DC2626;">SUPERLAPTOP STORE</h2>
           <h3>Tu contraseña ha sido restablecida</h3>
           <p>Te confirmamos que la contraseña de tu cuenta ha sido actualizada exitosamente.</p>
           <p style="font-size: 12px; color: #6b7280;">Si no solicitaste este cambio, por favor contáctanos de inmediato.</p>

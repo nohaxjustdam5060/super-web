@@ -109,7 +109,7 @@ export default function ProductDetail() {
     if (product.brand?.name) specs.push({ key: 'Marca', val: product.brand.name, icon: Layers, highlight: false });
     if (product.sku) specs.push({ key: 'SKU / Código', val: product.sku, icon: Layers, highlight: false });
     if (product.category?.name) specs.push({ key: 'Categoría', val: product.category.name, icon: Layers, highlight: false });
-    specs.push({ key: 'Garantía Directa', val: '1 Año Oficial SUPER Tech', icon: ShieldCheck, highlight: false });
+    specs.push({ key: 'Garantía Directa', val: '1 Año Oficial SUPERLAPTOP', icon: ShieldCheck, highlight: false });
     specs.push({ key: 'Estado del Producto', val: 'Nuevo / 100% Original Sellado', icon: CheckCircle, highlight: false });
 
     // Parse and expand ALL attributes from technical_specs (specs_map, atributos array, or plain object)
@@ -302,7 +302,7 @@ export default function ProductDetail() {
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                 <span className="text-xs font-bold text-brand-blue uppercase bg-brand-blue-light px-3 py-1 rounded-md border border-brand-blue/20">
-                  {product.brand?.name || 'SUPER Tech'}
+                  {product.brand?.name || 'SUPERLAPTOP'}
                 </span>
 
                 {/* DYNAMIC STOCK BADGE */}
@@ -375,7 +375,7 @@ export default function ProductDetail() {
 
             {/* Product Summary */}
             <p className="text-xs sm:text-sm text-gray-600 leading-relaxed pt-1">
-              {product.description || 'Producto tecnológico de alto rendimiento garantizado por SUPER Tech. Cuenta con garantía directa de fábrica y despacho rápido a todo el país.'}
+              {product.description || 'Producto tecnológico de alto rendimiento garantizado por SUPERLAPTOP. Cuenta con garantía directa de fábrica y despacho rápido a todo el país.'}
             </p>
           </div>
 
@@ -453,7 +453,7 @@ export default function ProductDetail() {
               </div>
               <div className="flex items-center space-x-2 text-gray-600 bg-gray-50 p-2 sm:p-2.5 rounded-md border border-gray-100 min-w-0">
                 <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 flex-shrink-0" />
-                <span className="break-words leading-tight">Garantía Oficial SUPER Tech</span>
+                <span className="break-words leading-tight">Garantía Oficial SUPERLAPTOP</span>
               </div>
             </div>
           </div>

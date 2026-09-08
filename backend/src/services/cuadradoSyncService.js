@@ -29,7 +29,7 @@ class CuadradoSyncService {
         const dataString = await new Promise((resolve, reject) => {
           const req = https.get(CUADRADO_JSON_URL, {
             agent: httpsAgent,
-            headers: { 'User-Agent': 'SuperTech-CatalogSync/1.0' }
+            headers: { 'User-Agent': 'SUPERLAPTOP-CatalogSync/1.0' }
           }, (res) => {
             if (res.statusCode < 200 || res.statusCode >= 300) {
               return reject(new Error(`HTTP Error ${res.statusCode}: ${res.statusMessage}`));

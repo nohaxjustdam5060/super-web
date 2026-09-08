@@ -200,7 +200,7 @@ export default function Navbar() {
             SUPER
           </div>
           <span className="text-base sm:text-xl font-black tracking-tight text-brand-blue">
-            TECH<span className="text-brand-red">.</span>
+            LAPTOP<span className="text-brand-red">.</span>
           </span>
         </Link>
 
@@ -261,7 +261,7 @@ export default function Navbar() {
                           </h4>
                           <div className="flex items-center space-x-2 mt-0.5">
                             <span className="text-[10px] text-gray-400 font-medium truncate">
-                              {prod.brand?.name || prod.category?.name || 'Super Tech'}
+                              {prod.brand?.name || prod.category?.name || 'SUPERLAPTOP'}
                             </span>
                             {prod.sku && (
                               <span className="text-[9px] text-gray-500 font-mono">

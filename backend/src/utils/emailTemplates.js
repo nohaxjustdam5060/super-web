@@ -1,5 +1,5 @@
 /**
- * Email Templates for SUPER Tech Store
+ * Email Templates for SUPERLAPTOP Store
  * Uses inline styles for maximum cross-client email compatibility (Gmail, Outlook, Yahoo, Apple Mail).
  */
 
@@ -50,7 +50,7 @@ function generateOrderConfirmationHTML(order) {
         <!-- Header -->
         <div style="background-color: #0F172A; padding: 25px 30px; text-align: center; border-bottom: 4px solid #DC2626;">
           <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 900; letter-spacing: -0.5px;">
-            SUPER <span style="color: #EF4444;">TECH</span>
+            SUPER <span style="color: #EF4444;">LAPTOP</span>
           </h1>
           <p style="color: #94a3b8; margin: 5px 0 0 0; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">
             Confirmación de Compra
@@ -144,14 +144,14 @@ function generateOrderConfirmationHTML(order) {
           <div style="text-align: center; padding-top: 10px;">
             <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/profile" 
                style="background-color: #1E3A8A; color: #ffffff; padding: 14px 28px; border-radius: 10px; font-weight: bold; text-decoration: none; display: inline-block; font-size: 14px; box-shadow: 0 4px 6px -1px rgba(30, 58, 138, 0.3);">
-              Ver Estado de mi Pedido en SUPER Tech
+              Ver Estado de mi Pedido en SUPERLAPTOP
             </a>
           </div>
         </div>
 
         <!-- Footer -->
         <div style="background-color: #f1f5f9; padding: 20px 30px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0;">
-          <p style="margin: 0 0 5px 0;">SUPER Tech Store • Hardware & Tecnologías de Alto Rendimiento</p>
+          <p style="margin: 0 0 5px 0;">SUPERLAPTOP Store • Hardware & Tecnologías de Alto Rendimiento</p>
           <p style="margin: 0;">Jr. Velarde 172, Lima • Atencion: Lunes a Sábado 9:00 a 19:00</p>
         </div>
       </div>

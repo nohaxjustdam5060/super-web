@@ -46,7 +46,7 @@ export default function Footer() {
               SUPER
             </div>
             <span className="text-lg font-extrabold text-white">
-              TECH<span className="text-brand-red">.</span>
+              LAPTOP<span className="text-brand-red">.</span>
             </span>
           </div>
           <p className="text-sm text-gray-400 leading-relaxed mb-4">
@@ -55,7 +55,7 @@ export default function Footer() {
           <div className="space-y-2 text-sm text-gray-400">
             <p className="flex items-center"><MapPin className="w-4 h-4 mr-2 text-brand-red-accent flex-shrink-0" /> Av. Javier Prado Este 1234, Lima</p>
             <p className="flex items-center"><Phone className="w-4 h-4 mr-2 text-brand-red-accent flex-shrink-0" /> +51 933 347 488</p>
-            <p className="flex items-center"><Mail className="w-4 h-4 mr-2 text-brand-red-accent flex-shrink-0" /> ventas@supertech.com</p>
+            <p className="flex items-center"><Mail className="w-4 h-4 mr-2 text-brand-red-accent flex-shrink-0" /> ventas@superlaptop.pe</p>
           </div>
         </div>
 
@@ -111,7 +111,7 @@ export default function Footer() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 pt-6 border-t border-gray-800 text-center text-xs text-gray-500">
-        © {new Date().getFullYear()} SUPER Tech E-commerce. Todos los derechos reservados. Diseñado para alto rendimiento y producción.
+        © {new Date().getFullYear()} SUPERLAPTOP. Todos los derechos reservados. Diseñado para alto rendimiento y producción.
       </div>
     </footer>
   );

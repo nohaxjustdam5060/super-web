@@ -27,7 +27,7 @@ app.use('/api', apiLimiter);
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'online',
-    service: 'SUPER Tech E-commerce API',
+    service: 'SUPERLAPTOP E-commerce API',
     environment: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString()
   });

@@ -34,7 +34,7 @@ export default function Register() {
           <div className="inline-flex bg-brand-blue text-white p-3 rounded-2xl shadow-md mb-2">
             <UserPlus className="w-6 h-6" />
           </div>
-          <h2 className="text-2xl font-black text-gray-900">Crear Cuenta SUPER</h2>
+          <h2 className="text-2xl font-black text-gray-900">Crear Cuenta SUPERLAPTOP</h2>
           <p className="text-xs text-gray-500">Únete a la plataforma tecnológica líder</p>
         </div>
 

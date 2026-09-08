@@ -55,7 +55,7 @@ class PaymentService {
           pending: 'https://www.youtube.com'
         },
         notification_url: `${backendUrl}/api/payments/webhook`,
-        statement_descriptor: 'SUPER TECH'
+        statement_descriptor: 'SUPERLAPTOP'
       };
 
       console.log('👉 [LOG PASO 1 - MERCPAGO CREATE PREFERENCE PAYLOAD]:', {

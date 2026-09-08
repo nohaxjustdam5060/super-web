@@ -57,7 +57,7 @@ export default function ProductCard({ product }) {
       <div className="p-5 flex-1 flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between text-xs text-gray-500 mb-1.5">
-            <span className="font-semibold text-brand-blue uppercase">{product.brand?.name || 'SUPER Tech'}</span>
+            <span className="font-semibold text-brand-blue uppercase">{product.brand?.name || 'SUPERLAPTOP'}</span>
             <span className="text-gray-400">SKU: {product.sku}</span>
           </div>
 

@@ -1,11 +1,11 @@
 export const WHATSAPP_NUMBER = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_WHATSAPP_NUMBER) || '51978529826';
-export const STORE_NAME = 'SUPER Tech';
+export const STORE_NAME = 'SUPERLAPTOP';
 
 /**
  * Helper to format WhatsApp purchase message and construct direct wa.me link.
  * 
  * Format:
- * Hola. Me gustaria hacer este pedido en SUPER Tech:
+ * Hola. Me gustaria hacer este pedido en SUPERLAPTOP:
  * • {cantidad} x {nombre_producto} ({sku}) — S/. {precio_total_del_item}
  * • {cantidad} x {nombre_producto} ({sku}) — S/. {precio_total_del_item}
  * 

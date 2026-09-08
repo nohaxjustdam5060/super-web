@@ -233,18 +233,18 @@ exports.processBankTransferPayment = async (req, res, next) => {
     try {
       await emailService.sendEmail({
         to: req.user.email,
-        subject: `[SUPER Tech] Reserva de Pedido #${order.order_number} - Instrucciones de Transferencia Bancaria`,
+        subject: `[SUPERLAPTOP] Reserva de Pedido #${order.order_number} - Instrucciones de Transferencia Bancaria`,
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; background: #ffffff;">
             <h2 style="color: #dc2626;">¡Tu pedido #${order.order_number} ha sido reservado!</h2>
-            <p>Gracias por tu compra en <strong>SUPER Tech</strong>. Tu pedido estará reservado durante <strong>24 horas</strong> mientras se verifica la transferencia bancaria.</p>
+            <p>Gracias por tu compra en <strong>SUPERLAPTOP</strong>. Tu pedido estará reservado durante <strong>24 horas</strong> mientras se verifica la transferencia bancaria.</p>
 
             <h3 style="color: #1e3a8a;">Datos Bancarios para Transferir:</h3>
             <ul>
               <li><strong>BCP Soles:</strong> 191-98765432-0-89 (CCI: 002-191-0098765432089-54)</li>
               <li><strong>Interbank Soles:</strong> 200-3001234567 (CCI: 003-200-003001234567-88)</li>
               <li><strong>BBVA Soles:</strong> 0011-0123-0200987654 (CCI: 011-123-000200987654-12)</li>
-              <li><strong>Titular:</strong> SUPER TECH E-COMMERCE S.A.C.</li>
+              <li><strong>Titular:</strong> SUPERLAPTOP E-COMMERCE S.A.C.</li>
             </ul>
 
             <p style="background: #f8fafc; padding: 12px; border-radius: 8px; font-weight: bold; border-left: 4px solid #dc2626;">
@@ -274,7 +274,9 @@ exports.getOrders = async (req, res, next) => {
     const orders = await Order.findAll({
       where: {
         user_id: req.user.id,
-        status: { [Op.ne]: 'pending' } // Exclude un-paid pending orders from user history
+        status: {
+          [Op.notIn]: ['pending', 'cancelled']
+        }
       },
       order: [['createdAt', 'DESC']],
       include: [{ model: OrderItem, as: 'items' }]
@@ -355,7 +357,7 @@ exports.verifyBankTransfer = async (req, res, next) => {
 
     const emailPromise = emailService.sendEmail({
       to: order.user?.email || req.user.email,
-      subject: `[SUPER Tech] Pago Verificado - Confirmación de Pedido #${order.order_number}`,
+      subject: `[SUPERLAPTOP] Pago Verificado - Confirmación de Pedido #${order.order_number}`,
       html
     }).catch((emailErr) => console.error('[VerifyPaymentEmailError]', emailErr));
 

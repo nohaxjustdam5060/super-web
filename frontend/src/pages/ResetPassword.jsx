@@ -72,7 +72,7 @@ export default function ResetPassword() {
             <Lock className="w-7 h-7" />
           </div>
           <h2 className="text-2xl font-black text-gray-900">Restablecer Contraseña</h2>
-          <p className="text-xs text-gray-500">Ingresa tu nueva contraseña para tu cuenta de SUPER Tech</p>
+          <p className="text-xs text-gray-500">Ingresa tu nueva contraseña para tu cuenta de SUPERLAPTOP</p>
         </div>
 
         {errorMsg && (
