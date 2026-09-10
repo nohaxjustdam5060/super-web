@@ -1,10 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, CreditCard, Truck, CheckCircle2, ArrowRight, ArrowLeft, Building2, FileText, Check, Copy, Clock, MessageSquare, MapPin, Store } from 'lucide-react';
+import { ShieldCheck, CreditCard, Truck, CheckCircle2, ArrowRight, ArrowLeft, Building2, FileText, Check, Copy, Clock, MessageSquare, MapPin, Store, AlertCircle, Info } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
 import CheckoutButton from '../components/CheckoutButton';
 import axiosClient from '../api/axiosClient';
+
+// Helper: Anti-fraud filter for fake or obvious sequential documents
+function isFakeOrSequentialDocument(doc) {
+  const clean = String(doc || '').trim();
+  if (!clean) return false;
+  // All digits repeated (e.g., 00000000, 11111111, 99999999999)
+  if (/^(\w)\1+$/.test(clean)) return true;
+  // Obvious ascending or descending sequences
+  const fakes = [
+    '12345678', '87654321', '01234567', '76543210',
+    '12345678901', '10123456789', '20123456789', '11111111111', '00000000000'
+  ];
+  return fakes.includes(clean);
+}
+
+// Helper: Validate minimum Peruvian phone length
+function isValidPhone(phone) {
+  const digits = String(phone || '').replace(/\D/g, '');
+  return digits.length >= 9;
+}
+
+// Helper: Auto-detect Peruvian document type (DNI vs Carné de Extranjería)
+function detectDocumentType(doc) {
+  const clean = String(doc || '').trim();
+  if (!clean) return 'DNI';
+  // Exactly 8 numeric digits -> DNI
+  if (/^\d{8}$/.test(clean)) return 'DNI';
+  // If contains letters, or length is greater than 8 chars (up to 12 alphanumeric) -> CE
+  if (/[a-zA-Z]/.test(clean) || clean.length > 8) return 'CE';
+  return 'DNI';
+}
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -18,6 +49,9 @@ export default function Checkout() {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [isBankTransferConfirmed, setIsBankTransferConfirmed] = useState(false);
 
+  // Terms and conditions acceptance
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+
   // Address Form - Persisted in localStorage & pre-filled from user profile
   const [shippingAddress, setShippingAddress] = useState(() => {
     try {
@@ -28,6 +62,7 @@ export default function Checkout() {
     }
     return {
       recipient_name: user?.name || '',
+      recipient_document: '', // DNI o Carné de Extranjería
       phone: user?.phone || '',
       address_line1: '',
       department: 'Lima',
@@ -46,13 +81,31 @@ export default function Checkout() {
   // Invoice / Receipt State (Boleta / Factura)
   const [invoiceInfo, setInvoiceInfo] = useState({
     invoice_type: 'boleta', // 'boleta' or 'factura'
-    document_type: 'DNI',   // 'DNI' or 'RUC'
+    document_type: 'DNI',   // 'DNI' or 'CE' for boleta; 'RUC' for factura
     document_number: '',
-    company_name: ''
+    company_name: '',
+    fiscal_address: ''
   });
+
+  // Dedicated Draft Buffers per document type to avoid destructive truncations
+  const [documentDrafts, setDocumentDrafts] = useState({
+    DNI: '',
+    CE: '',
+    RUC: ''
+  });
+
+  // Checkbox for autocompleting fiscal address with delivery address
+  const [useDeliveryAsFiscalAddress, setUseDeliveryAsFiscalAddress] = useState(false);
 
   // Payment Method Selection ('mercadopago' or 'bank_transfer')
   const [paymentMethod, setPaymentMethod] = useState('mercadopago');
+
+  // Check whether current selected shipping method is Store Pickup
+  const isPickup = Boolean(
+    selectedShippingMethod?.code === 'pickup' ||
+    Number(selectedShippingMethod?.cost) === 0 ||
+    selectedShippingMethod?.name?.toLowerCase().includes('recojo')
+  );
 
   useEffect(() => {
     if (user) {
@@ -69,6 +122,67 @@ export default function Checkout() {
       localStorage.setItem('super_shipping_address', JSON.stringify(shippingAddress));
     }
   }, [shippingAddress]);
+
+  // Reactive Sync: Whenever recipient_document in Step 1 changes, populate draft buffer & keep Boleta document updated
+  useEffect(() => {
+    const doc = String(shippingAddress.recipient_document || '').trim();
+    if (doc) {
+      const detectedType = detectDocumentType(doc);
+      const formattedDoc = detectedType === 'DNI'
+        ? doc.replace(/\D/g, '').slice(0, 8)
+        : doc.toUpperCase().slice(0, 12);
+
+      // Keep type-specific buffer updated with Step 1 data
+      setDocumentDrafts((prev) => {
+        if (prev[detectedType] !== formattedDoc) {
+          return { ...prev, [detectedType]: formattedDoc };
+        }
+        return prev;
+      });
+
+      // Update active Boleta invoice info without overwriting if in Factura
+      if (invoiceInfo.invoice_type === 'boleta') {
+        setInvoiceInfo((prev) => {
+          if (prev.document_number !== formattedDoc || prev.document_type !== detectedType) {
+            return {
+              ...prev,
+              document_type: detectedType,
+              document_number: formattedDoc
+            };
+          }
+          return prev;
+        });
+      }
+    }
+  }, [shippingAddress.recipient_document, invoiceInfo.invoice_type]);
+
+  // Reactive Sync: If delivery address changes while useDeliveryAsFiscalAddress is active, keep fiscal address in sync
+  useEffect(() => {
+    if (useDeliveryAsFiscalAddress && !isPickup) {
+      const formatted = [
+        shippingAddress.address_line1,
+        shippingAddress.apartment_notes,
+        shippingAddress.district,
+        shippingAddress.province,
+        shippingAddress.department
+      ].filter(Boolean).join(', ');
+
+      setInvoiceInfo((prev) => {
+        if (prev.fiscal_address !== formatted) {
+          return { ...prev, fiscal_address: formatted };
+        }
+        return prev;
+      });
+    }
+  }, [
+    useDeliveryAsFiscalAddress,
+    isPickup,
+    shippingAddress.address_line1,
+    shippingAddress.apartment_notes,
+    shippingAddress.district,
+    shippingAddress.province,
+    shippingAddress.department
+  ]);
 
   // Load Shipping Methods from API
   useEffect(() => {
@@ -156,72 +270,209 @@ export default function Checkout() {
     }
   };
 
-  // Step 1 Submission: Create or update draft order
-  const handleProceedToPaymentStep = async (e) => {
+  // Helper: Build consolidated order payload for final payment submission
+  const getConsolidatedPayload = (overridePaymentMethod) => {
+    const payloadShippingAddress = isPickup
+      ? {
+          ...shippingAddress,
+          is_pickup: true,
+          address_line1: 'Jr. Velarde 172, Cercado de Lima (Tienda Física SUPERLAPTOP)',
+          department: 'Lima',
+          province: 'Lima',
+          district: 'Cercado de Lima',
+          reference: 'Retiro presencial en tienda física'
+        }
+      : {
+          ...shippingAddress,
+          is_pickup: false
+        };
+
+    return {
+      items,
+      shipping_address: payloadShippingAddress,
+      shipping_method: selectedShippingMethod ? selectedShippingMethod.name : 'Envío Express a Domicilio',
+      shipping_cost: shippingCost,
+      coupon_code: couponCode || null,
+      invoice_info: invoiceInfo,
+      payment_method: overridePaymentMethod || paymentMethod
+    };
+  };
+
+  // Step 1 Submission: Validate and advance to Payment & Invoice Step instantly (0ms)
+  const handleProceedToPaymentStep = (e) => {
     e.preventDefault();
 
-    if (!shippingAddress.recipient_name || !shippingAddress.phone || !shippingAddress.address_line1 || !shippingAddress.district) {
-      alert('Por favor completa todos los campos requeridos de envío.');
+    // 1. Common validations: Name and Phone
+    if (!shippingAddress.recipient_name?.trim()) {
+      alert(`Por favor completa el nombre y apellidos de quien ${isPickup ? 'recoge' : 'recibe'}.`);
       return;
     }
 
-    setLoading(true);
-    try {
-      const res = await axiosClient.post('/orders', {
-        items,
-        shipping_address: shippingAddress,
-        shipping_method: selectedShippingMethod ? selectedShippingMethod.name : 'Envío Express a Domicilio',
-        shipping_cost: shippingCost,
-        coupon_code: couponCode || null
-      });
-
-      if (res.data.success) {
-        setCreatedOrder(res.data.order);
-        setStep(2); // Advance to Payment & Invoice Step
-      }
-    } catch (err) {
-      alert(err.response?.data?.message || 'Error al generar la orden de compra.');
-    } finally {
-      setLoading(false);
+    if (!shippingAddress.phone?.trim()) {
+      alert('El teléfono de contacto es obligatorio.');
+      return;
     }
+
+    if (!isValidPhone(shippingAddress.phone)) {
+      alert('Por favor ingresa un número de teléfono de contacto válido (mínimo 9 dígitos).');
+      return;
+    }
+
+    // 2. Conditional validations by method
+    if (isPickup) {
+      if (!shippingAddress.recipient_document?.trim()) {
+        alert('Por favor ingresa el DNI o Carné de Extranjería de la persona que recogerá en tienda.');
+        return;
+      }
+      if (isFakeOrSequentialDocument(shippingAddress.recipient_document)) {
+        alert('El documento de identidad ingresado no es válido o contiene una secuencia repetida.');
+        return;
+      }
+    } else {
+      if (!shippingAddress.address_line1?.trim()) {
+        alert('Por favor ingresa la dirección completa de entrega.');
+        return;
+      }
+      if (!shippingAddress.department?.trim() || !shippingAddress.province?.trim() || !shippingAddress.district?.trim()) {
+        alert('Por favor completa el Departamento, Provincia y Distrito de entrega.');
+        return;
+      }
+    }
+
+    // UX Optimization: Sincronización reactiva de Boleta con los datos más recientes del Paso 1
+    if (invoiceInfo.invoice_type === 'boleta') {
+      const docStep1 = String(shippingAddress.recipient_document || '').trim();
+      if (docStep1) {
+        const detectedType = detectDocumentType(docStep1);
+        const formatted = detectedType === 'DNI'
+          ? docStep1.replace(/\D/g, '').slice(0, 8)
+          : docStep1.toUpperCase().slice(0, 12);
+
+        setDocumentDrafts((prev) => ({
+          ...prev,
+          [detectedType]: formatted
+        }));
+
+        setInvoiceInfo((prev) => ({
+          ...prev,
+          document_type: detectedType,
+          document_number: formatted
+        }));
+      }
+    } else if (invoiceInfo.invoice_type === 'factura' && useDeliveryAsFiscalAddress && !isPickup) {
+      const updatedFiscal = [
+        shippingAddress.address_line1,
+        shippingAddress.apartment_notes,
+        shippingAddress.district,
+        shippingAddress.province,
+        shippingAddress.department
+      ].filter(Boolean).join(', ');
+      setInvoiceInfo((prev) => ({
+        ...prev,
+        fiscal_address: updatedFiscal
+      }));
+    }
+
+    // Instant transition (0ms): purely client-side state
+    setStep(2);
   };
 
-  // Validate Invoice Info (DNI 8 digits, RUC 11 digits)
-   const validateInvoiceInfo = () => {
-    const num = invoiceInfo.document_number.trim();
+  // Comprehensive Invoice & Terms Validator (SUNAT & Anti-fraud rules)
+  const validateBeforePayment = () => {
+    if (!acceptedTerms) {
+      alert('Debes aceptar los Términos y Condiciones y las Políticas de Garantía para continuar.');
+      return false;
+    }
+
+    const num = String(invoiceInfo.document_number || '').trim();
+
     if (invoiceInfo.invoice_type === 'boleta') {
-      if (!/^\d{9}$/.test(num) && false) {
-        alert('Para Boleta de Venta, el DNI debe contener exactamente 8 dígitos numéricos.');
+      if (!num) {
+        alert('Para Boleta de Venta, debes ingresar tu documento de identidad (DNI o Carné de Extranjería).');
         return false;
       }
+
+      if (invoiceInfo.document_type === 'DNI') {
+        if (!/^\d{8}$/.test(num)) {
+          alert('Para Boleta de Venta con DNI, debe contener exactamente 8 dígitos numéricos.');
+          return false;
+        }
+        if (isFakeOrSequentialDocument(num)) {
+          alert('El número de DNI ingresado no es válido o corresponde a una secuencia numérica no permitida.');
+          return false;
+        }
+      } else if (invoiceInfo.document_type === 'CE') {
+        if (!/^[a-zA-Z0-9]{8,12}$/.test(num)) {
+          alert('Para Boleta de Venta con Carné de Extranjería (CE), debe contener entre 8 y 12 caracteres alfanuméricos.');
+          return false;
+        }
+        if (isFakeOrSequentialDocument(num)) {
+          alert('El Carné de Extranjería ingresado no es válido.');
+          return false;
+        }
+      }
     } else if (invoiceInfo.invoice_type === 'factura') {
+      if (!num) {
+        alert('Para Factura Electrónica, debes ingresar el número de RUC.');
+        return false;
+      }
       if (!/^\d{11}$/.test(num)) {
         alert('Para Factura Electrónica, el RUC debe contener exactamente 11 dígitos numéricos.');
         return false;
       }
+      if (!/^(10|20|15|17)\d{9}$/.test(num)) {
+        alert('El RUC ingresado no es válido para SUNAT. Debe comenzar con 10, 20, 15 o 17.');
+        return false;
+      }
+      if (isFakeOrSequentialDocument(num)) {
+        alert('El número de RUC ingresado contiene una secuencia no permitida o es inválido.');
+        return false;
+      }
+      if (!invoiceInfo.company_name?.trim()) {
+        alert('Por favor ingresa la Razón Social de la empresa para la Factura Electrónica.');
+        return false;
+      }
+      if (!invoiceInfo.fiscal_address?.trim()) {
+        alert('Por favor ingresa el Domicilio Fiscal de la empresa para la Factura Electrónica.');
+        return false;
+      }
     }
+
     return true;
   };
 
-  // Bank Transfer Submission
+  // Toggle autocompletion of fiscal address using the delivery address
+  const handleToggleFiscalAddress = (e) => {
+    const checked = e.target.checked;
+    setUseDeliveryAsFiscalAddress(checked);
+    if (checked) {
+      const deliveryFormatted = [
+        shippingAddress.address_line1,
+        shippingAddress.apartment_notes,
+        shippingAddress.district,
+        shippingAddress.province,
+        shippingAddress.department
+      ].filter(Boolean).join(', ');
+      setInvoiceInfo((prev) => ({ ...prev, fiscal_address: deliveryFormatted }));
+    }
+  };
+
+  // Bank Transfer Submission (Consolidated atomic checkout)
   const handleConfirmBankTransfer = async () => {
-    if (!validateInvoiceInfo() ) return;
+    if (!validateBeforePayment()) return;
 
     setLoading(true);
     try {
-      const res = await axiosClient.post('/orders/bank-transfer', {
-        order_id: createdOrder.id,
-        shipping_address: shippingAddress,
-        shipping_method: selectedShippingMethod ? selectedShippingMethod.name : 'Envío Express a Domicilio',
-        shipping_cost: shippingCost,
-        invoice_info: invoiceInfo
-      });
+      const payload = getConsolidatedPayload('bank_transfer');
+      const res = await axiosClient.post('/orders/bank-transfer', payload);
 
-      if (res.data.success) {
+      if (res.data.success && res.data.order) {
+        setCreatedOrder(res.data.order);
         setIsBankTransferConfirmed(true);
         clearCart();
       }
     } catch (err) {
+      console.error('[BankTransferError]:', err);
       alert(err.response?.data?.message || 'Error al registrar el pedido por transferencia.');
     } finally {
       setLoading(false);
@@ -332,160 +583,60 @@ export default function Checkout() {
           {/* Left Column: Form & Step Contents */}
           <div className="lg:col-span-2 space-y-6">
             {step === 1 ? (
-              /* STEP 1: SHIPPING ADDRESS & SHIPPING METHOD */
+              /* STEP 1: SHIPPING METHOD (TOP) & CONDITIONAL ADDRESS FORM */
               <form onSubmit={handleProceedToPaymentStep} className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm space-y-6">
-                <h3 className="text-xl font-black text-gray-900 flex items-center border-b border-gray-100 pb-3">
-                  <Truck className="w-5 h-5 mr-2 text-brand-red" /> 1. Datos de Envío y Destinatario
-                </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Nombre de quien recibe *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="ej. Juan Pérez"
-                      value={shippingAddress.recipient_name}
-                      onChange={(e) => setShippingAddress({ ...shippingAddress, recipient_name: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Teléfono de contacto *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="ej. 987654321"
-                      value={shippingAddress.phone}
-                      onChange={(e) => setShippingAddress({ ...shippingAddress, phone: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
-                    />
-                  </div>
+                <div className="border-b border-gray-100 pb-3">
+                  <h3 className="text-xl font-black text-gray-900 flex items-center">
+                    <Truck className="w-5 h-5 mr-2 text-brand-red" /> 1. Método de Entrega y Datos de Despacho
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Selecciona cómo deseas recibir tu compra antes de completar tus datos.
+                  </p>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">Dirección (Calle, Avenida y Número) *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="ej. Av. Javier Prado Este 1234, Dpto 402"
-                    value={shippingAddress.address_line1}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, address_line1: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
-                  />
-                </div>
-
-                {/* Peruvian Political Division: Departamento, Provincia, Distrito */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Departamento *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="ej. Lima"
-                      value={shippingAddress.department}
-                      onChange={(e) => setShippingAddress({ ...shippingAddress, department: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Provincia *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="ej. Lima"
-                      value={shippingAddress.province}
-                      onChange={(e) => setShippingAddress({ ...shippingAddress, province: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Distrito *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="ej. Miraflores"
-                      value={shippingAddress.district}
-                      onChange={(e) => setShippingAddress({ ...shippingAddress, district: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Dpto / Interior (Opcional)</label>
-                    <input
-                      type="text"
-                      placeholder="ej. Dpto 402, Torre B"
-                      value={shippingAddress.apartment_notes}
-                      onChange={(e) => setShippingAddress({ ...shippingAddress, apartment_notes: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Referencia de ubicación (Opcional)</label>
-                    <input
-                      type="text"
-                      placeholder="ej. Casa color verde al lado del grifo"
-                      value={shippingAddress.reference}
-                      onChange={(e) => setShippingAddress({ ...shippingAddress, reference: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2 pt-1">
-                  <input
-                    type="checkbox"
-                    id="save_info"
-                    checked={shippingAddress.save_info}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, save_info: e.target.checked })}
-                    className="w-4 h-4 text-brand-red rounded border-gray-300 focus:ring-brand-red cursor-pointer"
-                  />
-                  <label htmlFor="save_info" className="text-xs font-bold text-gray-700 cursor-pointer">
-                    Guardar esta información como mi dirección por defecto para futuras compras
+                {/* 1.1 SHIPPING METHOD SELECTION (PLACED AT THE TOP) */}
+                <div className="space-y-3">
+                  <label className="block text-xs font-black uppercase tracking-wider text-brand-blue">
+                    Selecciona el Método de Entrega *
                   </label>
-                </div>
 
-                {/* SHIPPING METHOD SELECTION SECTION */}
-                <div className="pt-4 border-t border-gray-100 space-y-3">
-                  <h4 className="font-extrabold text-gray-900 text-sm flex items-center">
-                    <MapPin className="w-4 h-4 mr-1.5 text-brand-red" /> Seleccionar Método de Envío
-                  </h4>
-
-                  <div className="grid grid-cols-1 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {shippingMethods.map((method) => {
                       const isSelected = selectedShippingMethod?.id === method.id;
-                      const isPickup = Number(method.cost) === 0;
+                      const methodIsPickup = method.code === 'pickup' || Number(method.cost) === 0 || method.name?.toLowerCase().includes('recojo');
 
                       return (
                         <div
                           key={method.id}
                           onClick={() => setSelectedShippingMethod(method)}
-                          className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between ${
+                          className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
                             isSelected
-                              ? 'border-brand-red bg-red-50/20 shadow-sm'
+                              ? 'border-brand-red bg-red-50/20 shadow-md ring-1 ring-brand-red/30'
                               : 'border-gray-200 hover:border-gray-300 bg-white'
                           }`}
                         >
-                          <div className="flex items-center space-x-3">
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-brand-red bg-brand-red' : 'border-gray-300'}`}>
-                              {isSelected && <Check className="w-3 h-3 text-white stroke-[3]" />}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-brand-red bg-brand-red' : 'border-gray-300'}`}>
+                                {isSelected && <Check className="w-3 h-3 text-white stroke-[3]" />}
+                              </div>
+                              <span className={`font-black text-xs px-2 py-0.5 rounded-full ${methodIsPickup ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-50 text-blue-800'}`}>
+                                {methodIsPickup ? '¡Gratis!' : `S/ ${Number(method.cost).toFixed(2)}`}
+                              </span>
                             </div>
-                            <div>
-                              <p className="font-bold text-gray-900 text-sm flex items-center">
-                                {isPickup ? <Store className="w-4 h-4 mr-1.5 text-emerald-600" /> : <Truck className="w-4 h-4 mr-1.5 text-brand-blue" />}
-                                {method.name}
-                              </p>
-                              <p className="text-xs text-gray-500">{method.description} ({method.estimated_delivery})</p>
-                            </div>
+
+                            <p className="font-extrabold text-gray-900 text-sm flex items-center pt-1">
+                              {methodIsPickup ? <Store className="w-4 h-4 mr-1.5 text-emerald-600 flex-shrink-0" /> : <Truck className="w-4 h-4 mr-1.5 text-brand-blue flex-shrink-0" />}
+                              <span>{method.name}</span>
+                            </p>
+
+                            <p className="text-[11px] text-gray-500 leading-tight">
+                              {method.description}
+                            </p>
                           </div>
 
-                          <div className="text-right">
-                            <span className={`font-black text-sm ${isPickup ? 'text-emerald-600 uppercase tracking-wider' : 'text-gray-900'}`}>
-                              {isPickup ? '¡Gratis!' : `S/ ${Number(method.cost).toFixed(2)}`}
-                            </span>
+                          <div className="pt-3 border-t border-gray-100 mt-2 text-[10px] text-gray-400 font-bold">
+                            ⏱ {method.estimated_delivery}
                           </div>
                         </div>
                       );
@@ -493,12 +644,243 @@ export default function Checkout() {
                   </div>
                 </div>
 
+                {/* 1.2 CONDITIONAL FIELDS BASED ON METHOD */}
+                {isPickup ? (
+                  /* CASE A: STORE PICKUP */
+                  <div className="space-y-6 pt-2">
+                    {/* Store Physical Info Card */}
+                    <div className="bg-emerald-50/70 border-2 border-emerald-200/80 rounded-2xl p-5 space-y-3 shadow-sm">
+                      <div className="flex items-center space-x-2 text-emerald-900 font-black text-sm">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700">
+                          <Store className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-emerald-900 leading-tight">Punto Oficial de Retiro en Tienda Física</p>
+                          <p className="text-[11px] text-emerald-700 font-medium">SUPERLAPTOP — Centro de Lima</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs text-emerald-950 font-medium">
+                        <div className="bg-white/80 p-3 rounded-xl border border-emerald-100">
+                          <span className="text-[11px] font-bold text-emerald-800 block">📍 Dirección:</span>
+                          <span className="font-black text-gray-900">Jr. Velarde 172, Lima</span>
+                          <span className="text-[10px] text-gray-500 block">(Ref: Altura Wilson y Av. Bolivia, Cercado de Lima)</span>
+                        </div>
+                        <div className="bg-white/80 p-3 rounded-xl border border-emerald-100">
+                          <span className="text-[11px] font-bold text-emerald-800 block">🕒 Horarios de Atención:</span>
+                          <span className="font-black text-gray-900">Lunes a Sábado: 9:30 AM – 7:30 PM</span>
+                          <span className="text-[10px] text-gray-500 block">Domingos y feriados no hay atención</span>
+                        </div>
+                      </div>
+
+                      <p className="text-[11px] text-emerald-800 bg-emerald-100/50 p-2.5 rounded-xl border border-emerald-200/60 leading-relaxed font-semibold">
+                        ℹ️ <strong>Requisitos de retiro:</strong> Para retirar tu pedido en tienda, la persona indicada debe presentar su documento de identidad físico (DNI o Carné de Extranjería) y el código de pedido.
+                      </p>
+                    </div>
+
+                    {/* Store Pickup Form Fields */}
+                    <div className="space-y-4">
+                      <h4 className="font-black text-gray-900 text-sm flex items-center">
+                        <ShieldCheck className="w-4 h-4 mr-1.5 text-brand-red" /> Datos de la Persona que Recoge en Tienda
+                      </h4>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1">Nombre y Apellidos de quien recoge *</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="ej. Juan Carlos Pérez Rojas"
+                            value={shippingAddress.recipient_name}
+                            onChange={(e) => setShippingAddress({ ...shippingAddress, recipient_name: e.target.value })}
+                            className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1">
+                            DNI o Carné de Extranjería de quien recoge *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            maxLength={12}
+                            placeholder="ej. 71234567 o CE00123456"
+                            value={shippingAddress.recipient_document}
+                            onChange={(e) => setShippingAddress({ ...shippingAddress, recipient_document: e.target.value.trim() })}
+                            className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                          />
+                          <span className="text-[10px] text-gray-400 mt-1 block">
+                            💡 Se autocompletará en tu Boleta de Venta en el Paso 2.
+                          </span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">
+                          Teléfono de contacto celular *
+                        </label>
+                        <input
+                          type="tel"
+                          required
+                          maxLength={15}
+                          placeholder="ej. 987654321"
+                          value={shippingAddress.phone}
+                          onChange={(e) => setShippingAddress({ ...shippingAddress, phone: e.target.value.replace(/[^\d+ ]/g, '') })}
+                          className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                        />
+                        <span className="text-[10px] text-gray-400 mt-1 block">
+                          Te notificaremos por WhatsApp o llamada cuando tus productos estén listos para el recojo.
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* CASE B: HOME / PROVINCE DELIVERY */
+                  <div className="space-y-4 pt-2">
+                    <h4 className="font-black text-gray-900 text-sm flex items-center">
+                      <Truck className="w-4 h-4 mr-1.5 text-brand-red" /> Datos de Envío y Destinatario
+                    </h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Nombre de quien recibe *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="ej. Juan Pérez"
+                          value={shippingAddress.recipient_name}
+                          onChange={(e) => setShippingAddress({ ...shippingAddress, recipient_name: e.target.value })}
+                          className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">
+                          Teléfono de contacto celular *
+                        </label>
+                        <input
+                          type="tel"
+                          required
+                          maxLength={15}
+                          placeholder="ej. 987654321"
+                          value={shippingAddress.phone}
+                          onChange={(e) => setShippingAddress({ ...shippingAddress, phone: e.target.value.replace(/[^\d+ ]/g, '') })}
+                          className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">
+                          DNI o Carné de Extranjería de quien recibe (Opcional)
+                        </label>
+                        <input
+                          type="text"
+                          maxLength={12}
+                          placeholder="ej. 71234567"
+                          value={shippingAddress.recipient_document}
+                          onChange={(e) => setShippingAddress({ ...shippingAddress, recipient_document: e.target.value.trim() })}
+                          className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                        />
+                        <span className="text-[10px] text-gray-400 mt-1 block">
+                          Requerido para envíos por agencia y autocompletado de Boleta.
+                        </span>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Dirección (Calle, Avenida y Número) *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="ej. Av. Javier Prado Este 1234"
+                          value={shippingAddress.address_line1}
+                          onChange={(e) => setShippingAddress({ ...shippingAddress, address_line1: e.target.value })}
+                          className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Peruvian Political Division: Departamento, Provincia, Distrito */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Departamento *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="ej. Lima"
+                          value={shippingAddress.department}
+                          onChange={(e) => setShippingAddress({ ...shippingAddress, department: e.target.value })}
+                          className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Provincia *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="ej. Lima"
+                          value={shippingAddress.province}
+                          onChange={(e) => setShippingAddress({ ...shippingAddress, province: e.target.value })}
+                          className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Distrito *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="ej. Miraflores"
+                          value={shippingAddress.district}
+                          onChange={(e) => setShippingAddress({ ...shippingAddress, district: e.target.value })}
+                          className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Dpto / Interior (Opcional)</label>
+                        <input
+                          type="text"
+                          placeholder="ej. Dpto 402, Torre B"
+                          value={shippingAddress.apartment_notes}
+                          onChange={(e) => setShippingAddress({ ...shippingAddress, apartment_notes: e.target.value })}
+                          className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Referencia de ubicación (Opcional)</label>
+                        <input
+                          type="text"
+                          placeholder="ej. Altura cuadra 12 de Javier Prado, frente al parque"
+                          value={shippingAddress.reference}
+                          onChange={(e) => setShippingAddress({ ...shippingAddress, reference: e.target.value })}
+                          className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 pt-1">
+                      <input
+                        type="checkbox"
+                        id="save_info"
+                        checked={shippingAddress.save_info}
+                        onChange={(e) => setShippingAddress({ ...shippingAddress, save_info: e.target.checked })}
+                        className="w-4 h-4 text-brand-red rounded border-gray-300 focus:ring-brand-red cursor-pointer"
+                      />
+                      <label htmlFor="save_info" className="text-xs font-bold text-gray-700 cursor-pointer select-none">
+                        Guardar esta información como mi dirección por defecto para futuras compras
+                      </label>
+                    </div>
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={loading}
                   className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-base"
                 >
-                  <span>Continuar al Paso 2: Pago</span>
+                  <span>Continuar al Paso 2: Comprobante & Pago</span>
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </form>
@@ -509,32 +891,74 @@ export default function Checkout() {
                   <h3 className="text-xl font-black text-gray-900 flex items-center">
                     <CreditCard className="w-5 h-5 mr-2 text-brand-red" /> 2. Comprobante & Método de Pago
                   </h3>
-                  <button onClick={() => setStep(1)} className="text-xs text-brand-blue font-bold hover:underline flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="text-xs text-brand-blue font-bold hover:underline flex items-center bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100 transition-colors hover:bg-blue-100"
+                  >
                     <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Volver a Envío
                   </button>
                 </div>
 
                 {/* RECEIPT / INVOICE TYPE SELECTOR (BOLETA vs FACTURA) */}
-                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-3">
+                <div className="bg-gray-50 p-4 sm:p-5 rounded-2xl border border-gray-200 space-y-4">
                   <h4 className="font-extrabold text-gray-900 text-xs flex items-center uppercase tracking-wider text-brand-blue">
-                    <FileText className="w-4 h-4 mr-1.5" /> Selección de Comprobante de Pago
+                    <FileText className="w-4 h-4 mr-1.5" /> Selección de Comprobante Electrónico (SUNAT)
                   </h4>
 
+                  {/* Top Buttons: Boleta vs Factura */}
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
-                      onClick={() => setInvoiceInfo({ ...invoiceInfo, invoice_type: 'boleta', document_type: 'DNI', document_number: '' })}
+                      onClick={() => {
+                        // Guardar RUC actual en su draft
+                        if (invoiceInfo.invoice_type === 'factura' && invoiceInfo.document_number) {
+                          setDocumentDrafts((prev) => ({ ...prev, RUC: invoiceInfo.document_number }));
+                        }
+
+                        // Determinar el tipo de documento adecuado para Boleta
+                        const docStep1 = String(shippingAddress.recipient_document || '').trim();
+                        const detectedStep1 = detectDocumentType(docStep1);
+
+                        // Si había un tipo previo en boleta distinto de RUC, o el tipo detectado del paso 1
+                        const targetType = invoiceInfo.document_type === 'RUC' ? detectedStep1 : invoiceInfo.document_type;
+                        const targetDoc = documentDrafts[targetType] || (detectedStep1 === targetType ? docStep1 : '');
+
+                        setInvoiceInfo((prev) => ({
+                          ...prev,
+                          invoice_type: 'boleta',
+                          document_type: targetType,
+                          document_number: targetType === 'DNI'
+                            ? targetDoc.replace(/\D/g, '').slice(0, 8)
+                            : targetDoc.toUpperCase().slice(0, 12)
+                        }));
+                      }}
                       className={`p-3 rounded-xl font-extrabold text-xs border text-center transition-all ${
                         invoiceInfo.invoice_type === 'boleta'
                           ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
                           : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
                       }`}
                     >
-                      Boleta de Venta (DNI)
+                      Boleta de Venta
                     </button>
                     <button
                       type="button"
-                      onClick={() => setInvoiceInfo({ ...invoiceInfo, invoice_type: 'factura', document_type: 'RUC', document_number: '' })}
+                      onClick={() => {
+                        // Guardar el documento actual en su respectivo draft antes de conmutar a Factura
+                        if (invoiceInfo.invoice_type === 'boleta' && invoiceInfo.document_number) {
+                          setDocumentDrafts((prev) => ({
+                            ...prev,
+                            [invoiceInfo.document_type]: invoiceInfo.document_number
+                          }));
+                        }
+
+                        setInvoiceInfo((prev) => ({
+                          ...prev,
+                          invoice_type: 'factura',
+                          document_type: 'RUC',
+                          document_number: documentDrafts.RUC || ''
+                        }));
+                      }}
                       className={`p-3 rounded-xl font-extrabold text-xs border text-center transition-all ${
                         invoiceInfo.invoice_type === 'factura'
                           ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
@@ -545,34 +969,197 @@ export default function Checkout() {
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1">
-                        {invoiceInfo.invoice_type === 'boleta' ? 'Número de DNI (8 dígitos) *' : 'Número de RUC (11 dígitos) *'}
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        maxLength={invoiceInfo.invoice_type === 'boleta' ? 8 : 11}
-                        placeholder={invoiceInfo.invoice_type === 'boleta' ? '12345678' : '20123456789'}
-                        value={invoiceInfo.document_number}
-                        onChange={(e) => setInvoiceInfo({ ...invoiceInfo, document_number: e.target.value.replace(/\D/g, '') })}
-                        className="w-full bg-white border border-gray-300 rounded-xl p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-blue"
-                      />
-                    </div>
-                    {invoiceInfo.invoice_type === 'factura' && (
+                  {/* CASE 1: BOLETA DE VENTA FIELDS */}
+                  {invoiceInfo.invoice_type === 'boleta' ? (
+                    <div className="space-y-3 pt-1">
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">Razón Social (Empresa)</label>
+                        <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                          Tipo de Documento de Identidad *
+                        </label>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              // Preservar el valor actual de CE en su buffer antes de cambiar a DNI
+                              if (invoiceInfo.document_type === 'CE' && invoiceInfo.document_number) {
+                                setDocumentDrafts((prev) => ({ ...prev, CE: invoiceInfo.document_number }));
+                              }
+
+                              const docStep1 = String(shippingAddress.recipient_document || '').trim();
+                              let targetDNI = documentDrafts.DNI;
+                              if (!targetDNI) {
+                                if (detectDocumentType(docStep1) === 'DNI') {
+                                  targetDNI = docStep1.replace(/\D/g, '').slice(0, 8);
+                                } else if (invoiceInfo.document_number) {
+                                  targetDNI = invoiceInfo.document_number.replace(/\D/g, '').slice(0, 8);
+                                }
+                              }
+
+                              setInvoiceInfo((prev) => ({
+                                ...prev,
+                                document_type: 'DNI',
+                                document_number: targetDNI
+                              }));
+                            }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
+                              invoiceInfo.document_type === 'DNI'
+                                ? 'bg-brand-blue text-white border-brand-blue shadow-xs'
+                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                            }`}
+                          >
+                            DNI (8 dígitos)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              // Preservar el valor actual de DNI en su buffer antes de cambiar a CE
+                              if (invoiceInfo.document_type === 'DNI' && invoiceInfo.document_number) {
+                                setDocumentDrafts((prev) => ({ ...prev, DNI: invoiceInfo.document_number }));
+                              }
+
+                              const docStep1 = String(shippingAddress.recipient_document || '').trim();
+                              let targetCE = documentDrafts.CE;
+                              if (!targetCE) {
+                                if (detectDocumentType(docStep1) === 'CE') {
+                                  targetCE = docStep1.toUpperCase().slice(0, 12);
+                                } else {
+                                  targetCE = invoiceInfo.document_number;
+                                }
+                              }
+
+                              setInvoiceInfo((prev) => ({
+                                ...prev,
+                                document_type: 'CE',
+                                document_number: targetCE
+                              }));
+                            }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
+                              invoiceInfo.document_type === 'CE'
+                                ? 'bg-brand-blue text-white border-brand-blue shadow-xs'
+                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                            }`}
+                          >
+                            Carné de Extranjería (CE)
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">
+                          {invoiceInfo.document_type === 'DNI' ? 'DNI (exactamente 8 dígitos numéricos) *' : 'Carné de Extranjería (8 a 12 caracteres alfanuméricos) *'}
+                        </label>
                         <input
                           type="text"
-                          placeholder="ej. MI EMPRESA S.A.C."
-                          value={invoiceInfo.company_name}
-                          onChange={(e) => setInvoiceInfo({ ...invoiceInfo, company_name: e.target.value })}
+                          required
+                          maxLength={invoiceInfo.document_type === 'DNI' ? 8 : 12}
+                          placeholder={invoiceInfo.document_type === 'DNI' ? 'ej. 71234567' : 'ej. 001234567'}
+                          value={invoiceInfo.document_number}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            if (invoiceInfo.document_type === 'DNI') {
+                              // Si el usuario escribe letras o más de 8 caracteres, auto-conmutar a CE sin perder caracteres
+                              if (/[a-zA-Z]/.test(raw) || raw.trim().length > 8) {
+                                const cleanCE = raw.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 12);
+                                setDocumentDrafts((prev) => ({ ...prev, CE: cleanCE }));
+                                setInvoiceInfo((prev) => ({
+                                  ...prev,
+                                  document_type: 'CE',
+                                  document_number: cleanCE
+                                }));
+                              } else {
+                                const cleanDNI = raw.replace(/\D/g, '').slice(0, 8);
+                                setDocumentDrafts((prev) => ({ ...prev, DNI: cleanDNI }));
+                                setInvoiceInfo((prev) => ({
+                                  ...prev,
+                                  document_number: cleanDNI
+                                }));
+                              }
+                            } else {
+                              // Modo CE: alfanumérico hasta 12 caracteres
+                              const cleanCE = raw.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 12);
+                              setDocumentDrafts((prev) => ({ ...prev, CE: cleanCE }));
+                              setInvoiceInfo((prev) => ({
+                                ...prev,
+                                document_number: cleanCE
+                              }));
+                            }
+                          }}
+                          className="w-full bg-white border border-gray-300 rounded-xl p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-blue"
+                        />
+                        <span className="text-[10px] text-gray-400 mt-1 block">
+                          Autocompletado desde los datos del paso anterior si ingresaste tu documento.
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    /* CASE 2: FACTURA ELECTRÓNICA (RUC) FIELDS */
+                    <div className="space-y-3 pt-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1">
+                            Número de RUC (11 dígitos, inicia con 10, 20, 15 o 17) *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            maxLength={11}
+                            placeholder="ej. 20601234567"
+                            value={invoiceInfo.document_number}
+                            onChange={(e) => {
+                              const cleanRUC = e.target.value.replace(/\D/g, '').slice(0, 11);
+                              setDocumentDrafts((prev) => ({ ...prev, RUC: cleanRUC }));
+                              setInvoiceInfo((prev) => ({ ...prev, document_number: cleanRUC }));
+                            }}
+                            className="w-full bg-white border border-gray-300 rounded-xl p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-blue"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1">
+                            Razón Social (Empresa) *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="ej. CORPORACION TECH S.A.C."
+                            value={invoiceInfo.company_name}
+                            onChange={(e) => setInvoiceInfo({ ...invoiceInfo, company_name: e.target.value })}
+                            className="w-full bg-white border border-gray-300 rounded-xl p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-blue"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-xs font-bold text-gray-700">
+                            Domicilio Fiscal de la Empresa *
+                          </label>
+                          {!isPickup && shippingAddress.address_line1 && (
+                            <label className="flex items-center space-x-1 text-[11px] font-bold text-brand-blue cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={useDeliveryAsFiscalAddress}
+                                onChange={handleToggleFiscalAddress}
+                                className="w-3.5 h-3.5 text-brand-blue rounded border-gray-300 focus:ring-brand-blue cursor-pointer"
+                              />
+                              <span>Usar dirección de entrega como Domicilio Fiscal</span>
+                            </label>
+                          )}
+                        </div>
+                        <input
+                          type="text"
+                          required
+                          placeholder="ej. Av. Rivera Navarrete 501, San Isidro, Lima"
+                          value={invoiceInfo.fiscal_address}
+                          onChange={(e) => {
+                            setUseDeliveryAsFiscalAddress(false);
+                            setInvoiceInfo({ ...invoiceInfo, fiscal_address: e.target.value });
+                          }}
                           className="w-full bg-white border border-gray-300 rounded-xl p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-blue"
                         />
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* PAYMENT METHOD SELECTOR */}
@@ -614,16 +1201,39 @@ export default function Checkout() {
                   </div>
                 </div>
 
+                {/* TERMS AND CONDITIONS CHECKBOX (REQUIRED BEFORE PAYMENT) */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-start space-x-3 transition-colors hover:bg-slate-100/70">
+                  <input
+                    type="checkbox"
+                    id="terms_agree"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 text-brand-red rounded border-gray-300 focus:ring-brand-red cursor-pointer"
+                  />
+                  <label htmlFor="terms_agree" className="text-xs text-gray-700 font-bold cursor-pointer select-none leading-relaxed">
+                    He leído y acepto los <span className="text-brand-blue underline hover:text-blue-700">Términos y Condiciones de Compra</span> y las <span className="text-brand-blue underline hover:text-blue-700">Políticas de Garantía</span> de SUPERLAPTOP (*)
+                  </label>
+                </div>
+
                 {/* OPTION A: MERCADO PAGO CHECKOUT PRO */}
                 {paymentMethod === 'mercadopago' ? (
-                  <div className="space-y-3 pt-2">
+                  <div className="space-y-3 pt-1">
                     <p className="text-xs text-gray-500">
                       Al hacer clic en el botón, serás redirigido a la plataforma segura de Mercado Pago para completar tu pago con tarjeta de crédito, débito, Yape o efectivo:
                     </p>
                     <CheckoutButton
                       orderId={createdOrder?.id}
                       invoiceInfo={invoiceInfo}
+                      getOrderPayload={() => getConsolidatedPayload('mercadopago')}
+                      onSuccess={(order) => setCreatedOrder(order)}
+                      disabled={!acceptedTerms}
+                      onBeforePay={validateBeforePayment}
                     />
+                    {!acceptedTerms && (
+                      <p className="text-[11px] text-amber-600 font-bold flex items-center justify-center">
+                        ⚠️ Debes marcar la casilla de Términos y Condiciones para habilitar el botón de pago.
+                      </p>
+                    )}
                   </div>
                 ) : (
                   /* OPTION B: BANK TRANSFER DETAILS & RESERVATION */
@@ -667,12 +1277,17 @@ export default function Checkout() {
                     <button
                       type="button"
                       onClick={handleConfirmBankTransfer}
-                      disabled={loading}
-                      className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-base"
+                      disabled={loading || !acceptedTerms}
+                      className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-base disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Building2 className="w-5 h-5" />
                       <span>Confirmar Pedido por Transferencia</span>
                     </button>
+                    {!acceptedTerms && (
+                      <p className="text-[11px] text-amber-600 font-bold flex items-center justify-center">
+                        ⚠️ Debes marcar la casilla de Términos y Condiciones para habilitar la confirmación.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

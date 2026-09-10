@@ -1,6 +1,8 @@
 const { Op } = require('sequelize');
+const sequelize = require('../config/database');
 const { Order, OrderItem, OrderStatusHistory, Product, Coupon, Address, ShippingMethod, Payment, User } = require('../models');
 const emailService = require('../services/emailService');
+const orderService = require('../services/orderService');
 
 exports.getShippingMethods = async (req, res, next) => {
   try {
@@ -54,118 +56,20 @@ exports.createOrder = async (req, res, next) => {
   try {
     const { items, shipping_address, shipping_method, shipping_cost, invoice_info, payment_method, coupon_code, notes } = req.body;
 
-    if (!items || items.length === 0) {
-      return res.status(400).json({ success: false, message: 'La orden no contiene items' });
-    }
-
-    let subtotal = 0;
-    const validatedItems = [];
-
-    for (const item of items) {
-      const product = await Product.findByPk(item.product_id);
-      if (!product || !product.is_active) {
-        return res.status(400).json({ success: false, message: `Producto no disponible: ${item.name || item.product_id}` });
-      }
-
-      if (product.stock < item.quantity) {
-        return res.status(400).json({ success: false, message: `Stock insuficiente para ${product.name}` });
-      }
-
-      const unitPrice = Number(product.offer_price || product.price);
-      const itemTotal = unitPrice * item.quantity;
-      subtotal += itemTotal;
-
-      validatedItems.push({
-        product_id: product.id,
-        product_name: product.name,
-        sku: product.sku,
-        quantity: item.quantity,
-        unit_price: unitPrice,
-        total_price: itemTotal
-      });
-    }
-
-    // Apply Coupon if exists
-    let discountAmount = 0;
-    if (coupon_code) {
-      const coupon = await Coupon.findOne({ where: { code: coupon_code.toUpperCase(), is_active: true } });
-      if (coupon) {
-        if (coupon.discount_type === 'percentage') {
-          discountAmount = (subtotal * Number(coupon.discount_value)) / 100;
-          if (coupon.max_discount && discountAmount > Number(coupon.max_discount)) {
-            discountAmount = Number(coupon.max_discount);
-          }
-        } else {
-          discountAmount = Number(coupon.discount_value);
-        }
-        coupon.used_count += 1;
-        await coupon.save();
-      }
-    }
-
-    const calculatedShippingCost = shipping_cost !== undefined ? Number(shipping_cost) : 15.00;
-    const total = Math.max(0, subtotal - discountAmount + calculatedShippingCost);
-
-    // Save address as default if user checked "Guardar mi información para la próxima vez"
-    if (req.user && shipping_address && shipping_address.save_info) {
-      try {
-        const existingAddress = await Address.findOne({ where: { user_id: req.user.id } });
-        const addressData = {
-          user_id: req.user.id,
-          recipient_name: shipping_address.recipient_name || req.user.name,
-          phone: shipping_address.phone || '999999999',
-          address_line1: shipping_address.address_line1 || '',
-          address_line2: [shipping_address.apartment_notes, shipping_address.reference].filter(Boolean).join(' - '),
-          city: shipping_address.district || shipping_address.province || 'Lima',
-          state: shipping_address.department || 'Lima',
-          postal_code: '15001',
-          country: 'Perú',
-          is_default: true
-        };
-
-        if (existingAddress) {
-          await existingAddress.update(addressData);
-        } else {
-          await Address.create(addressData);
-        }
-      } catch (addrErr) {
-        console.error('[AddressSaveError]', addrErr);
-      }
-    }
-
-    // Always create a new unique order for every purchase attempt
-    const orderNumber = `SUP-${Date.now().toString().slice(-6)}-${Math.floor(1000 + Math.random() * 9000)}`;
-
-    const order = await Order.create({
-      order_number: orderNumber,
-      user_id: req.user.id,
-      status: 'pending',
-      subtotal,
-      discount_amount: discountAmount,
-      shipping_cost: calculatedShippingCost,
-      total,
+    const order = await orderService.createOrderCore({
+      userId: req.user.id,
+      userEmail: req.user.email,
+      userName: req.user.name,
+      items,
       shipping_address,
-      shipping_method: shipping_method || 'Envío Express a Domicilio',
-      invoice_info: invoice_info || null,
+      shipping_method,
+      shipping_cost,
+      invoice_info,
       payment_method: payment_method || 'mercadopago',
-      coupon_code: coupon_code || null,
-      notes
-    });
-
-    await Promise.all(
-      validatedItems.map((item) =>
-        OrderItem.create({
-          order_id: order.id,
-          ...item
-        })
-      )
-    );
-
-    await OrderStatusHistory.create({
-      order_id: order.id,
+      coupon_code,
+      notes,
       status: 'pending',
-      comment: 'Orden creada por el cliente',
-      created_by_user_id: req.user.id
+      statusComment: 'Orden creada por el cliente'
     });
 
     return res.status(201).json({
@@ -178,56 +82,87 @@ exports.createOrder = async (req, res, next) => {
   }
 };
 
-// Process Bank Transfer Checkout Submission
+// Process Bank Transfer Checkout Submission (supports legacy order_id or consolidated atomic creation)
 exports.processBankTransferPayment = async (req, res, next) => {
   try {
-    const { order_id, shipping_address, shipping_method, shipping_cost, invoice_info, coupon_code, notes } = req.body;
+    const { order_id, items, shipping_address, shipping_method, shipping_cost, invoice_info, coupon_code, notes } = req.body;
 
-    let order;
+    let order = null;
+
     if (order_id) {
+      // Legacy flow: Update existing order
       order = await Order.findOne({ where: { id: order_id, user_id: req.user.id } });
-    }
 
-    if (!order) {
-      return res.status(404).json({ success: false, message: 'Orden no encontrada' });
-    }
-
-    order.status = 'payment_review';
-    order.payment_method = 'bank_transfer';
-    if (shipping_address) order.shipping_address = shipping_address;
-    if (shipping_method) order.shipping_method = shipping_method;
-    if (shipping_cost !== undefined) order.shipping_cost = Number(shipping_cost);
-    if (invoice_info) order.invoice_info = invoice_info;
-    if (notes) order.notes = notes;
-    await order.save();
-
-    // Create or update Payment record
-    const [payment] = await Payment.findOrCreate({
-      where: { order_id: order.id },
-      defaults: {
-        order_id: order.id,
-        provider: 'bank_transfer',
-        status: 'pending_verification',
-        payment_method: 'bank_transfer',
-        amount: order.total,
-        currency: 'PEN'
+      if (!order) {
+        return res.status(404).json({ success: false, message: 'Orden no encontrada' });
       }
-    });
 
-    if (payment) {
-      payment.provider = 'bank_transfer';
-      payment.status = 'pending_verification';
-      payment.payment_method = 'bank_transfer';
-      payment.amount = order.total;
-      await payment.save();
+      order.status = 'payment_review';
+      order.payment_method = 'bank_transfer';
+      if (shipping_address) order.shipping_address = shipping_address;
+      if (shipping_method) order.shipping_method = shipping_method;
+      if (shipping_cost !== undefined) order.shipping_cost = Number(shipping_cost);
+      if (invoice_info) order.invoice_info = invoice_info;
+      if (notes) order.notes = notes;
+      await order.save();
+
+      // Create or update Payment record
+      const [payment] = await Payment.findOrCreate({
+        where: { order_id: order.id },
+        defaults: {
+          order_id: order.id,
+          provider: 'bank_transfer',
+          status: 'pending_verification',
+          payment_method: 'bank_transfer',
+          amount: order.total,
+          currency: 'PEN'
+        }
+      });
+
+      if (payment) {
+        payment.provider = 'bank_transfer';
+        payment.status = 'pending_verification';
+        payment.payment_method = 'bank_transfer';
+        payment.amount = order.total;
+        await payment.save();
+      }
+
+      await OrderStatusHistory.create({
+        order_id: order.id,
+        status: 'payment_review',
+        comment: 'Pago por transferencia bancaria iniciado. Pendiente de verificación por administrador (Reserva 24h).',
+        created_by_user_id: req.user.id
+      });
+    } else {
+      // Consolidated atomic flow: create order directly in 'payment_review'
+      await sequelize.transaction(async (t) => {
+        order = await orderService.createOrderCore({
+          userId: req.user.id,
+          userEmail: req.user.email,
+          userName: req.user.name,
+          items,
+          shipping_address,
+          shipping_method,
+          shipping_cost,
+          invoice_info,
+          payment_method: 'bank_transfer',
+          coupon_code,
+          notes,
+          status: 'payment_review',
+          statusComment: 'Pago por transferencia bancaria iniciado. Pendiente de verificación por administrador (Reserva 24h).',
+          transaction: t
+        });
+
+        await Payment.create({
+          order_id: order.id,
+          provider: 'bank_transfer',
+          status: 'pending_verification',
+          payment_method: 'bank_transfer',
+          amount: order.total,
+          currency: 'PEN'
+        }, { transaction: t });
+      });
     }
-
-    await OrderStatusHistory.create({
-      order_id: order.id,
-      status: 'payment_review',
-      comment: 'Pago por transferencia bancaria iniciado. Pendiente de verificación por administrador (Reserva 24h).',
-      created_by_user_id: req.user.id
-    });
 
     // Send Bank Transfer Instruction Email
     try {

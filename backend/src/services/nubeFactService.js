@@ -21,17 +21,22 @@ function buildNubeFactPayload(order) {
 
   const tipo_de_comprobante = isFactura ? 1 : 2; // 1: Factura, 2: Boleta
   const serie = isFactura ? SERIE_FACTURA : SERIE_BOLETA;
-  const cliente_tipo_de_documento = isFactura ? '6' : '1'; // 6: RUC, 1: DNI
+  // 6: RUC, 4: Carné de Extranjería, 1: DNI
+  const cliente_tipo_de_documento = isFactura
+    ? '6'
+    : (invoiceInfo.document_type === 'CE' ? '4' : '1');
   const cliente_numero_de_documento = invoiceInfo.document_number || '00000000';
   const cliente_denominacion = isFactura
     ? (invoiceInfo.company_name || shippingAddress.recipient_name || order.user?.name || 'EMPRESA S.A.C.')
     : (shippingAddress.recipient_name || order.user?.name || 'CLIENTE GENERAL');
 
-  const cliente_direccion = [
-    shippingAddress.address_line1,
-    shippingAddress.district,
-    shippingAddress.department
-  ].filter(Boolean).join(', ') || 'LIMA, PERU';
+  const cliente_direccion = (isFactura && invoiceInfo.fiscal_address)
+    ? invoiceInfo.fiscal_address
+    : [
+        shippingAddress.address_line1,
+        shippingAddress.district,
+        shippingAddress.department
+      ].filter(Boolean).join(', ') || 'LIMA, PERU';
 
   const cliente_email = order.user?.email || '';
 

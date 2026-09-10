@@ -6,9 +6,16 @@ const { validateBody } = require('../middlewares/validationMiddleware');
 const Joi = require('joi');
 
 const createPreferenceSchema = Joi.object({
-  order_id: Joi.string().uuid().required(),
-  invoice_info: Joi.object().optional()
-});
+  order_id: Joi.string().uuid().optional(),
+  items: Joi.array().items(Joi.object().unknown(true)).optional(),
+  shipping_address: Joi.object().unknown(true).optional(),
+  shipping_method: Joi.string().allow(null, '').optional(),
+  shipping_cost: Joi.number().min(0).optional(),
+  coupon_code: Joi.string().allow(null, '').optional(),
+  invoice_info: Joi.object().allow(null).optional(),
+  notes: Joi.string().allow(null, '').optional(),
+  payment_method: Joi.string().allow(null, '').optional()
+}).or('order_id', 'items');
 
 // Endpoint para crear la preferencia de Checkout Pro (Redirección a Mercado Pago)
 router.post('/create-preference', authMiddleware, validateBody(createPreferenceSchema), paymentController.createPreference);

@@ -5,6 +5,7 @@ const nubeFactService = require('../services/nubeFactService');
 const sequelize = require('../config/database');
 const { Transaction } = require('sequelize');
 const { Order, OrderItem, Payment, OrderStatusHistory, User } = require('../models');
+const orderService = require('../services/orderService');
 const logger = require('../config/logger');
 
 /**
@@ -140,44 +141,75 @@ async function processSuccessfulOrder(orderId, paymentData) {
  */
 exports.createPreference = async (req, res, next) => {
   try {
-    const { order_id, invoice_info } = req.body;
+    const { order_id, items, shipping_address, shipping_method, shipping_cost, coupon_code, invoice_info, notes } = req.body;
 
-    if (!order_id) {
-      return res.status(400).json({
-        success: false,
-        message: 'No se especificó el ID de la orden.'
+    let order = null;
+    let preference = null;
+
+    if (order_id) {
+      // Legacy flow with existing order
+      order = await Order.findByPk(order_id, {
+        include: [
+          { model: OrderItem, as: 'items' },
+          { model: User, as: 'user' }
+        ]
+      });
+
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: 'Orden no encontrada'
+        });
+      }
+
+      if (invoice_info) {
+        order.invoice_info = invoice_info;
+      }
+
+      preference = await paymentService.createPreference(order);
+
+      order.preference_id = preference.id;
+      await order.save();
+    } else {
+      // Consolidated atomic flow: create order and MP preference in a managed transaction
+      await sequelize.transaction(async (t) => {
+        order = await orderService.createOrderCore({
+          userId: req.user.id,
+          userEmail: req.user.email,
+          userName: req.user.name,
+          items,
+          shipping_address,
+          shipping_method,
+          shipping_cost,
+          invoice_info,
+          payment_method: 'mercadopago',
+          coupon_code,
+          notes,
+          status: 'pending',
+          statusComment: 'Orden creada para pago con Mercado Pago (Checkout Pro)',
+          transaction: t
+        });
+
+        // Ensure user and items are attached on the order object for createPreference
+        order.items = order.getDataValue('items');
+        order.user = order.getDataValue('user') || { name: req.user.name, email: req.user.email };
+
+        // Create Mercado Pago Preference
+        preference = await paymentService.createPreference(order);
+
+        // Update preference_id in DB within the transaction
+        order.preference_id = preference.id;
+        await order.save({ transaction: t });
       });
     }
-
-    const order = await Order.findByPk(order_id, {
-      include: [
-        { model: OrderItem, as: 'items' },
-        { model: User, as: 'user' }
-      ]
-    });
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'Orden no encontrada'
-      });
-    }
-
-    if (invoice_info) {
-      order.invoice_info = invoice_info;
-    }
-
-    const preference = await paymentService.createPreference(order);
-
-    order.preference_id = preference.id;
-    await order.save();
 
     return res.json({
       success: true,
       message: 'Preferencia de Mercado Pago creada exitosamente.',
       preference_id: preference.id,
       init_point: preference.init_point,
-      sandbox_init_point: preference.sandbox_init_point
+      sandbox_init_point: preference.sandbox_init_point,
+      order
     });
   } catch (error) {
     logger.error('❌ [paymentController.createPreference Error]:', error);

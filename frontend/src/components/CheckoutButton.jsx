@@ -2,23 +2,45 @@ import React, { useState } from 'react';
 import { CreditCard, Loader2 } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 
-export default function CheckoutButton({ orderId, invoiceInfo, className = '' }) {
+export default function CheckoutButton({
+  orderId,
+  invoiceInfo,
+  orderPayload = null,
+  getOrderPayload = null,
+  onSuccess = null,
+  className = '',
+  disabled = false,
+  onBeforePay = null
+}) {
   const [loading, setLoading] = useState(false);
 
   const handlePayWithMercadoPago = async () => {
-    if (!orderId) {
-      alert('Error: ID de la orden no encontrado.');
+    if (disabled) return;
+
+    if (onBeforePay) {
+      const canProceed = onBeforePay();
+      if (!canProceed) return;
+    }
+
+    const payload = getOrderPayload ? getOrderPayload() : orderPayload;
+
+    if (!payload && !orderId) {
+      alert('Error: Datos del pedido no encontrados.');
       return;
     }
 
     setLoading(true);
     try {
-      const res = await axiosClient.post('/payments/create-preference', {
-        order_id: orderId,
-        invoice_info: invoiceInfo
-      });
+      const body = payload
+        ? { ...payload, invoice_info: payload.invoice_info || invoiceInfo }
+        : { order_id: orderId, invoice_info: invoiceInfo };
+
+      const res = await axiosClient.post('/payments/create-preference', body);
 
       if (res.data.success && res.data.init_point) {
+        if (onSuccess && res.data.order) {
+          onSuccess(res.data.order);
+        }
         // Redirect to Mercado Pago Checkout Pro hosted environment
         window.location.href = res.data.init_point;
       } else {
@@ -36,8 +58,8 @@ export default function CheckoutButton({ orderId, invoiceInfo, className = '' })
     <button
       type="button"
       onClick={handlePayWithMercadoPago}
-      disabled={loading}
-      className={`w-full bg-[#009EE3] hover:bg-[#0087C4] text-white font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-all active:scale-95 text-base disabled:opacity-50 ${className}`}
+      disabled={loading || disabled}
+      className={`w-full bg-[#009EE3] hover:bg-[#0087C4] text-white font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-all active:scale-95 text-base disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
     >
       {loading ? (
         <>
