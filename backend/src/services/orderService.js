@@ -1,4 +1,5 @@
 const { Order, OrderItem, OrderStatusHistory, Product, Coupon, Address } = require('../models');
+const { Op } = require('sequelize');
 
 /**
  * Creates an order record along with items, validates stock and coupons,
@@ -29,8 +30,17 @@ async function createOrderCore({
   let subtotal = 0;
   const validatedItems = [];
 
+  // Fetch all order products in a single batch query (Op.in)
+  const productIds = items.map((item) => item.product_id);
+  const dbProducts = await Product.findAll({
+    where: { id: { [Op.in]: productIds } },
+    transaction
+  });
+
+  const productMap = new Map(dbProducts.map((p) => [String(p.id), p]));
+
   for (const item of items) {
-    const product = await Product.findByPk(item.product_id, { transaction });
+    const product = productMap.get(String(item.product_id));
     if (!product || !product.is_active) {
       const err = new Error(`Producto no disponible: ${item.name || item.product_name || item.product_id}`);
       err.statusCode = 400;

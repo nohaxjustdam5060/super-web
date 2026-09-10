@@ -334,30 +334,6 @@ exports.getFilterOptions = async (req, res, next) => {
     const { Op } = require('sequelize');
     const { search, category_id, min_price, max_price, in_stock = 'true' } = req.query;
 
-    // Auto-repair unbranded active products on demand if brand_id is null (e.g. Epson products)
-    const unbrandedProducts = await Product.findAll({
-      where: { brand_id: null, is_active: true },
-      attributes: ['id', 'name']
-    });
-
-    if (unbrandedProducts.length > 0) {
-      try {
-        const cuadradoSyncService = require('../services/cuadradoSyncService');
-        const brandCache = new Map();
-        const existingBrands = await Brand.findAll();
-        existingBrands.forEach((b) => brandCache.set(b.name, b.id));
-
-        for (const p of unbrandedProducts) {
-          const inferredBrandId = await cuadradoSyncService.getOrCreateBrandForProduct(p.name, brandCache);
-          if (inferredBrandId) {
-            await Product.update({ brand_id: inferredBrandId }, { where: { id: p.id } });
-          }
-        }
-      } catch (repairErr) {
-        console.error('[AUTO_BRAND_REPAIR_ERROR]', repairErr);
-      }
-    }
-
     // Build base contextual WHERE clause for active & stocked products matching category and/or search term
     const where = await searchService.buildProductSearchQuery({
       search,

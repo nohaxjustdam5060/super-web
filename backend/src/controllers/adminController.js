@@ -3,27 +3,35 @@ const { Op } = require('sequelize');
 
 exports.getDashboardMetrics = async (req, res, next) => {
   try {
-    const totalUsers = await User.count({ where: { role: 'cliente' } });
-    const totalProducts = await Product.count();
-    const lowStockProducts = await Product.count({
-      where: { stock: { [Op.lte]: 5 } }
-    });
+    const [
+      totalUsers,
+      totalProducts,
+      lowStockProducts,
+      ordersCount,
+      rawRevenue,
+      recentOrders,
+      topLowStock
+    ] = await Promise.all([
+      User.count({ where: { role: 'cliente' } }),
+      Product.count(),
+      Product.count({
+        where: { stock: { [Op.lte]: 5 } }
+      }),
+      Order.count(),
+      Order.sum('total', { where: { status: 'paid' } }),
+      Order.findAll({
+        limit: 5,
+        order: [['createdAt', 'DESC']],
+        include: [{ model: User, as: 'user', attributes: ['id', 'name', 'email'] }]
+      }),
+      Product.findAll({
+        where: { stock: { [Op.lte]: 5 } },
+        limit: 5,
+        order: [['stock', 'ASC']]
+      })
+    ]);
 
-    const ordersCount = await Order.count();
-    const paidOrders = await Order.findAll({ where: { status: 'paid' } });
-    const totalRevenue = paidOrders.reduce((sum, ord) => sum + Number(ord.total), 0);
-
-    const recentOrders = await Order.findAll({
-      limit: 5,
-      order: [['createdAt', 'DESC']],
-      include: [{ model: User, as: 'user', attributes: ['id', 'name', 'email'] }]
-    });
-
-    const topLowStock = await Product.findAll({
-      where: { stock: { [Op.lte]: 5 } },
-      limit: 5,
-      order: [['stock', 'ASC']]
-    });
+    const totalRevenue = Number(rawRevenue || 0);
 
     return res.json({
       success: true,

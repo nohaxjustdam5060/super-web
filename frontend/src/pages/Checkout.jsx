@@ -679,7 +679,7 @@ export default function Checkout() {
                     </div>
 
                     {/* Store Pickup Form Fields */}
-                    <div className="space-y-4">
+                    <div className="space-y-4" >
                       <h4 className="font-black text-gray-900 text-sm flex items-center">
                         <ShieldCheck className="w-4 h-4 mr-1.5 text-brand-red" /> Datos de la Persona que Recoge en Tienda
                       </h4>
@@ -690,10 +690,10 @@ export default function Checkout() {
                           <input
                             type="text"
                             required
-                            placeholder="ej. Juan Carlos Pérez Rojas"
+                            placeholder="Nombre completo"
                             value={shippingAddress.recipient_name}
                             onChange={(e) => setShippingAddress({ ...shippingAddress, recipient_name: e.target.value })}
-                            className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                            className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
                           />
                         </div>
 
@@ -705,10 +705,10 @@ export default function Checkout() {
                             type="text"
                             required
                             maxLength={12}
-                            placeholder="ej. 71234567 o CE00123456"
+                            placeholder="DNI o Carné de Extranjería"
                             value={shippingAddress.recipient_document}
                             onChange={(e) => setShippingAddress({ ...shippingAddress, recipient_document: e.target.value.trim() })}
-                            className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                            className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
                           />
                           <span className="text-[10px] text-gray-400 mt-1 block">
                             💡 Se autocompletará en tu Boleta de Venta en el Paso 2.
@@ -724,10 +724,10 @@ export default function Checkout() {
                           type="tel"
                           required
                           maxLength={15}
-                          placeholder="ej. 987654321"
+                          placeholder="Teléfono celular"
                           value={shippingAddress.phone}
                           onChange={(e) => setShippingAddress({ ...shippingAddress, phone: e.target.value.replace(/[^\d+ ]/g, '') })}
-                          className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
                         />
                         <span className="text-[10px] text-gray-400 mt-1 block">
                           Te notificaremos por WhatsApp o llamada cuando tus productos estén listos para el recojo.
@@ -748,10 +748,10 @@ export default function Checkout() {
                         <input
                           type="text"
                           required
-                          placeholder="ej. Juan Pérez"
+                          placeholder="Nombre completo"
                           value={shippingAddress.recipient_name}
                           onChange={(e) => setShippingAddress({ ...shippingAddress, recipient_name: e.target.value })}
-                          className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
                         />
                       </div>
                       <div>
@@ -762,10 +762,10 @@ export default function Checkout() {
                           type="tel"
                           required
                           maxLength={15}
-                          placeholder="ej. 987654321"
+                          placeholder="Teléfono celular"
                           value={shippingAddress.phone}
                           onChange={(e) => setShippingAddress({ ...shippingAddress, phone: e.target.value.replace(/[^\d+ ]/g, '') })}
-                          className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
                         />
                       </div>
                     </div>
@@ -778,10 +778,10 @@ export default function Checkout() {
                         <input
                           type="text"
                           maxLength={12}
-                          placeholder="ej. 71234567"
+                          placeholder="DNI o Carné de Extranjería"
                           value={shippingAddress.recipient_document}
                           onChange={(e) => setShippingAddress({ ...shippingAddress, recipient_document: e.target.value.trim() })}
-                          className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
                         />
                         <span className="text-[10px] text-gray-400 mt-1 block">
                           Requerido para envíos por agencia y autocompletado de Boleta.
@@ -792,10 +792,10 @@ export default function Checkout() {
                         <input
                           type="text"
                           required
-                          placeholder="ej. Av. Javier Prado Este 1234"
+                          placeholder="Dirección (Calle, Avenida y Número)"
                           value={shippingAddress.address_line1}
                           onChange={(e) => setShippingAddress({ ...shippingAddress, address_line1: e.target.value })}
-                          className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
                         />
                       </div>
                     </div>
@@ -807,10 +807,10 @@ export default function Checkout() {
                         <input
                           type="text"
                           required
-                          placeholder="ej. Lima"
+                          placeholder="Departamento"
                           value={shippingAddress.department}
                           onChange={(e) => setShippingAddress({ ...shippingAddress, department: e.target.value })}
-                          className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
                         />
                       </div>
                       <div>
@@ -818,10 +818,10 @@ export default function Checkout() {
                         <input
                           type="text"
                           required
-                          placeholder="ej. Lima"
+                          placeholder="Provincia"
                           value={shippingAddress.province}
                           onChange={(e) => setShippingAddress({ ...shippingAddress, province: e.target.value })}
-                          className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
                         />
                       </div>
                       <div>
@@ -829,10 +829,10 @@ export default function Checkout() {
                         <input
                           type="text"
                           required
-                          placeholder="ej. Miraflores"
+                          placeholder="Distrito"
                           value={shippingAddress.district}
                           onChange={(e) => setShippingAddress({ ...shippingAddress, district: e.target.value })}
-                          className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
                         />
                       </div>
                     </div>
@@ -842,20 +842,20 @@ export default function Checkout() {
                         <label className="block text-xs font-bold text-gray-700 mb-1">Dpto / Interior (Opcional)</label>
                         <input
                           type="text"
-                          placeholder="ej. Dpto 402, Torre B"
+                          placeholder="Dpto / Interior (Opcional)"
                           value={shippingAddress.apartment_notes}
                           onChange={(e) => setShippingAddress({ ...shippingAddress, apartment_notes: e.target.value })}
-                          className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
                         />
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1">Referencia de ubicación (Opcional)</label>
                         <input
                           type="text"
-                          placeholder="ej. Altura cuadra 12 de Javier Prado, frente al parque"
+                          placeholder="Referencia de ubicación"
                           value={shippingAddress.reference}
                           onChange={(e) => setShippingAddress({ ...shippingAddress, reference: e.target.value })}
-                          className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-red font-semibold"
+                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
                         />
                       </div>
                     </div>
@@ -1052,7 +1052,7 @@ export default function Checkout() {
                           type="text"
                           required
                           maxLength={invoiceInfo.document_type === 'DNI' ? 8 : 12}
-                          placeholder={invoiceInfo.document_type === 'DNI' ? 'ej. 71234567' : 'ej. 001234567'}
+                          placeholder={invoiceInfo.document_type === 'DNI' ? 'DNI (8 dígitos)' : 'Carné de Extranjería'}
                           value={invoiceInfo.document_number}
                           onChange={(e) => {
                             const raw = e.target.value;
@@ -1079,12 +1079,12 @@ export default function Checkout() {
                               const cleanCE = raw.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 12);
                               setDocumentDrafts((prev) => ({ ...prev, CE: cleanCE }));
                               setInvoiceInfo((prev) => ({
-                                ...prev,
-                                document_number: cleanCE
+                                  ...prev,
+                                  document_number: cleanCE
                               }));
                             }
                           }}
-                          className="w-full bg-white border border-gray-300 rounded-xl p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-blue"
+                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
                         />
                         <span className="text-[10px] text-gray-400 mt-1 block">
                           Autocompletado desde los datos del paso anterior si ingresaste tu documento.
@@ -1103,14 +1103,14 @@ export default function Checkout() {
                             type="text"
                             required
                             maxLength={11}
-                            placeholder="ej. 20601234567"
+                            placeholder="Número de RUC (11 dígitos)"
                             value={invoiceInfo.document_number}
                             onChange={(e) => {
                               const cleanRUC = e.target.value.replace(/\D/g, '').slice(0, 11);
                               setDocumentDrafts((prev) => ({ ...prev, RUC: cleanRUC }));
                               setInvoiceInfo((prev) => ({ ...prev, document_number: cleanRUC }));
                             }}
-                            className="w-full bg-white border border-gray-300 rounded-xl p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-blue"
+                            className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
                           />
                         </div>
 
@@ -1121,10 +1121,10 @@ export default function Checkout() {
                           <input
                             type="text"
                             required
-                            placeholder="ej. CORPORACION TECH S.A.C."
+                            placeholder="Razón Social"
                             value={invoiceInfo.company_name}
                             onChange={(e) => setInvoiceInfo({ ...invoiceInfo, company_name: e.target.value })}
-                            className="w-full bg-white border border-gray-300 rounded-xl p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-blue"
+                            className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
                           />
                         </div>
                       </div>
@@ -1140,22 +1140,22 @@ export default function Checkout() {
                                 type="checkbox"
                                 checked={useDeliveryAsFiscalAddress}
                                 onChange={handleToggleFiscalAddress}
-                                className="w-3.5 h-3.5 text-brand-blue rounded border-gray-300 focus:ring-brand-blue cursor-pointer"
+                                className="w-3.5 h-3.5 text-brand-red rounded border-gray-300 focus:ring-brand-red cursor-pointer"
                               />
-                              <span>Usar dirección de entrega como Domicilio Fiscal</span>
+                              <span className="text-gray-700 hover:text-brand-red transition-colors">Usar dirección de entrega como Domicilio Fiscal</span>
                             </label>
                           )}
                         </div>
                         <input
                           type="text"
                           required
-                          placeholder="ej. Av. Rivera Navarrete 501, San Isidro, Lima"
+                          placeholder="Domicilio Fiscal de la Empresa"
                           value={invoiceInfo.fiscal_address}
                           onChange={(e) => {
                             setUseDeliveryAsFiscalAddress(false);
                             setInvoiceInfo({ ...invoiceInfo, fiscal_address: e.target.value });
                           }}
-                          className="w-full bg-white border border-gray-300 rounded-xl p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-blue"
+                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
                         />
                       </div>
                     </div>
@@ -1316,15 +1316,15 @@ export default function Checkout() {
             <div className="pt-3 border-t border-gray-100 flex space-x-2">
               <input
                 type="text"
-                placeholder="Código de cupón (ej: SUPERLAPTOP10)"
+                placeholder="Código de cupón"
                 value={couponCode}
                 onChange={(e) => setCouponCode(e.target.value)}
-                className="flex-1 bg-gray-50 border border-gray-300 rounded-xl px-3 py-1.5 text-xs font-semibold"
+                className="flex-1 bg-white border border-gray-300 rounded-xl px-3.5 py-2.5 text-xs text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
               />
               <button
                 type="button"
                 onClick={applyCoupon}
-                className="bg-brand-dark text-white text-xs font-bold px-3 py-1.5 rounded-xl hover:bg-slate-800"
+                className="bg-brand-dark text-white text-xs font-bold px-3.5 py-2.5 rounded-xl hover:bg-slate-800 transition-colors"
               >
                 Aplicar
               </button>

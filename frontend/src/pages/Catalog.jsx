@@ -55,6 +55,52 @@ export default function Catalog() {
 
   const [categoriesTree, setCategoriesTree] = useState([]);
 
+  // Local state for debouncing price range filters
+  const [priceInputs, setPriceInputs] = useState({
+    min: minPrice,
+    max: maxPrice
+  });
+
+  // Keep local inputs in sync when URL changes externally (e.g. clearFilters, navigation)
+  useEffect(() => {
+    setPriceInputs({
+      min: minPrice,
+      max: maxPrice
+    });
+  }, [minPrice, maxPrice]);
+
+  // Debounced effect (450ms) to update URL params from local price inputs
+  useEffect(() => {
+    const currentMin = searchParams.get('min_price') || '';
+    const currentMax = searchParams.get('max_price') || '';
+
+    if (priceInputs.min === currentMin && priceInputs.max === currentMax) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        if (priceInputs.min) {
+          next.set('min_price', priceInputs.min);
+        } else {
+          next.delete('min_price');
+        }
+
+        if (priceInputs.max) {
+          next.set('max_price', priceInputs.max);
+        } else {
+          next.delete('max_price');
+        }
+
+        next.delete('page'); // Reset to page 1
+        return next;
+      });
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [priceInputs.min, priceInputs.max]);
+
   // Fetch Categories tree once on mount
   useEffect(() => {
     axiosClient.get('/products/categories')
@@ -242,6 +288,7 @@ export default function Catalog() {
   };
 
   const clearFilters = () => {
+    setPriceInputs({ min: '', max: '' });
     setSearchParams({});
   };
 
@@ -436,15 +483,15 @@ export default function Catalog() {
                   <input
                     type="number"
                     placeholder="Mín"
-                    value={minPrice}
-                    onChange={(e) => handleFilterChange('min_price', e.target.value)}
+                    value={priceInputs.min}
+                    onChange={(e) => setPriceInputs((prev) => ({ ...prev, min: e.target.value }))}
                     className="w-full bg-gray-50 border border-gray-300 rounded-xl py-2 px-3 text-xs focus:ring-2 focus:ring-brand-red"
                   />
                   <input
                     type="number"
                     placeholder="Máx"
-                    value={maxPrice}
-                    onChange={(e) => handleFilterChange('max_price', e.target.value)}
+                    value={priceInputs.max}
+                    onChange={(e) => setPriceInputs((prev) => ({ ...prev, max: e.target.value }))}
                     className="w-full bg-gray-50 border border-gray-300 rounded-xl py-2 px-3 text-xs focus:ring-2 focus:ring-brand-red"
                   />
                 </div>

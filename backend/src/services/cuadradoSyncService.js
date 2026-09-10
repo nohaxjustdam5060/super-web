@@ -381,15 +381,22 @@ class CuadradoSyncService {
           const priceChanged = Math.abs(Number(existing.price) - price) > 0.01;
           const stockChanged = Number(existing.stock) !== stock;
           const statusChanged = Boolean(existing.is_active) !== isActive;
+          const missingBrand = !existing.brand_id;
 
-          if (priceChanged || stockChanged || statusChanged) {
+          let brandIdToAssign = null;
+          if (missingBrand) {
+            brandIdToAssign = await this.getOrCreateBrandForProduct(existing.name || item.nombre, brandCache);
+          }
+
+          if (priceChanged || stockChanged || statusChanged || (missingBrand && brandIdToAssign)) {
             itemsToUpdate.push({
               id: existing.id,
               sku,
               price,
               stock,
               is_active: isActive,
-              technical_specs: technicalSpecs
+              technical_specs: technicalSpecs,
+              ...(brandIdToAssign ? { brand_id: brandIdToAssign } : {})
             });
           } else {
             skippedCount++;
@@ -411,13 +418,17 @@ class CuadradoSyncService {
         const batch = itemsToUpdate.slice(i, i + BATCH_SIZE);
         await sequelize.transaction(async (t) => {
           for (const upd of batch) {
+            const updatePayload = {
+              price: upd.price,
+              stock: upd.stock,
+              is_active: upd.is_active,
+              technical_specs: upd.technical_specs
+            };
+            if (upd.brand_id) {
+              updatePayload.brand_id = upd.brand_id;
+            }
             await Product.update(
-              {
-                price: upd.price,
-                stock: upd.stock,
-                is_active: upd.is_active,
-                technical_specs: upd.technical_specs
-              },
+              updatePayload,
               {
                 where: { id: upd.id },
                 transaction: t
