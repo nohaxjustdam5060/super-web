@@ -51,6 +51,14 @@ export default function HeroCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
+  // Image Preloading Effect (Pre-decodes slide images into memory cache on mount)
+  useEffect(() => {
+    SLIDES.forEach((slide) => {
+      const img = new Image();
+      img.src = slide.image;
+    });
+  }, []);
+
   const nextSlide = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % SLIDES.length);
   }, []);
@@ -59,14 +67,14 @@ export default function HeroCarousel() {
     setCurrentIndex((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
   }, []);
 
-  // Autoplay Effect (Changes slide every 4.5 seconds unless hovered)
+  // Autoplay Effect (Changes slide every 3.5 seconds unless hovered, resets on manual interaction)
   useEffect(() => {
     if (isPaused) return;
     const timer = setInterval(() => {
       nextSlide();
-    }, 4500);
+    }, 3500);
     return () => clearInterval(timer);
-  }, [isPaused, nextSlide]);
+  }, [isPaused, nextSlide, currentIndex]);
 
   return (
     <div className="w-full relative overflow-hidden bg-slate-950 text-white select-none">
@@ -83,21 +91,27 @@ export default function HeroCarousel() {
           return (
             <div
               key={slide.id}
-              className={`absolute inset-0 w-full h-full transition-all duration-700 ease-in-out transform ${
+              style={{ willChange: 'opacity' }}
+              className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${
                 isActive
-                  ? 'opacity-100 translate-x-0 z-10 pointer-events-auto'
-                  : 'opacity-0 translate-x-8 z-0 pointer-events-none'
+                  ? 'opacity-100 z-10 pointer-events-auto'
+                  : 'opacity-0 z-0 pointer-events-none'
               }`}
             >
-              {/* Background Image with Dark Overlay Gradient */}
-              <div className="absolute inset-0 w-full h-full">
+              {/* Background Image with Dark Overlay Gradient & Hardware-Accelerated Zoom */}
+              <div className="absolute inset-0 w-full h-full overflow-hidden">
                 <img
                   src={slide.image}
                   alt={slide.title}
-                  className="w-full h-full object-cover object-center opacity-30 mix-blend-luminosity scale-100 transition-transform duration-1000"
+                  loading="eager"
+                  decoding="async"
+                  style={{ willChange: 'transform, opacity' }}
+                  className={`w-full h-full object-cover object-center transition-all duration-1000 ease-out ${
+                    isActive ? 'opacity-40 scale-105' : 'opacity-0 scale-100'
+                  }`}
                 />
-                <div className={`absolute inset-0 bg-gradient-to-r ${slide.gradient} opacity-90`} />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-black/40" />
+                <div className={`absolute inset-0 bg-gradient-to-r ${slide.gradient} opacity-85`} />
+                <div className="absolute inset-0 bg-slate-950/50" />
               </div>
 
               {/* Slide Text & Content Grid (Centered Content inside max-w-7xl) */}
@@ -106,7 +120,7 @@ export default function HeroCarousel() {
                   {/* Left Column: Headline & Action Buttons */}
                   <div className="lg:col-span-8 space-y-4 sm:space-y-6">
                     <span className="inline-flex items-center space-x-2 bg-brand-red/20 text-brand-red-accent border border-brand-red/40 text-xs font-black px-3.5 py-1.5 rounded-md uppercase tracking-wider shadow-sm">
-                      <BadgeIcon className="w-4 h-4 animate-bounce" />
+                      <BadgeIcon className={`w-4 h-4 ${isActive ? 'animate-bounce' : ''}`} />
                       <span>{slide.badge}</span>
                     </span>
 
@@ -132,7 +146,7 @@ export default function HeroCarousel() {
 
                       <Link
                         to={slide.secondaryBtnLink}
-                        className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold px-5 sm:px-6 py-3 sm:py-3.5 rounded-md transition-colors text-sm sm:text-base cursor-pointer backdrop-blur-sm"
+                        className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold px-5 sm:px-6 py-3 sm:py-3.5 rounded-md transition-colors text-sm sm:text-base cursor-pointer"
                       >
                         {slide.secondaryBtnText}
                       </Link>
@@ -142,11 +156,16 @@ export default function HeroCarousel() {
                   {/* Right Column: Featured Image Graphic (Hidden on mobile for clean vertical alignment) */}
                   <div className="hidden lg:flex lg:col-span-4 justify-center items-center">
                     <div className="relative group">
-                      <div className="absolute inset-0 bg-brand-red/20 rounded-lg blur-2xl group-hover:bg-brand-red/30 transition-colors" />
+                      <div className="absolute inset-0 bg-brand-red/15 rounded-lg opacity-80 group-hover:bg-brand-red/25 transition-colors" />
                       <img
                         src={slide.image}
                         alt={slide.title}
-                        className="relative z-10 max-h-[340px] lg:max-h-[380px] w-auto max-w-full object-contain rounded-lg border border-white/10 shadow-2xl drop-shadow-[0_20px_30px_rgba(0,0,0,0.5)] transform transition-transform duration-500"
+                        loading="eager"
+                        decoding="async"
+                        style={{ willChange: 'transform, opacity' }}
+                        className={`relative z-10 max-h-[340px] lg:max-h-[380px] w-auto max-w-full object-contain rounded-lg border border-white/10 shadow-2xl transform transition-transform duration-700 ease-out ${
+                          isActive ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+                        }`}
                       />
                     </div>
                   </div>

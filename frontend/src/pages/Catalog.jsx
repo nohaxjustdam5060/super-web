@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Filter, Grid, List, Search, RefreshCw, ChevronDown, CheckCircle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
+import DualRangeSlider from '../components/DualRangeSlider';
 import axiosClient from '../api/axiosClient';
 
 export default function Catalog() {
@@ -477,24 +478,39 @@ export default function Catalog() {
           {/* Render Filter Sidebar with clean consolidated options */}
           {(() => {
             const renderPriceFilter = () => (
-              <div key="price_filter">
-                <h4 className="font-bold text-xs sm:text-sm text-gray-800 mb-2">Rango de Precio (S/)</h4>
+              <div key="price_filter" className="space-y-2">
+                <h4 className="font-bold text-xs sm:text-sm text-gray-800">Rango de Precio (S/)</h4>
                 <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="number"
-                    placeholder="Mín"
-                    value={priceInputs.min}
-                    onChange={(e) => setPriceInputs((prev) => ({ ...prev, min: e.target.value }))}
-                    className="w-full bg-gray-50 border border-gray-300 rounded-xl py-2 px-3 text-xs focus:ring-2 focus:ring-brand-red"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Máx"
-                    value={priceInputs.max}
-                    onChange={(e) => setPriceInputs((prev) => ({ ...prev, max: e.target.value }))}
-                    className="w-full bg-gray-50 border border-gray-300 rounded-xl py-2 px-3 text-xs focus:ring-2 focus:ring-brand-red"
-                  />
+                  <div className="relative">
+                    <span className="absolute left-2.5 top-2 text-[11px] font-extrabold text-gray-400 select-none">S/</span>
+                    <input
+                      type="number"
+                      placeholder="Mín"
+                      value={priceInputs.min}
+                      onChange={(e) => setPriceInputs((prev) => ({ ...prev, min: e.target.value }))}
+                      className="w-full bg-white border border-gray-300 rounded-xl py-1.5 pl-7 pr-2 text-xs font-semibold text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
+                    />
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-2.5 top-2 text-[11px] font-extrabold text-gray-400 select-none">S/</span>
+                    <input
+                      type="number"
+                      placeholder="Máx"
+                      value={priceInputs.max}
+                      onChange={(e) => setPriceInputs((prev) => ({ ...prev, max: e.target.value }))}
+                      className="w-full bg-white border border-gray-300 rounded-xl py-1.5 pl-7 pr-2 text-xs font-semibold text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
+                    />
+                  </div>
                 </div>
+
+                <DualRangeSlider
+                  min={0}
+                  max={20000}
+                  step={50}
+                  valueMin={priceInputs.min}
+                  valueMax={priceInputs.max}
+                  onChange={(newMin, newMax) => setPriceInputs({ min: newMin, max: newMax })}
+                />
               </div>
             );
 

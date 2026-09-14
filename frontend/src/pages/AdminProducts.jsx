@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Package, Check, X, ToggleLeft, ToggleRight, Sparkles, Filter, Trash2, UploadCloud, Star, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Plus, Edit2, Package, Check, X, ToggleLeft, ToggleRight, Sparkles, Filter, Trash2, UploadCloud, Star, Search, ChevronLeft, ChevronRight, LayoutDashboard } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 
 export default function AdminProducts() {
@@ -378,19 +379,30 @@ export default function AdminProducts() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-3xl border border-gray-200 shadow-sm gap-4">
+      <div className="bg-brand-dark text-white p-6 rounded-3xl border border-slate-800 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 flex items-center">
+          <span className="text-brand-red-accent font-black text-xs uppercase tracking-widest">[ PANEL ADMINISTRATIVO SUPER ]</span>
+          <h1 className="text-2xl font-black mt-1 flex items-center">
             <Package className="w-6 h-6 mr-2 text-brand-red" /> Gestión de Productos e Inventario
           </h1>
-          <p className="text-xs text-gray-500">Administración de catálogo, edición de precios y control de visibilidad</p>
+          <p className="text-xs text-gray-400 mt-0.5">Administración de catálogo, edición de precios y control de visibilidad</p>
         </div>
-        <button
-          onClick={openCreateModal}
-          className="bg-brand-red hover:bg-brand-red-hover text-white font-extrabold text-xs px-5 py-3 rounded-2xl flex items-center shadow-lg transition-transform active:scale-95 cursor-pointer"
-        >
-          <Plus className="w-4 h-4 mr-1.5" /> Nuevo Producto
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
+          <Link
+            to="/admin"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-extrabold text-xs px-5 py-3 rounded-2xl transition-all active:scale-95 shadow-md cursor-pointer"
+          >
+            <LayoutDashboard className="w-4 h-4 text-brand-red-accent" />
+            <span>Volver al Dashboard</span>
+          </Link>
+          <button
+            onClick={openCreateModal}
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 bg-brand-red hover:bg-brand-red-hover text-white font-extrabold text-xs px-5 py-3 rounded-2xl shadow-lg transition-transform active:scale-95 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Nuevo Producto</span>
+          </button>
+        </div>
       </div>
 
       {/* Status Filter Tabs & Search Bar */}

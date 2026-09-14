@@ -1,38 +1,47 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Truck, CreditCard, RefreshCw, Mail, Phone, MapPin } from 'lucide-react';
+import PaymentBadges from './PaymentBadges';
 
 export default function Footer() {
   return (
     <footer className="bg-brand-dark text-gray-300 border-t border-gray-800 pt-12 pb-8">
       {/* Features Bar */}
       <div className="max-w-7xl mx-auto px-4 pb-10 border-b border-gray-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="flex items-center space-x-3 bg-gray-900/60 p-4 rounded-md border border-gray-800">
-          <Truck className="w-8 h-8 text-brand-red-accent flex-shrink-0" />
+        <div className="flex items-center space-x-3.5 bg-gray-900/60 p-4 rounded-xl border border-gray-800/80 hover:border-gray-700/80 transition-all duration-200">
+          <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 flex-shrink-0 flex items-center justify-center">
+            <Truck className="w-6 h-6 text-red-500" />
+          </div>
           <div>
-            <h4 className="text-white font-bold text-sm">Envíos a Todo el Perú</h4>
-            <p className="text-xs text-gray-400">Despacho express a Lima y provincias</p>
+            <h4 className="text-white font-semibold text-sm">Envíos a Todo el Perú</h4>
+            <p className="text-sm text-gray-400">Despacho express a Lima y provincias</p>
           </div>
         </div>
-        <div className="flex items-center space-x-3 bg-gray-900/60 p-4 rounded-md border border-gray-800">
-          <ShieldCheck className="w-8 h-8 text-brand-blue-bright flex-shrink-0" />
+        <div className="flex items-center space-x-3.5 bg-gray-900/60 p-4 rounded-xl border border-gray-800/80 hover:border-gray-700/80 transition-all duration-200">
+          <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 flex-shrink-0 flex items-center justify-center">
+            <ShieldCheck className="w-6 h-6 text-red-500" />
+          </div>
           <div>
-            <h4 className="text-white font-bold text-sm">Garantía 100% Oficial</h4>
-            <p className="text-xs text-gray-400">Productos con sello de fabricante</p>
+            <h4 className="text-white font-semibold text-sm">Garantía 100% Oficial</h4>
+            <p className="text-sm text-gray-400">Productos con sello de fabricante</p>
           </div>
         </div>
-        <div className="flex items-center space-x-3 bg-gray-900/60 p-4 rounded-md border border-gray-800">
-          <CreditCard className="w-8 h-8 text-emerald-400 flex-shrink-0" />
+        <div className="flex items-center space-x-3.5 bg-gray-900/60 p-4 rounded-xl border border-gray-800/80 hover:border-gray-700/80 transition-all duration-200">
+          <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 flex-shrink-0 flex items-center justify-center">
+            <CreditCard className="w-6 h-6 text-red-500" />
+          </div>
           <div>
-            <h4 className="text-white font-bold text-sm">Mercado Pago Seguro</h4>
-            <p className="text-xs text-gray-400">Tarjetas de crédito/débito y cuotas</p>
+            <h4 className="text-white font-semibold text-sm">Mercado Pago Seguro</h4>
+            <p className="text-sm text-gray-400">Tarjetas de crédito/débito y cuotas</p>
           </div>
         </div>
-        <div className="flex items-center space-x-3 bg-gray-900/60 p-4 rounded-md border border-gray-800">
-          <RefreshCw className="w-8 h-8 text-amber-400 flex-shrink-0" />
+        <div className="flex items-center space-x-3.5 bg-gray-900/60 p-4 rounded-xl border border-gray-800/80 hover:border-gray-700/80 transition-all duration-200">
+          <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 flex-shrink-0 flex items-center justify-center">
+            <RefreshCw className="w-6 h-6 text-red-500" />
+          </div>
           <div>
-            <h4 className="text-white font-bold text-sm">Soporte Especializado</h4>
-            <p className="text-xs text-gray-400">Asesoría por WhatsApp</p>
+            <h4 className="text-white font-semibold text-sm">Soporte Especializado</h4>
+            <p className="text-sm text-gray-400">Asesoría por WhatsApp</p>
           </div>
         </div>
       </div>
@@ -86,7 +95,7 @@ export default function Footer() {
 
         {/* Col 4: Servicio al Cliente */}
         <div>
-          <h4 className="text-white font-bold text-base mb-4 border-b border-brand-blue-bright inline-block pb-1">Servicio al Cliente</h4>
+          <h4 className="text-white font-bold text-base mb-4 border-b border-brand-red-accent inline-block pb-1">Servicio al Cliente</h4>
           <ul className="space-y-2.5 text-sm">
             <li><Link to="/profile" className="hover:text-white transition-colors">Estado de mi Pedido</Link></li>
             <li><Link to="/catalog" className="hover:text-white transition-colors">Guía de Compras y Armado</Link></li>
@@ -98,15 +107,9 @@ export default function Footer() {
 
         {/* Col 5: Medios de Pago */}
         <div>
-          <h4 className="text-white font-bold text-base mb-4 border-b border-emerald-400 inline-block pb-1">Medios de Pago</h4>
-          <p className="text-xs text-gray-400 mb-4">Aceptamos todas las tarjetas:</p>
-          <div className="flex flex-wrap gap-2 text-xs font-semibold text-gray-200">
-            <span className="bg-gray-800 px-3 py-1.5 rounded-md border border-gray-700">💳 Visa</span>
-            <span className="bg-gray-800 px-3 py-1.5 rounded-md border border-gray-700">💳 Mastercard</span>
-            <span className="bg-gray-800 px-3 py-1.5 rounded-md border border-gray-700">💳 Diners / Amex</span>
-            <span className="bg-gray-800 px-3 py-1.5 rounded-md border border-gray-700">📱 Yape / Plin</span>
-            <span className="bg-gray-800 px-3 py-1.5 rounded-md border border-gray-700">🏦 PagoEfectivo</span>
-          </div>
+          <h4 className="text-white font-bold text-base mb-4 border-b border-brand-red-accent inline-block pb-1">Medios de Pago</h4>
+          <p className="text-xs text-gray-400 mb-4">Aceptamos todas las tarjetas y pagos digitales:</p>
+          <PaymentBadges />
         </div>
       </div>
 

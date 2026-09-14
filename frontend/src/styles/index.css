@@ -58,3 +58,46 @@
   animation: marquee 16s linear infinite;
 }
 
+/* Dual Range Slider Custom Thumb Styling */
+.range-slider-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  border: 2.5px solid #e52e2e;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.15s ease-in-out;
+}
+
+.range-slider-thumb::-webkit-slider-thumb:hover {
+  transform: scale(1.18);
+}
+
+.range-slider-thumb::-webkit-slider-thumb:active {
+  transform: scale(0.92);
+}
+
+.range-slider-thumb::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  border: 2.5px solid #e52e2e;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.15s ease-in-out;
+}
+
+.range-slider-thumb::-moz-range-thumb:hover {
+  transform: scale(1.18);
+}
+
+.range-slider-thumb::-moz-range-thumb:active {
+  transform: scale(0.92);
+}
+

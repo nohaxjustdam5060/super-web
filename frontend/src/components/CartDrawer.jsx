@@ -1,35 +1,44 @@
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, MessageSquare } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import { generateWhatsAppOrderUrl } from '../utils/whatsappMessage';
 
-export default function CartDrawer() {
+const CartDrawer = memo(function CartDrawer() {
   const { items, isOpen, closeCart, updateQuantity, removeItem, getSubtotal } = useCartStore();
   const navigate = useNavigate();
-  const subtotal = getSubtotal();
+
+  const totalItemsCount = useMemo(() => {
+    return items.reduce((acc, item) => acc + item.quantity, 0);
+  }, [items]);
+
+  const subtotal = useMemo(() => {
+    return getSubtotal();
+  }, [items, getSubtotal]);
+
+  const whatsappUrl = useMemo(() => {
+    return generateWhatsAppOrderUrl(items);
+  }, [items]);
 
   if (!isOpen) return null;
 
-  const whatsappUrl = generateWhatsAppOrderUrl(items);
-
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-50 overflow-hidden animate-fadeIn">
+      {/* Backdrop without GPU backdrop-blur */}
       <div
         onClick={closeCart}
-        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-slate-900/65 transition-opacity duration-300"
       />
 
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-2 sm:pl-10">
-        <div className="w-[92vw] sm:w-screen max-w-md bg-white shadow-2xl flex flex-col">
+        <div className="w-[92vw] sm:w-screen max-w-md bg-white shadow-2xl flex flex-col transform transition-transform duration-300">
           {/* Header */}
           <div className="p-5 bg-brand-dark text-white flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <ShoppingBag className="w-5 h-5 text-brand-red-accent" />
               <h2 className="font-bold text-lg">Tu Carrito SUPER</h2>
               <span className="bg-brand-red text-white text-xs font-black px-2 py-0.5 rounded-full">
-                {items.reduce((acc, item) => acc + item.quantity, 0)}
+                {totalItemsCount}
               </span>
             </div>
             <button onClick={closeCart} className="text-gray-400 hover:text-white p-1 rounded-lg">
@@ -53,13 +62,17 @@ export default function CartDrawer() {
               </div>
             ) : (
               items.map((item) => (
-                <div key={item.id} className="flex items-center space-x-4 p-3 bg-gray-50 border border-gray-200 rounded-xl relative group">
+                <div key={item.id || item.product_id} className="flex items-center space-x-4 p-3 bg-gray-50 border border-gray-200 rounded-xl relative group">
                   <img
                     src={item.image_url || 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=150&auto=format&fit=crop'}
                     alt={item.name}
-                    className="w-16 h-16 object-contain rounded-lg bg-white p-1 border border-gray-100"
+                    width={64}
+                    height={64}
+                    decoding="async"
+                    loading="lazy"
+                    className="w-16 h-16 object-contain rounded-lg bg-white p-1 border border-gray-100 flex-shrink-0"
                   />
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <h4 className="font-bold text-xs text-gray-900 line-clamp-2">{item.name}</h4>
                     <p className="text-xs text-brand-red font-black mt-1">
                       S/ {Number(item.price).toFixed(2)}
@@ -129,4 +142,6 @@ export default function CartDrawer() {
       </div>
     </div>
   );
-}
+});
+
+export default CartDrawer;

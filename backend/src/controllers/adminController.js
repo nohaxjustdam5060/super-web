@@ -91,9 +91,79 @@ exports.updateUserRole = async (req, res, next) => {
 
 exports.getAdminOrders = async (req, res, next) => {
   try {
-    const { Payment, OrderItem, Product, ProductImage } = require('../models');
-    const orders = await Order.findAll({
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.max(1, Math.min(100, parseInt(req.query.limit, 10) || 10));
+    const offset = (page - 1) * limit;
+    const { status, shippingFilter } = req.query;
+
+    const whereClause = {};
+
+    if (status && status !== 'all') {
+      whereClause.status = status;
+    }
+
+    if (shippingFilter && shippingFilter !== 'all') {
+      if (shippingFilter === 'pickup') {
+        whereClause[Op.or] = [
+          { shipping_method: { [Op.iLike]: '%recojo%' } },
+          { shipping_method: { [Op.iLike]: '%pickup%' } },
+          { shipping_method: { [Op.iLike]: '%tienda%' } }
+        ];
+      } else if (shippingFilter === 'provincia_express') {
+        whereClause[Op.or] = [
+          { shipping_method: { [Op.iLike]: '%provincia%' } },
+          { shipping_method: { [Op.iLike]: '%agencia%' } }
+        ];
+      } else if (shippingFilter === 'lima_callao') {
+        whereClause[Op.and] = [
+          { shipping_method: { [Op.notILike]: '%recojo%' } },
+          { shipping_method: { [Op.notILike]: '%pickup%' } },
+          { shipping_method: { [Op.notILike]: '%tienda%' } },
+          { shipping_method: { [Op.notILike]: '%provincia%' } },
+          { shipping_method: { [Op.notILike]: '%agencia%' } }
+        ];
+      }
+    }
+
+    const { count, rows } = await Order.findAndCountAll({
+      where: whereClause,
+      limit,
+      offset,
       order: [['createdAt', 'DESC']],
+      distinct: true,
+      attributes: [
+        'id', 'order_number', 'user_id', 'status', 'subtotal',
+        'discount_amount', 'shipping_cost', 'total', 'shipping_address',
+        'shipping_method', 'invoice_info', 'payment_method', 'coupon_code',
+        'notes', 'createdAt'
+      ],
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'name', 'email', 'phone'] }
+      ]
+    });
+
+    const totalPages = Math.ceil(count / limit) || 1;
+
+    return res.json({
+      success: true,
+      orders: rows,
+      pagination: {
+        total: count,
+        totalPages,
+        currentPage: page,
+        limit
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAdminOrderDetail = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { Payment, OrderItem, Product, ProductImage } = require('../models');
+    const order = await Order.findByPk(id, {
       include: [
         { model: User, as: 'user', attributes: ['id', 'name', 'email', 'phone'] },
         { model: Payment, as: 'payments' },
@@ -104,13 +174,19 @@ exports.getAdminOrders = async (req, res, next) => {
             {
               model: Product,
               as: 'product',
-              include: [{ model: ProductImage, as: 'images' }]
+              attributes: ['id', 'name', 'sku', 'price'],
+              include: [{ model: ProductImage, as: 'images', attributes: ['id', 'image_url', 'is_primary'] }]
             }
           ]
         }
       ]
     });
-    return res.json({ success: true, orders });
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Orden no encontrada' });
+    }
+
+    return res.json({ success: true, order });
   } catch (error) {
     next(error);
   }

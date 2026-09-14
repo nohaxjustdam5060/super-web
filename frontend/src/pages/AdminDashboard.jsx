@@ -1,42 +1,107 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { 
   LayoutDashboard, ShoppingBag, Users, AlertTriangle, DollarSign, Package, 
   ShieldCheck, CheckCircle2, Clock, FileText, Building2, CreditCard, 
-  ExternalLink, Filter, Truck, Eye, X, Printer, User, MapPin, Calendar 
+  ExternalLink, Filter, Truck, Eye, X, Printer, User, MapPin, Calendar,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
+import OrderDetailsModal from '../components/OrderDetailsModal';
 
 export default function AdminDashboard() {
-  const [metrics, setMetrics] = useState(null);
-  const [orders, setOrders] = useState([]);
-  const [lowStock, setLowStock] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const tableRef = useRef(null);
   const [verifyingId, setVerifyingId] = useState(null);
   const [shippingFilter, setShippingFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
-  const fetchAdminData = () => {
-    setLoading(true);
-    Promise.all([
-      axiosClient.get('/admin/metrics'),
-      axiosClient.get('/admin/orders')
-    ])
-      .then(([metricsRes, ordersRes]) => {
-        if (metricsRes.data.success) {
-          setMetrics(metricsRes.data.metrics);
-          setLowStock(metricsRes.data.topLowStock || []);
-        }
-        if (ordersRes.data.success) {
-          setOrders(ordersRes.data.orders || []);
-        }
-      })
-      .catch((err) => console.error('[AdminDashboard] Error:', err))
-      .finally(() => setLoading(false));
+  // Cached Queries with 60s stale time (Instant 0ms transitions on return)
+  const { data: metricsData, isLoading: metricsLoading } = useQuery({
+    queryKey: ['adminMetrics'],
+    queryFn: async () => {
+      const res = await axiosClient.get('/admin/metrics');
+      return res.data;
+    },
+    staleTime: 60000
+  });
+
+  const { data: ordersData, isLoading: ordersLoading } = useQuery({
+    queryKey: ['adminOrders', page, limit, shippingFilter],
+    queryFn: async () => {
+      const res = await axiosClient.get('/admin/orders', {
+        params: { page, limit, shippingFilter }
+      });
+      return res.data;
+    },
+    staleTime: 60000
+  });
+
+  const metrics = metricsData?.metrics || null;
+  const lowStock = metricsData?.topLowStock || [];
+  const orders = ordersData?.orders || [];
+  const pagination = ordersData?.pagination || { total: orders.length, totalPages: 1, currentPage: page, limit };
+  const totalOrdersCount = pagination.total || 0;
+  const totalPages = pagination.totalPages || 1;
+  const currentPage = pagination.currentPage || page;
+  const startIndex = totalOrdersCount > 0 ? (currentPage - 1) * limit + 1 : 0;
+  const endIndex = Math.min(currentPage * limit, totalOrdersCount);
+
+  const handleShippingFilterChange = (e) => {
+    setShippingFilter(e.target.value);
+    setPage(1);
   };
 
-  useEffect(() => {
-    fetchAdminData();
+  const handleLimitChange = (e) => {
+    setLimit(Number(e.target.value));
+    setPage(1);
+  };
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    if (tableRef.current) {
+      tableRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push('...');
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (currentPage < totalPages - 2) pages.push('...');
+      pages.push(totalPages);
+    }
+    return pages;
+  };
+
+  // Open modal instantly and fetch detailed items on-demand
+  const handleOpenDetail = useCallback(async (ord) => {
+    setSelectedOrder(ord);
+    setLoadingDetail(true);
+    try {
+      const res = await axiosClient.get(`/admin/orders/${ord.id}`);
+      if (res.data.success && res.data.order) {
+        setSelectedOrder(res.data.order);
+      }
+    } catch (err) {
+      console.error('[AdminDashboard] Error fetching order detail:', err);
+    } finally {
+      setLoadingDetail(false);
+    }
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setSelectedOrder(null);
   }, []);
 
   const handleVerifyBankTransfer = async (orderId) => {
@@ -47,7 +112,11 @@ export default function AdminDashboard() {
       const res = await axiosClient.put(`/orders/${orderId}/verify-bank-transfer`);
       if (res.data.success) {
         alert('¡Transferencia bancaria verificada exitosamente! La orden ha sido marcada como PAGADA.');
-        fetchAdminData();
+        queryClient.invalidateQueries({ queryKey: ['adminMetrics'] });
+        queryClient.invalidateQueries({ queryKey: ['adminOrders'] });
+        if (selectedOrder && selectedOrder.id === orderId) {
+          setSelectedOrder((prev) => ({ ...prev, status: 'paid' }));
+        }
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Error al verificar la transferencia bancaria.');
@@ -110,10 +179,6 @@ export default function AdminDashboard() {
     return true;
   });
 
-  if (loading) {
-    return <div className="max-w-7xl mx-auto px-4 py-16 text-center font-bold text-gray-500">Cargando panel de administración...</div>;
-  }
-
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
       {/* Header Bar */}
@@ -122,9 +187,13 @@ export default function AdminDashboard() {
           <span className="text-brand-red-accent font-black text-xs uppercase tracking-widest">[ PANEL ADMINISTRATIVO SUPER ]</span>
           <h1 className="text-2xl font-black mt-1">Dashboard & Gestión de Pedidos</h1>
         </div>
-        <div className="flex space-x-3 text-xs font-bold">
-          <Link to="/admin/products" className="bg-brand-red px-5 py-2.5 rounded-xl hover:bg-brand-red-hover transition-colors shadow">
-            Gestionar Productos
+        <div className="flex space-x-3 text-xs font-bold w-full sm:w-auto">
+          <Link
+            to="/admin/products"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-brand-red hover:bg-brand-red-hover text-white font-extrabold text-xs px-5 py-3 rounded-2xl shadow-lg transition-transform active:scale-95 cursor-pointer"
+          >
+            <Package className="w-4 h-4" />
+            <span>Gestionar Productos</span>
           </Link>
         </div>
       </div>
@@ -165,7 +234,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Orders Management Table */}
-      <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 space-y-4">
+      <div ref={tableRef} className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-gray-100 pb-3">
           <div>
             <h3 className="font-extrabold text-gray-900 text-lg flex items-center">
@@ -179,7 +248,7 @@ export default function AdminDashboard() {
               <Filter className="w-4 h-4 text-gray-400" />
               <select
                 value={shippingFilter}
-                onChange={(e) => setShippingFilter(e.target.value)}
+                onChange={handleShippingFilterChange}
                 className="bg-gray-50 border border-gray-300 text-gray-800 text-xs font-bold rounded-xl p-2 focus:ring-2 focus:ring-brand-blue outline-none cursor-pointer"
               >
                 <option value="all">Todos los envíos</option>
@@ -190,7 +259,7 @@ export default function AdminDashboard() {
             </div>
             
             <span className="text-xs font-extrabold text-brand-blue bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 whitespace-nowrap">
-              Total: {filteredOrders.length} {filteredOrders.length !== orders.length ? `/ ${orders.length}` : ''} órdenes
+              Total: {totalOrdersCount} órdenes
             </span>
           </div>
         </div>
@@ -210,14 +279,23 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 font-semibold text-gray-800">
-              {filteredOrders.length === 0 ? (
+              {ordersLoading && orders.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-gray-500 font-medium">
+                    <div className="flex items-center justify-center space-x-2">
+                      <Clock className="w-4 h-4 animate-spin text-brand-blue" />
+                      <span>Cargando órdenes de la tienda...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : orders.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="p-6 text-center text-gray-400 font-semibold">
-                    {orders.length === 0 ? 'No se registran órdenes creadas por el momento.' : 'No hay órdenes que coincidan con el filtro de envío seleccionado.'}
+                    No se registran órdenes creadas por el momento.
                   </td>
                 </tr>
               ) : (
-                filteredOrders.map((ord) => {
+                orders.map((ord) => {
                   const addr = ord.shipping_address || {};
                   const inv = ord.invoice_info || {};
                   const isBankTransfer = ord.payment_method === 'bank_transfer';
@@ -277,7 +355,7 @@ export default function AdminDashboard() {
                         <div className="flex items-center justify-end space-x-1.5">
                           <button
                             type="button"
-                            onClick={() => setSelectedOrder(ord)}
+                            onClick={() => handleOpenDetail(ord)}
                             className="bg-slate-100 hover:bg-slate-200 text-gray-800 font-extrabold px-2.5 py-1.5 rounded-xl text-[11px] inline-flex items-center space-x-1 transition-all active:scale-95 border border-slate-200"
                             title="Ver detalle completo de la orden"
                           >
@@ -305,6 +383,70 @@ export default function AdminDashboard() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Footer Controls */}
+        <div className="bg-gray-50/80 p-4 rounded-2xl border border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-semibold text-gray-600">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center space-x-2">
+              <span>Mostrar:</span>
+              <select
+                value={limit}
+                onChange={handleLimitChange}
+                className="bg-white border border-gray-300 rounded-xl px-2.5 py-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-blue cursor-pointer"
+              >
+                <option value={10}>10 por pág.</option>
+                <option value={20}>20 por pág.</option>
+                <option value={50}>50 por pág.</option>
+                <option value={100}>100 por pág.</option>
+              </select>
+            </div>
+            <span className="text-gray-500 font-medium">
+              Mostrando <strong className="text-gray-900">{startIndex} - {endIndex}</strong> de <strong className="text-gray-900">{totalOrdersCount}</strong> pedidos
+            </span>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center space-x-1.5 flex-wrap justify-end">
+              <button
+                type="button"
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed font-bold transition-all cursor-pointer flex items-center"
+              >
+                <ChevronLeft className="w-4 h-4 mr-0.5" />
+                <span>Anterior</span>
+              </button>
+
+              {getPageNumbers().map((p, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => typeof p === 'number' && handlePageChange(p)}
+                  disabled={p === '...'}
+                  className={`w-8 h-8 rounded-xl font-black transition-all flex items-center justify-center cursor-pointer ${
+                    p === currentPage
+                      ? 'bg-brand-red text-white shadow-md'
+                      : p === '...'
+                      ? 'bg-transparent text-gray-400 cursor-default'
+                      : 'bg-white text-gray-700 hover:bg-gray-200 border border-gray-200'
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+
+              <button
+                type="button"
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed font-bold transition-all cursor-pointer flex items-center"
+              >
+                <span>Siguiente</span>
+                <ChevronRight className="w-4 h-4 ml-0.5" />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Low Stock Alert List */}
@@ -328,168 +470,11 @@ export default function AdminDashboard() {
       </div>
 
       {/* ORDER DETAILS MODAL */}
-      {selectedOrder && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
-          <div className="bg-white w-full max-w-3xl rounded-3xl border border-gray-200 shadow-2xl overflow-hidden my-8 space-y-6 p-6 sm:p-8 relative max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="flex items-start justify-between border-b border-gray-100 pb-4">
-              <div>
-                <div className="flex items-center space-x-3 mb-1">
-                  <h2 className="text-2xl font-black text-gray-900">Orden #{selectedOrder.order_number}</h2>
-                  {renderShippingBadge(selectedOrder.shipping_method, selectedOrder.shipping_address)}
-                </div>
-                <div className="flex items-center space-x-4 text-xs text-gray-500 font-medium">
-                  <span className="flex items-center">
-                    <Calendar className="w-3.5 h-3.5 mr-1 text-gray-400" />
-                    {new Date(selectedOrder.createdAt).toLocaleString('es-PE', { dateStyle: 'medium', timeStyle: 'short' })}
-                  </span>
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase border ${
-                    selectedOrder.status === 'paid'
-                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                      : selectedOrder.status === 'payment_review'
-                      ? 'bg-amber-100 text-amber-800 border-amber-300'
-                      : 'bg-gray-100 text-gray-600 border-gray-300'
-                  }`}>
-                    Estado: {selectedOrder.status === 'paid' ? 'Pagado' : selectedOrder.status === 'payment_review' ? 'En Revisión (24h)' : selectedOrder.status}
-                  </span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setSelectedOrder(null)}
-                className="p-2 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-900 transition-colors"
-                title="Cerrar ventana"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Body: Products List */}
-            <div className="space-y-3">
-              <h4 className="font-extrabold text-gray-900 text-xs uppercase tracking-wider flex items-center text-brand-blue">
-                <Package className="w-4 h-4 mr-1.5 text-brand-red" /> Productos del Pedido ({(selectedOrder.items || []).length})
-              </h4>
-              <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200 divide-y divide-gray-200/60 max-h-56 overflow-y-auto space-y-2">
-                {(selectedOrder.items || []).length === 0 ? (
-                  <p className="text-xs text-gray-400 text-center py-2 font-medium">No hay items registrados en el detalle de esta orden.</p>
-                ) : (
-                  (selectedOrder.items || []).map((item) => {
-                    const prodImg = item.product?.images?.find((i) => i.is_primary)?.image_url || item.product?.images?.[0]?.image_url || '/placeholder-product.png';
-                    const unitPrice = Number(item.unit_price) || 0;
-                    const itemSubtotal = unitPrice * item.quantity;
-                    return (
-                      <div key={item.id || item.product_id} className="pt-2 first:pt-0 flex items-center justify-between text-xs">
-                        <div className="flex items-center space-x-3">
-                          <img
-                            src={prodImg}
-                            alt={item.product_name}
-                            className="w-12 h-12 object-cover rounded-xl border border-gray-200 bg-white flex-shrink-0"
-                            onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?auto=format&fit=crop&q=80&w=200'; }}
-                          />
-                          <div>
-                            <p className="font-bold text-gray-900 line-clamp-1">{item.product_name || item.product?.name}</p>
-                            <p className="text-[10px] text-gray-400 font-mono">SKU: {item.sku || item.product?.sku || 'N/A'}</p>
-                            <p className="text-[11px] text-gray-600 font-semibold">S/ {unitPrice.toFixed(2)} × {item.quantity} {item.quantity === 1 ? 'unidad' : 'unidades'}</p>
-                          </div>
-                        </div>
-                        <p className="font-black text-gray-900 text-sm whitespace-nowrap">S/ {itemSubtotal.toFixed(2)}</p>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-
-            {/* Modal Body: Customer & Delivery Address */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Customer & Document Information */}
-              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-2 text-xs">
-                <h4 className="font-extrabold text-gray-900 text-xs uppercase tracking-wider flex items-center text-brand-blue">
-                  <User className="w-3.5 h-3.5 mr-1.5 text-brand-red" /> Datos del Cliente & Comprobante
-                </h4>
-                <div className="space-y-1 text-gray-700">
-                  <p><strong>Cliente:</strong> {selectedOrder.user?.name || selectedOrder.shipping_address?.recipient_name || 'Cliente'}</p>
-                  <p><strong>Email:</strong> {selectedOrder.user?.email || 'No especificado'}</p>
-                  <p><strong>Teléfono:</strong> {selectedOrder.shipping_address?.phone || selectedOrder.user?.phone || 'No especificado'}</p>
-                  <div className="pt-2 border-t border-gray-200 mt-2 space-y-1">
-                    <p><strong>Tipo Comprobante:</strong> <span className="uppercase font-bold text-brand-blue">{selectedOrder.invoice_info?.invoice_type || 'Boleta'}</span></p>
-                    <p><strong>{selectedOrder.invoice_info?.document_type || 'DNI'}:</strong> <span className="font-mono font-bold text-gray-900">{selectedOrder.invoice_info?.document_number || '—'}</span></p>
-                    {selectedOrder.invoice_info?.company_name && <p><strong>Razón Social:</strong> {selectedOrder.invoice_info.company_name}</p>}
-                  </div>
-                </div>
-              </div>
-
-              {/* Delivery Address */}
-              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-2 text-xs">
-                <h4 className="font-extrabold text-gray-900 text-xs uppercase tracking-wider flex items-center text-brand-blue">
-                  <MapPin className="w-3.5 h-3.5 mr-1.5 text-brand-red" /> Dirección de Entrega
-                </h4>
-                <div className="space-y-1 text-gray-700">
-                  <p><strong>Método:</strong> {selectedOrder.shipping_method || 'Envío a Domicilio'}</p>
-                  <p><strong>Dirección:</strong> {selectedOrder.shipping_address?.address_line1 || 'Sin dirección'}</p>
-                  {selectedOrder.shipping_address?.address_line2 && <p><strong>Ref / Dpto:</strong> {selectedOrder.shipping_address.address_line2}</p>}
-                  <p><strong>Ubicación:</strong> {[selectedOrder.shipping_address?.district, selectedOrder.shipping_address?.province, selectedOrder.shipping_address?.department].filter(Boolean).join(', ') || 'Lima, Perú'}</p>
-                  {selectedOrder.notes && <p className="pt-1 text-amber-700 font-medium"><strong>Notas:</strong> {selectedOrder.notes}</p>}
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Body: Payment & Financial Summary */}
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2 text-xs">
-              <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider flex items-center">
-                <CreditCard className="w-3.5 h-3.5 mr-1.5 text-brand-blue" /> Resumen de Pago & Transacción
-              </h4>
-              <div className="space-y-1">
-                <div className="flex justify-between text-gray-600">
-                  <span>Subtotal Productos:</span>
-                  <span className="font-mono font-bold">S/ {Number(selectedOrder.subtotal).toFixed(2)}</span>
-                </div>
-                {Number(selectedOrder.discount_amount) > 0 && (
-                  <div className="flex justify-between text-emerald-600 font-semibold">
-                    <span>Descuento ({selectedOrder.coupon_code || 'Cupón'}):</span>
-                    <span className="font-mono font-bold">- S/ {Number(selectedOrder.discount_amount).toFixed(2)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-gray-600">
-                  <span>Costo de Envío:</span>
-                  <span className="font-mono font-bold">S/ {Number(selectedOrder.shipping_cost).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm font-black text-gray-900 pt-2 border-t border-slate-200">
-                  <span>Monto Total:</span>
-                  <span className="text-brand-red font-mono">S/ {Number(selectedOrder.total).toFixed(2)}</span>
-                </div>
-              </div>
-
-              <div className="pt-2 text-[11px] text-gray-500 space-y-1 border-t border-slate-200 mt-2">
-                <p><strong>Forma de Pago:</strong> {selectedOrder.payment_method === 'bank_transfer' ? 'Transferencia Bancaria Directa' : 'Mercado Pago (Checkout Pro)'}</p>
-                {selectedOrder.mp_payment_id && <p><strong>ID Pago Mercado Pago:</strong> <span className="font-mono text-gray-800 font-bold">{selectedOrder.mp_payment_id}</span></p>}
-                {selectedOrder.preference_id && <p><strong>ID Preferencia MP:</strong> <span className="font-mono text-gray-400 text-[10px]">{selectedOrder.preference_id}</span></p>}
-              </div>
-            </div>
-
-            {/* Modal Actions Footer */}
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-4 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={() => alert('La impresión de comprobantes en PDF estará disponible cuando se habilite el guardado en base de datos de la tabla invoices.')}
-                className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-800 font-extrabold px-4 py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2 transition-all active:scale-95 border border-gray-300"
-              >
-                <Printer className="w-4 h-4 text-brand-blue" />
-                <span>Imprimir Guía de Despacho / Comprobante</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedOrder(null)}
-                className="w-full sm:w-auto bg-brand-dark hover:bg-gray-800 text-white font-extrabold px-6 py-2.5 rounded-xl text-xs transition-all active:scale-95 shadow-md"
-              >
-                Cerrar Detalle
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <OrderDetailsModal 
+        selectedOrder={selectedOrder} 
+        loadingDetail={loadingDetail} 
+        onClose={handleCloseModal} 
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { ShieldCheck, CreditCard, Truck, CheckCircle2, ArrowRight, ArrowLeft, Bu
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
 import CheckoutButton from '../components/CheckoutButton';
+import PaymentBadges from '../components/PaymentBadges';
 import axiosClient from '../api/axiosClient';
 
 // Helper: Anti-fraud filter for fake or obvious sequential documents
@@ -902,7 +903,7 @@ export default function Checkout() {
 
                 {/* RECEIPT / INVOICE TYPE SELECTOR (BOLETA vs FACTURA) */}
                 <div className="bg-gray-50 p-4 sm:p-5 rounded-2xl border border-gray-200 space-y-4">
-                  <h4 className="font-extrabold text-gray-900 text-xs flex items-center uppercase tracking-wider text-brand-blue">
+                  <h4 className="font-extrabold text-gray-900 text-xs flex items-center uppercase tracking-wider text-brand-red">
                     <FileText className="w-4 h-4 mr-1.5" /> Selección de Comprobante Electrónico (SUNAT)
                   </h4>
 
@@ -935,8 +936,8 @@ export default function Checkout() {
                       }}
                       className={`p-3 rounded-xl font-extrabold text-xs border text-center transition-all ${
                         invoiceInfo.invoice_type === 'boleta'
-                          ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
-                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                          ? 'bg-brand-red text-white border-brand-red shadow-sm'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-brand-red/50 hover:bg-red-50/30'
                       }`}
                     >
                       Boleta de Venta
@@ -961,8 +962,8 @@ export default function Checkout() {
                       }}
                       className={`p-3 rounded-xl font-extrabold text-xs border text-center transition-all ${
                         invoiceInfo.invoice_type === 'factura'
-                          ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
-                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                          ? 'bg-brand-red text-white border-brand-red shadow-sm'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-brand-red/50 hover:bg-red-50/30'
                       }`}
                     >
                       Factura Electrónica (RUC)
@@ -1003,7 +1004,7 @@ export default function Checkout() {
                             }}
                             className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
                               invoiceInfo.document_type === 'DNI'
-                                ? 'bg-brand-blue text-white border-brand-blue shadow-xs'
+                                ? 'bg-brand-red text-white border-brand-red shadow-xs'
                                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
                             }`}
                           >
@@ -1035,7 +1036,7 @@ export default function Checkout() {
                             }}
                             className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
                               invoiceInfo.document_type === 'CE'
-                                ? 'bg-brand-blue text-white border-brand-blue shadow-xs'
+                                ? 'bg-brand-red text-white border-brand-red shadow-xs'
                                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
                             }`}
                           >
@@ -1221,6 +1222,7 @@ export default function Checkout() {
                     <p className="text-xs text-gray-500">
                       Al hacer clic en el botón, serás redirigido a la plataforma segura de Mercado Pago para completar tu pago con tarjeta de crédito, débito, Yape o efectivo:
                     </p>
+                    <PaymentBadges className="pt-1 pb-1" />
                     <CheckoutButton
                       orderId={createdOrder?.id}
                       invoiceInfo={invoiceInfo}
