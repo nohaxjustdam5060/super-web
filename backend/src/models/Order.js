@@ -72,6 +72,31 @@ const Order = sequelize.define('Order', {
   mp_payment_id: {
     type: DataTypes.STRING(255),
     allowNull: true
+  },
+  invoice_status: {
+    type: DataTypes.STRING(20),
+    defaultValue: 'pending',
+    allowNull: false
+  },
+  invoice_error_message: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  invoice_response_code: {
+    type: DataTypes.STRING(50),
+    allowNull: true
+  },
+  invoice_series: {
+    type: DataTypes.STRING(20),
+    allowNull: true
+  },
+  invoice_number: {
+    type: DataTypes.STRING(50),
+    allowNull: true
+  },
+  invoice_pdf_url: {
+    type: DataTypes.TEXT,
+    allowNull: true
   }
 }, {
   tableName: 'orders',
@@ -80,6 +105,7 @@ const Order = sequelize.define('Order', {
     { fields: ['order_number'] },
     { fields: ['user_id'] },
     { fields: ['status'] },
+    { fields: ['invoice_status'] },
     { fields: ['preference_id'] },
     { fields: ['mp_payment_id'] }
   ]

@@ -135,7 +135,8 @@ exports.getAdminOrders = async (req, res, next) => {
         'id', 'order_number', 'user_id', 'status', 'subtotal',
         'discount_amount', 'shipping_cost', 'total', 'shipping_address',
         'shipping_method', 'invoice_info', 'payment_method', 'coupon_code',
-        'notes', 'createdAt'
+        'notes', 'invoice_status', 'invoice_error_message', 'invoice_response_code',
+        'invoice_series', 'invoice_number', 'invoice_pdf_url', 'createdAt'
       ],
       include: [
         { model: User, as: 'user', attributes: ['id', 'name', 'email', 'phone'] }

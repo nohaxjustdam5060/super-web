@@ -167,9 +167,9 @@ export default function Navbar() {
   }, [currentCategory, displayedCategory]);
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-slate-700 shadow-sm transition-all" ref={navRef}>
+    <header className="sticky top-0 z-50 bg-brand-dark border-b border-white/10 shadow-md transition-all" ref={navRef}>
       {/* Top Announcement Bar */}
-      <div className="bg-brand-dark text-white text-[10px] sm:text-xs py-1.5 px-2.5 sm:px-4">
+      <div className="bg-brand-dark text-white text-[10px] sm:text-xs py-1.5 px-2.5 sm:px-4 border-b border-white/10">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-1 sm:gap-2">
           <div className="flex items-center space-x-2 sm:space-x-6 min-w-0">
             <span className="flex items-center text-gray-300 font-medium truncate">
@@ -184,7 +184,7 @@ export default function Navbar() {
           <div className="flex items-center space-x-3 text-gray-300 text-[10px] sm:text-xs">
             <span>Atención: +51 933 347 488 </span>
             {user?.role === 'admin' || user?.role === 'super_admin' ? (
-              <Link to="/admin" className="text-brand-red-accent font-bold hover:underline">
+              <Link to="/admin" className="text-slate-100 font-bold hover:text-brand-red-accent hover:underline">
                 [ Panel Admin ]
               </Link>
             ) : null}
@@ -193,13 +193,13 @@ export default function Navbar() {
       </div>
 
       {/* Main Header */}
-      <div className="max-w-7xl mx-auto px-2.5 sm:px-4 py-2 sm:py-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-4">
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-4 py-2 sm:py-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-4 bg-brand-dark">
         {/* Brand Logo */}
         <Link to="/" className="flex items-center space-x-1.5 sm:space-x-2 group">
           <div className="bg-brand-red text-white px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md font-black tracking-widest text-base sm:text-xl shadow-md group-hover:scale-105 transition-transform">
             SUPER
           </div>
-          <span className="text-base sm:text-xl font-black tracking-tight text-brand-blue">
+          <span className="text-base sm:text-xl font-black tracking-tight text-white">
             LAPTOP<span className="text-brand-red">.</span>
           </span>
         </Link>
@@ -218,15 +218,15 @@ export default function Navbar() {
             onFocus={() => {
               if (searchQuery.trim().length >= 2) setShowLiveSearch(true);
             }}
-            className="w-full bg-white border-2 border-brand-red rounded-md py-2 pl-4 pr-11 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-red/30 shadow-sm transition-all"
+            className="w-full bg-slate-800/90 border-2 border-brand-red rounded-md py-2 pl-4 pr-11 text-sm font-medium text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-red/40 shadow-inner transition-all"
           />
           <button
             type="submit"
-            className="absolute right-2 text-brand-red hover:text-brand-red-hover p-1.5 rounded-md transition-colors flex items-center justify-center cursor-pointer"
+            className="absolute right-2 text-brand-red-accent hover:text-white p-1.5 rounded-md transition-colors flex items-center justify-center cursor-pointer"
             title="Buscar"
             aria-label="Buscar"
           >
-            <Search className="w-5 h-5 text-brand-red" />
+            <Search className="w-5 h-5 text-brand-red-accent" />
           </button>
 
           {/* Live Search Predictively Suggested Dropdown Menu */}
@@ -304,26 +304,26 @@ export default function Navbar() {
           )}
         </form>
 
-        {/* Header Right Actions (Profile, Cart & Hamburger ALWAYS VISIBLE; Compare HIDDEN on mobile) */}
+        {/* Header Right Actions (Profile, Cart & Hamburger on Mobile/Tablet; Compare HIDDEN on mobile) */}
         <div className="flex items-center space-x-1.5 sm:space-x-2.5 flex-wrap sm:flex-nowrap justify-end">
           {/* Compare Button (HIDDEN ON MOBILE, VISIBLE ON SM+) */}
           <Link
             to="/compare"
-            className="hidden sm:flex items-center p-1.5 text-gray-700 hover:text-brand-red transition-colors relative"
+            className="hidden sm:flex items-center p-1.5 text-slate-300 hover:text-white transition-colors relative"
             title="Comparar productos"
           >
             <Scale className="w-5 h-5" />
             {comparedProducts.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-brand-blue text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center shadow">
+              <span className="absolute -top-1 -right-1 bg-brand-red text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center shadow">
                 {comparedProducts.length}
               </span>
             )}
           </Link>
 
-          {/* 1. User Profile / Login (ALWAYS VISIBLE) */}
+          {/* 1. User Profile / Login */}
           {user ? (
-            <Link to="/profile" className="flex items-center space-x-1 text-xs font-bold text-gray-700 hover:text-brand-red p-1" title="Mi Cuenta">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-brand-blue-light text-brand-blue font-black text-xs flex items-center justify-center border border-brand-blue/20">
+            <Link to="/profile" className="flex items-center space-x-1.5 text-xs font-bold text-slate-200 hover:text-white p-1" title="Mi Cuenta">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-800 text-brand-red-accent font-black text-xs flex items-center justify-center border border-slate-700">
                 {user.name.substring(0, 2).toUpperCase()}
               </div>
               <span className="hidden lg:inline font-bold text-xs">{user.name.split(' ')[0]}</span>
@@ -331,7 +331,7 @@ export default function Navbar() {
           ) : (
             <Link
               to="/login"
-              className="flex items-center space-x-1 text-xs font-bold text-gray-700 hover:text-brand-red transition-colors bg-gray-100 px-2 sm:px-3 py-1.5 rounded-md"
+              className="flex items-center space-x-1 text-xs font-bold text-slate-200 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700/90 border border-slate-700 px-2 sm:px-3 py-1.5 rounded-md"
               title="Iniciar Sesión"
             >
               <User className="w-4 h-4 flex-shrink-0" />
@@ -339,7 +339,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {/* 2. Cart Button (ALWAYS VISIBLE) */}
+          {/* 2. Cart Button */}
           <button
             onClick={openCart}
             className="relative bg-brand-red hover:bg-brand-red-hover text-white px-2.5 sm:px-3.5 py-1.5 rounded-md flex items-center space-x-1 sm:space-x-1.5 shadow-md transition-transform active:scale-95 cursor-pointer"
@@ -354,21 +354,21 @@ export default function Navbar() {
             )}
           </button>
 
-          {/* 3. Hamburger Menu Button (ALWAYS VISIBLE across ALL screen widths) */}
+          {/* 3. Hamburger Menu Button (Visible on mobile/tablet, hidden on desktop lg+) */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="text-gray-700 hover:text-brand-red p-1.5 rounded-md border border-gray-200 hover:bg-gray-100 transition-colors flex items-center justify-center cursor-pointer"
+            className="lg:hidden text-slate-200 hover:text-white p-1.5 rounded-md border border-slate-700 hover:bg-slate-800 transition-colors flex items-center justify-center cursor-pointer"
             aria-label="Abrir Menú de Categorías"
             title="Menú de Categorías"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5 text-brand-red" /> : <Menu className="w-5 h-5" />}
+            {mobileMenuOpen ? <X className="w-5 h-5 text-brand-red-accent" /> : <Menu className="w-5 h-5 text-white" />}
           </button>
         </div>
       </div>
 
       {/* Navigation Sub-Bar & Centered Full-Width Mega-Menu */}
       <nav
-        className="bg-gray-900 text-gray-200 text-xs sm:text-sm font-medium border-t border-gray-800 relative hidden md:block"
+        className="bg-brand-dark text-gray-200 text-xs sm:text-sm font-medium border-t border-white/10 relative hidden md:block"
         onMouseLeave={() => setActiveParentSlug(null)}
       >
         <div className="max-w-7xl mx-auto px-4 flex flex-wrap items-center justify-between">
@@ -397,8 +397,8 @@ export default function Navbar() {
                     onClick={() => handleSubcategoryClick(parentCat.slug)}
                     className={`px-3 py-2.5 text-xs font-bold flex items-center transition-all ${
                       isActive
-                        ? 'text-white bg-gray-800 border-b-2 border-brand-red rounded-t-md rounded-b-none'
-                        : 'text-gray-300 hover:text-white hover:bg-gray-800/60 rounded-md'
+                        ? 'text-white bg-slate-800 border-b-2 border-brand-red rounded-t-md rounded-b-none'
+                        : 'text-gray-300 hover:text-white hover:bg-slate-800/60 rounded-md'
                     }`}
                   >
                     <DynamicIcon name={parentCat.icon_name} className="w-4 h-4 mr-1.5 text-brand-red-accent flex-shrink-0" />
@@ -412,7 +412,7 @@ export default function Navbar() {
             {/* Integrated "Ofertas" Button (In same row) */}
             <Link
               to="/catalog?is_featured=true"
-              className="px-3 py-2.5 text-xs font-black text-amber-400 hover:text-amber-300 flex items-center space-x-1 uppercase tracking-wider flex-shrink-0 rounded-md hover:bg-gray-800/60 transition-colors"
+              className="px-3 py-2.5 text-xs font-black text-amber-400 hover:text-amber-300 flex items-center space-x-1 uppercase tracking-wider flex-shrink-0 rounded-md hover:bg-slate-800/60 transition-colors"
               onMouseEnter={() => setActiveParentSlug(null)}
             >
               <Flame className="w-4 h-4 mr-1 text-amber-400 animate-pulse" />
@@ -494,7 +494,7 @@ export default function Navbar() {
 
       {/* Mobile Drawer Navigation (Accordion Style) */}
       {mobileMenuOpen && (
-        <div className="bg-white border-b border-gray-200 p-4 space-y-4 shadow-xl max-h-[85vh] overflow-y-auto border-t border-gray-100">
+        <div className="bg-brand-dark border-b border-slate-800 p-4 space-y-4 shadow-2xl max-h-[85vh] overflow-y-auto border-t border-slate-800 text-white">
           {/* Search Mobile */}
           <form onSubmit={handleSearchSubmit} className="flex md:hidden">
             <input
@@ -502,7 +502,7 @@ export default function Navbar() {
               placeholder="Buscar en la tienda..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-gray-100 border border-gray-300 rounded-l-xl py-2.5 px-3 text-xs focus:outline-none focus:ring-2 focus:ring-brand-red"
+              className="w-full bg-slate-800 border border-slate-700 rounded-l-xl py-2.5 px-3 text-xs text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-red"
             />
             <button type="submit" className="bg-brand-red text-white px-4 rounded-r-xl font-bold text-xs flex items-center">
               <Search className="w-3.5 h-3.5 mr-1" /> Buscar
@@ -514,14 +514,14 @@ export default function Navbar() {
             <Link
               to="/catalog"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex-1 bg-brand-red text-white text-center py-2.5 rounded-xl font-bold text-xs uppercase"
+              className="flex-1 bg-brand-red text-white text-center py-2.5 rounded-xl font-bold text-xs uppercase shadow"
             >
               Todo el Catálogo
             </Link>
             <Link
               to="/catalog?is_featured=true"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex-1 bg-amber-500 text-white text-center py-2.5 rounded-xl font-bold text-xs uppercase"
+              className="flex-1 bg-amber-500 text-slate-950 font-black text-center py-2.5 rounded-xl text-xs uppercase shadow"
             >
               ⚡ Ofertas
             </Link>
@@ -529,31 +529,31 @@ export default function Navbar() {
 
           {/* Categories Accordion */}
           <div className="space-y-2 pt-2">
-            <h4 className="text-xs font-black uppercase text-gray-400 tracking-wider">Categorías de Productos</h4>
+            <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">Categorías de Productos</h4>
             {categories.map((parentCat) => {
               const isExpanded = expandedMobileCategory === parentCat.slug;
               const hasSubcategories = parentCat.subcategories && parentCat.subcategories.length > 0;
 
               return (
-                <div key={parentCat.id} className="border border-gray-200 rounded-xl overflow-hidden">
+                <div key={parentCat.id} className="border border-slate-800 rounded-xl overflow-hidden bg-slate-900/60">
                   <button
                     onClick={() => setExpandedMobileCategory(isExpanded ? null : parentCat.slug)}
-                    className="w-full p-3 bg-gray-50 flex items-center justify-between text-xs font-bold text-gray-900 active:bg-gray-100"
+                    className="w-full p-3 bg-slate-800/80 flex items-center justify-between text-xs font-bold text-white active:bg-slate-800"
                   >
                     <span className="flex items-center">
-                      <DynamicIcon name={parentCat.icon_name} className="w-4 h-4 mr-2 text-brand-red" />
+                      <DynamicIcon name={parentCat.icon_name} className="w-4 h-4 mr-2 text-brand-red-accent" />
                       {parentCat.name}
                     </span>
                     {hasSubcategories && (
-                      <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                      <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180 text-white' : ''}`} />
                     )}
                   </button>
 
                   {isExpanded && hasSubcategories && (
-                    <div className="p-3 bg-white space-y-2 border-t border-gray-100">
+                    <div className="p-3 bg-slate-900 space-y-2 border-t border-slate-800">
                       <button
                         onClick={() => handleSubcategoryClick(parentCat.slug)}
-                        className="w-full text-left text-xs font-extrabold text-brand-red py-1"
+                        className="w-full text-left text-xs font-extrabold text-brand-red-accent py-1 hover:underline"
                       >
                         Ver todo en {parentCat.name} →
                       </button>
@@ -561,9 +561,9 @@ export default function Navbar() {
                         <button
                           key={sub.id}
                           onClick={() => handleSubcategoryClick(sub.slug)}
-                          className="w-full text-left text-xs font-semibold text-gray-700 py-2 px-2 hover:bg-gray-50 rounded-lg flex items-center"
+                          className="w-full text-left text-xs font-semibold text-slate-300 py-2 px-2 hover:bg-slate-800 rounded-lg flex items-center transition-colors"
                         >
-                          <DynamicIcon name={sub.icon_name} className="w-3.5 h-3.5 mr-2 text-gray-400" />
+                          <DynamicIcon name={sub.icon_name} className="w-3.5 h-3.5 mr-2 text-slate-400" />
                           {sub.name}
                         </button>
                       ))}

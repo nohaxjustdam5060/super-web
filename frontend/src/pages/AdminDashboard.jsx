@@ -154,6 +154,42 @@ export default function AdminDashboard() {
     );
   };
 
+  // Render visual SUNAT / NubeFact invoice status badge
+  const renderInvoiceStatusBadge = (ord) => {
+    const status = ord.invoice_status || 'pending';
+    const seriesNum = (ord.invoice_series && ord.invoice_number) ? `${ord.invoice_series}-${ord.invoice_number}` : '';
+
+    if (status === 'issued') {
+      return (
+        <span 
+          className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 whitespace-nowrap"
+          title={seriesNum ? `Comprobante emitido: ${seriesNum}` : 'Comprobante emitido y aceptado por SUNAT'}
+        >
+          <CheckCircle2 className="w-2.5 h-2.5 mr-1 text-emerald-600 flex-shrink-0" />
+          <span>SUNAT: Emitido{seriesNum ? ` (${seriesNum})` : ''}</span>
+        </span>
+      );
+    }
+
+    if (status === 'rejected' || status === 'failed') {
+      return (
+        <span 
+          className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-100 text-red-800 border border-red-300 whitespace-nowrap cursor-help shadow-sm"
+          title={ord.invoice_error_message || 'Comprobante rechazado por SUNAT'}
+        >
+          <AlertTriangle className="w-2.5 h-2.5 mr-1 text-red-600 flex-shrink-0" />
+          <span>SUNAT: Rechazado</span>
+        </span>
+      );
+    }
+
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-600 border border-gray-200 whitespace-nowrap">
+        Comprobante: Pendiente
+      </span>
+    );
+  };
+
   // Filter orders by selected shipping method
   const filteredOrders = orders.filter((ord) => {
     if (shippingFilter === 'all') return true;
@@ -308,7 +344,10 @@ export default function AdminDashboard() {
                         #{ord.order_number}
                       </td>
                       <td className="p-3 whitespace-nowrap">
-                        <p className="font-bold text-gray-900">{ord.user?.name || addr.recipient_name || 'Cliente'}</p>
+                        <p className="font-bold text-gray-900">{addr.recipient_name || ord.user?.name || 'Cliente'}</p>
+                        {ord.user?.name && addr.recipient_name && ord.user.name.trim().toLowerCase() !== addr.recipient_name.trim().toLowerCase() && (
+                          <span className="text-[10px] text-gray-500 block">Cuenta: {ord.user.name}</span>
+                        )}
                         <p className="text-[10px] text-gray-400">{ord.user?.email || addr.phone}</p>
                       </td>
                       <td className="p-3 max-w-xs truncate">
@@ -319,13 +358,18 @@ export default function AdminDashboard() {
                           {addr.address_line1 ? `${addr.address_line1}, ${addr.district || ''} - ${addr.department || ''}` : 'Sin dirección'}
                         </p>
                       </td>
-                      <td className="p-3 whitespace-nowrap">
-                        <span className="font-bold text-gray-900 uppercase">
-                          {inv.invoice_type || 'Boleta'}
-                        </span>
-                        <span className="text-[10px] text-gray-500 block font-mono">
-                          {inv.document_type || 'DNI'}: {inv.document_number || '—'}
-                        </span>
+                      <td className="p-3 whitespace-nowrap space-y-1">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="font-bold text-gray-900 uppercase">
+                            {inv.invoice_type || 'Boleta'}
+                          </span>
+                          <span className="text-[10px] text-gray-500 font-mono">
+                            ({inv.document_type || 'DNI'}: {inv.document_number || '—'})
+                          </span>
+                        </div>
+                        <div>
+                          {renderInvoiceStatusBadge(ord)}
+                        </div>
                       </td>
                       <td className="p-3 whitespace-nowrap">
                         <span className={`inline-flex items-center text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${

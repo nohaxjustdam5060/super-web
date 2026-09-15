@@ -9,10 +9,10 @@ export default {
       colors: {
         brand: {
           red: {
-            DEFAULT: '#DC2626',
-            hover: '#B91C1C',
+            DEFAULT: '#9E1B26',
+            hover: '#7F131C',
             light: '#FEE2E2',
-            accent: '#EF4444'
+            accent: '#C82333'
           },
           blue: {
             DEFAULT: '#1E3A8A',

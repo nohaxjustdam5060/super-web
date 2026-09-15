@@ -127,7 +127,7 @@ function buildNubeFactPayload(order) {
 
 /**
  * Service function to trigger NubeFact invoicing for a paid order.
- * Logs payload and NubeFact API response to console (Database storage bypassed for now per instructions).
+ * Updates order with invoice status, error descriptions, and PDF link.
  */
 exports.generateInvoiceForOrder = async (orderId) => {
   try {
@@ -176,36 +176,85 @@ exports.generateInvoiceForOrder = async (orderId) => {
       }, (res) => {
         let body = '';
         res.on('data', (chunk) => body += chunk);
-        res.on('end', () => {
+        res.on('end', async () => {
           try {
             const data = JSON.parse(body);
             console.log(`------------------------------------------------------`);
             console.log(`✅ [NUBEFACT API RESPUESTA RECIBIDA] Status HTTP: ${res.statusCode}`);
-            if (data.errors) {
-              console.error(`❌ [NUBEFACT ERROR]:`, data.errors);
-            } else {
-              console.log(`Estado SUNAT Aceptada: ${data.aceptada_por_sunat ? 'SÍ' : 'NO'}`);
-              console.log(`Serie y Número Generado: ${data.serie}-${data.numero}`);
-              console.log(`Enlace PDF Directo: ${data.enlace_del_pdf || data.enlace}`);
-              console.log(`Enlace XML Directo: ${data.enlace_del_xml || 'N/A'}`);
-              console.log(`Enlace CDR Directo: ${data.enlace_del_cdr || 'N/A'}`);
-              console.log(`Descripción SUNAT: ${data.sunat_description || 'OK'}`);
+
+            // Case A: NubeFact returned error or HTTP status >= 400
+            if (data.errors || res.statusCode >= 400) {
+              const errMsg = typeof data.errors === 'string'
+                ? data.errors
+                : data.errors
+                ? JSON.stringify(data.errors)
+                : data.sunat_description || `Error HTTP ${res.statusCode} al emitir en NubeFact`;
+
+              console.error(`❌ [NUBEFACT ERROR]:`, errMsg);
+
+              order.invoice_status = 'failed';
+              order.invoice_error_message = errMsg;
+              order.invoice_response_code = data.sunat_responsecode ? String(data.sunat_responsecode) : `HTTP_${res.statusCode}`;
+              await order.save();
+
+              resolve({ success: false, error: errMsg, data });
+              return;
             }
+
+            // Case B: SUNAT rejected the invoice
+            if (data.aceptada_por_sunat === false) {
+              const rejectMsg = data.sunat_description || 'Comprobante rechazado por SUNAT';
+              console.warn(`⚠️ [NUBEFACT/SUNAT RECHAZADO]:`, rejectMsg);
+
+              order.invoice_status = 'rejected';
+              order.invoice_error_message = rejectMsg;
+              order.invoice_response_code = data.sunat_responsecode ? String(data.sunat_responsecode) : null;
+              order.invoice_series = data.serie || payload.serie || null;
+              order.invoice_number = data.numero ? String(data.numero) : null;
+              order.invoice_pdf_url = data.enlace_del_pdf || data.enlace || null;
+              await order.save();
+
+              resolve({ success: false, rejected: true, message: rejectMsg, data });
+              return;
+            }
+
+            // Case C: Success - Invoice accepted by SUNAT / Generated
+            console.log(`Estado SUNAT Aceptada: ${data.aceptada_por_sunat ? 'SÍ' : 'NO'}`);
+            console.log(`Serie y Número Generado: ${data.serie}-${data.numero}`);
+            console.log(`Enlace PDF Directo: ${data.enlace_del_pdf || data.enlace}`);
+            console.log(`Descripción SUNAT: ${data.sunat_description || 'OK'}`);
+
+            order.invoice_status = 'issued';
+            order.invoice_series = data.serie || payload.serie || null;
+            order.invoice_number = data.numero ? String(data.numero) : null;
+            order.invoice_pdf_url = data.enlace_del_pdf || data.enlace || null;
+            order.invoice_error_message = null;
+            order.invoice_response_code = data.sunat_responsecode ? String(data.sunat_responsecode) : '0';
+            await order.save();
+
             console.log(`RESPUESTA JSON NUBEFACT COMPLETA:\n`, JSON.stringify(data, null, 2));
             console.log(`======================================================\n`);
-            resolve(data);
+            resolve({ success: true, data });
           } catch (e) {
             console.error(`❌ [NubeFact] Fallo al parsear respuesta JSON:`, body);
-            resolve(null);
+            order.invoice_status = 'failed';
+            order.invoice_error_message = 'Fallo al procesar respuesta del servicio de facturación';
+            order.save().catch((saveErr) => console.error('[OrderSaveError]', saveErr));
+            resolve({ success: false, error: 'JSON parse error', raw: body });
           }
         });
       });
 
-      req.on('error', (err) => {
+      req.on('error', async (err) => {
         console.error(`\n======================================================`);
         console.error(`❌ [NUBEFACT API ERROR] Fallo de conexión para orden #${order.order_number}:`, err.message);
         console.error(`======================================================\n`);
-        resolve(null);
+
+        order.invoice_status = 'failed';
+        order.invoice_error_message = `Error de conexión con NubeFact: ${err.message}`;
+        await order.save().catch((saveErr) => console.error('[OrderSaveError]', saveErr));
+
+        resolve({ success: false, error: err.message });
       });
 
       req.write(postData);
