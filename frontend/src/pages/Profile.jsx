@@ -104,7 +104,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-8">
+    <div className="max-w-[1440px] mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-8">
       {/* Profile Header Card */}
       <div className="bg-white p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sm:gap-6">
         <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">

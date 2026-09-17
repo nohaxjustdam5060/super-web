@@ -11,7 +11,7 @@ export default function LocationMap() {
   const embedUrl = `https://maps.google.com/maps?q=${lat},${lng}&t=&z=17&ie=UTF8&iwloc=&output=embed`;
   
   return (
-    <section className="max-w-7xl mx-auto px-4">
+    <section className="max-w-[1440px] mx-auto px-4">
       <div className="flex items-center justify-between mb-6">
         <div>
           <span className="text-brand-red font-black text-xs uppercase tracking-widest flex items-center space-x-1">

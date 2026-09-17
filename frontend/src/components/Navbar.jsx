@@ -169,8 +169,8 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 bg-brand-dark border-b border-white/10 shadow-md transition-all" ref={navRef}>
       {/* Top Announcement Bar */}
-      <div className="bg-brand-dark text-white text-[10px] sm:text-xs py-1.5 px-2.5 sm:px-4 border-b border-white/10">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-1 sm:gap-2">
+      <div className="bg-brand-dark text-white text-[10px] sm:text-xs py-1.5 px-2.5 sm:px-4">
+        <div className="max-w-[1440px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-1 sm:gap-2">
           <div className="flex items-center space-x-2 sm:space-x-6 min-w-0">
             <span className="flex items-center text-gray-300 font-medium truncate">
               <Truck className="w-3.5 h-3.5 mr-1.5 text-brand-red-accent flex-shrink-0" />
@@ -193,7 +193,7 @@ export default function Navbar() {
       </div>
 
       {/* Main Header */}
-      <div className="max-w-7xl mx-auto px-2.5 sm:px-4 py-2 sm:py-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-4 bg-brand-dark">
+      <div className="max-w-[1440px] mx-auto px-2.5 sm:px-4 py-2 sm:py-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-4 bg-brand-dark">
         {/* Brand Logo */}
         <Link to="/" className="flex items-center space-x-1.5 sm:space-x-2 group">
           <div className="bg-brand-red text-white px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md font-black tracking-widest text-base sm:text-xl shadow-md group-hover:scale-105 transition-transform">
@@ -368,10 +368,10 @@ export default function Navbar() {
 
       {/* Navigation Sub-Bar & Centered Full-Width Mega-Menu */}
       <nav
-        className="bg-brand-dark text-gray-200 text-xs sm:text-sm font-medium border-t border-white/10 relative hidden md:block"
+        className="bg-brand-dark text-gray-200 text-xs sm:text-sm font-medium relative hidden md:block"
         onMouseLeave={() => setActiveParentSlug(null)}
       >
-        <div className="max-w-7xl mx-auto px-4 flex flex-wrap items-center justify-between">
+        <div className="max-w-[1440px] mx-auto px-4 flex flex-wrap items-center justify-between">
           <div className="flex flex-wrap items-center space-x-1 py-0.5">
             {/* Catalog Link */}
             <Link
@@ -436,7 +436,7 @@ export default function Navbar() {
             <div
               ref={menuContentRef}
               key={currentCategory.id}
-              className="max-w-7xl mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-4 gap-6 animate-in fade-in duration-200"
+              className="max-w-[1440px] mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-4 gap-6 animate-in fade-in duration-200"
             >
               {/* Left Parent Category Featured Card */}
               <div className="bg-gradient-to-br from-brand-dark to-slate-800 text-white rounded-lg p-6 flex flex-col justify-between space-y-4 shadow-lg border border-slate-700">

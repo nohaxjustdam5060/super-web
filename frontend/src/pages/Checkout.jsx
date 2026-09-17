@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ShieldCheck, CreditCard, Truck, CheckCircle2, ArrowRight, ArrowLeft, Building2, FileText, Check, Copy, Clock, MessageSquare, MapPin, Store, AlertCircle, Info } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
@@ -206,7 +206,7 @@ export default function Checkout() {
 
   if (items.length === 0 && !createdOrder) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16 text-center space-y-4">
+      <div className="max-w-[1440px] mx-auto px-4 py-16 text-center space-y-4">
         <h2 className="text-2xl font-black text-gray-900">No hay productos en el carrito para procesar</h2>
         <button onClick={() => navigate('/catalog')} className="bg-brand-red text-white font-bold px-6 py-2.5 rounded-xl text-sm hover:bg-brand-red-hover shadow">
           Ir al Catálogo
@@ -218,7 +218,7 @@ export default function Checkout() {
   // Unauthenticated User Guard Screen
   if (!isAuthenticated) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="max-w-[1440px] mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto bg-white p-8 sm:p-10 rounded-3xl border border-gray-200 shadow-xl text-center space-y-6">
           <div className="w-16 h-16 bg-brand-red/10 text-brand-red rounded-3xl flex items-center justify-center mx-auto border border-brand-red/20 shadow-sm">
             <ShieldCheck className="w-9 h-9" />
@@ -484,7 +484,7 @@ export default function Checkout() {
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Hola SUPERLAPTOP, adjunto mi comprobante de transferencia para el pedido #${createdOrder?.order_number || ''}`)}`;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-[1440px] mx-auto px-4 py-8 space-y-8">
       {/* Step Indicators */}
       <div className="flex items-center justify-center space-x-4 max-w-xl mx-auto">
         <div className={`flex items-center space-x-2 text-sm font-extrabold ${step === 1 ? 'text-brand-red' : 'text-gray-400'}`}>
@@ -1212,7 +1212,15 @@ export default function Checkout() {
                     className="mt-0.5 w-4 h-4 text-brand-red rounded border-gray-300 focus:ring-brand-red cursor-pointer"
                   />
                   <label htmlFor="terms_agree" className="text-xs text-gray-700 font-bold cursor-pointer select-none leading-relaxed">
-                    He leído y acepto los <span className="text-brand-blue underline hover:text-blue-700">Términos y Condiciones de Compra</span> y las <span className="text-brand-blue underline hover:text-blue-700">Políticas de Garantía</span> de SUPERLAPTOP (*)
+                    He leído y acepto los{' '}
+                    <Link to="/politicas?tab=terminos" target="_blank" rel="noopener noreferrer" className="text-brand-red underline hover:text-brand-red-hover">
+                      Términos y Condiciones de Compra
+                    </Link>{' '}
+                    y las{' '}
+                    <Link to="/politicas?tab=garantia" target="_blank" rel="noopener noreferrer" className="text-brand-red underline hover:text-brand-red-hover">
+                      Políticas de Garantía
+                    </Link>{' '}
+                    de SUPERLAPTOP (*)
                   </label>
                 </div>
 

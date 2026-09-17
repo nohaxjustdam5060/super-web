@@ -22,6 +22,8 @@ import AdminProducts from './pages/AdminProducts';
 import CheckoutSuccess from './pages/CheckoutSuccess';
 import CheckoutFailure from './pages/CheckoutFailure';
 import CheckoutPending from './pages/CheckoutPending';
+import ComplaintsBookPage from './pages/ComplaintsBookPage';
+import PoliciesPage from './pages/PoliciesPage';
 
 import { useAuthStore } from './store/useAuthStore';
 
@@ -55,6 +57,9 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/libro-de-reclamaciones" element={<ComplaintsBookPage />} />
+          <Route path="/politicas" element={<PoliciesPage />} />
+          <Route path="/policies" element={<PoliciesPage />} />
 
           {/* Admin Routes */}
           <Route

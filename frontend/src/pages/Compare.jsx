@@ -10,7 +10,7 @@ export default function Compare() {
 
   if (comparedProducts.length === 0) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16 text-center space-y-4">
+      <div className="max-w-[1440px] mx-auto px-4 py-16 text-center space-y-4">
         <Scale className="w-16 h-16 mx-auto text-gray-300 stroke-1" />
         <h2 className="text-2xl font-black text-gray-900">No hay productos en comparación</h2>
         <p className="text-gray-500 text-sm">Selecciona productos desde el catálogo para comparar sus especificaciones frente a frente.</p>
@@ -27,7 +27,7 @@ export default function Compare() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-[1440px] mx-auto px-4 py-8 space-y-6">
       <div className="flex justify-between items-center bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
         <div>
           <h1 className="text-2xl font-black text-gray-900 flex items-center">

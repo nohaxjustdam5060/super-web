@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Cpu, Monitor, HardDrive, Database, Zap, Layers, ChevronRight, Flame, ArrowRight, Sparkles, Star, Gamepad2, Laptop, Briefcase, RefreshCw } from 'lucide-react';
-import ProductCard from '../components/ProductCard';
+import { ChevronRight, Sparkles, Star } from 'lucide-react';
 import LocationMap from '../components/LocationMap';
 import HeroCarousel from '../components/HeroCarousel';
+import ProductCarousel from '../components/ProductCarousel';
 import axiosClient from '../api/axiosClient';
 
 export default function Home() {
@@ -13,8 +13,8 @@ export default function Home() {
   const [loadingFeatured, setLoadingFeatured] = useState(true);
 
   useEffect(() => {
-    // 1. Fetch 4 Newest Products
-    axiosClient.get('/products?sort=newest&limit=4')
+    // 1. Fetch Newest Products for single-row carousel
+    axiosClient.get('/products?sort=newest&limit=10')
       .then((res) => {
         if (res.data.success) {
           setNewestProducts(res.data.products || []);
@@ -23,8 +23,8 @@ export default function Home() {
       .catch((err) => console.error('[NEWEST_PRODUCTS_ERROR]', err))
       .finally(() => setLoadingNewest(false));
 
-    // 2. Fetch 4 Featured Products
-    axiosClient.get('/products?is_featured=true&limit=4')
+    // 2. Fetch Featured Products for single-row carousel
+    axiosClient.get('/products?is_featured=true&limit=10')
       .then((res) => {
         if (res.data.success) {
           setFeaturedProducts(res.data.products || []);
@@ -39,8 +39,8 @@ export default function Home() {
       {/* 1. Full-Width Edge-to-Edge Hero Slider Carousel */}
       <HeroCarousel />
 
-      {/* 2. Categorías Principales (Estilo Circular con Imagen de Producto) */}
-      <section className="max-w-7xl mx-auto px-4">
+      {/* 2. Categorías Principales (Estilo Circular con Imagen de Producto - Estado Original Exacto) */}
+      <section className="max-w-[1440px] mx-auto px-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-2">
           <div>
             <h2 className="text-2xl sm:text-3xl font-black text-gray-900">Categorías Principales</h2>
@@ -108,38 +108,20 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. Productos Destacados (limitado a 4 productos) */}
-      <section className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 flex items-center space-x-2">
-              <span>Productos Destacados</span>
-              <Star className="w-6 h-6 text-amber-500 fill-amber-500" />
-            </h2>
-            <p className="text-sm text-gray-500">Hardware seleccionado por rendimiento y disponibilidad inmediata</p>
-          </div>
-          <Link to="/catalog?is_featured=true" className="text-brand-red font-bold text-sm flex items-center hover:underline">
-            Ver Todo <ChevronRight className="w-4 h-4 ml-1" />
-          </Link>
-        </div>
-
-        {loadingFeatured ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-gray-200 animate-pulse h-80 rounded-lg" />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.slice(0, 4).map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        )}
-      </section>
+      {/* 3. Productos Destacados (Carrusel 1 sola fila: 5 en Desktop, 2 en Móvil) */}
+      <ProductCarousel
+        title="Productos Destacados"
+        subtitle="Hardware seleccionado por rendimiento y disponibilidad inmediata"
+        icon={Star}
+        viewAllLink="/catalog?is_featured=true"
+        viewAllText="Ver Todo"
+        products={featuredProducts}
+        loading={loadingFeatured}
+        limit={10}
+      />
 
       {/* 4. Bloques Promocionales Grandes (2 Banners) */}
-      <section className="max-w-7xl mx-auto px-4">
+      <section className="max-w-[1440px] mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Promo Banner 1: Tablets & Móviles */}
           <div className="relative rounded-lg overflow-hidden shadow-2xl min-h-[340px] sm:min-h-[380px] group border border-slate-800 flex flex-col justify-end p-8 text-white">
@@ -215,35 +197,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. Novedades (4 productos más nuevos) */}
-      <section className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 flex items-center space-x-2">
-              <span>Novedades</span>
-              <Sparkles className="w-6 h-6 text-amber-500" />
-            </h2>
-            <p className="text-sm text-gray-500">Productos añadidos recientemente</p>
-          </div>
-          <Link to="/catalog?sort=newest" className="text-brand-red font-bold text-sm flex items-center hover:underline">
-            Ver Todas <ChevronRight className="w-4 h-4 ml-1" />
-          </Link>
-        </div>
-
-        {loadingNewest ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-gray-200 animate-pulse h-80 rounded-2xl" />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {newestProducts.slice(0, 4).map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        )}
-      </section>
+      {/* 5. Novedades (Carrusel 1 sola fila: 5 en Desktop, 2 en Móvil) */}
+      <ProductCarousel
+        title="Novedades"
+        subtitle="Productos añadidos recientemente"
+        icon={Sparkles}
+        viewAllLink="/catalog?sort=newest"
+        viewAllText="Ver Todas"
+        products={newestProducts}
+        loading={loadingNewest}
+        limit={10}
+      />
 
       {/* 6. Location Map Section */}
       <LocationMap />

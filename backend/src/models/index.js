@@ -18,6 +18,7 @@ const Review = require('./Review');
 const Wishlist = require('./Wishlist');
 const AuditLog = require('./AuditLog');
 const ShippingMethod = require('./ShippingMethod');
+const Claim = require('./Claim');
 
 // User Associations
 User.hasMany(Address, { foreignKey: 'user_id', as: 'addresses', onDelete: 'CASCADE' });
@@ -109,5 +110,6 @@ module.exports = {
   Review,
   Wishlist,
   AuditLog,
-  ShippingMethod
+  ShippingMethod,
+  Claim
 };

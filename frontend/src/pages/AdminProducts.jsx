@@ -377,7 +377,7 @@ export default function AdminProducts() {
   const endIndex = Math.min(currentPage * itemsPerPage, totalProductsCount);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-[1440px] mx-auto px-4 py-8 space-y-6">
       {/* Header Bar */}
       <div className="bg-brand-dark text-white p-6 rounded-3xl border border-slate-800 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>

@@ -1,6 +1,6 @@
 const { Resend } = require('resend');
 const logger = require('../config/logger');
-const { generateOrderConfirmationHTML } = require('../utils/emailTemplates');
+const { generateOrderConfirmationHTML, generateClaimConfirmationHTML } = require('../utils/emailTemplates');
 
 // Local dev certificate fallback for Windows environments with SSL interception
 if (process.env.NODE_ENV !== 'production') {
@@ -54,6 +54,29 @@ class EmailService {
   }
 
   /**
+   * Claim / Complaint Confirmation Email (Libro de Reclamaciones)
+   */
+  async sendClaimConfirmation(claim) {
+    const subject = `Constancia de Hoja de Reclamación #${claim.claim_code || ''} - SUPERLAPTOP`;
+    const html = generateClaimConfirmationHTML(claim);
+
+    // Send copy to consumer
+    const result = await this.sendEmail({ to: claim.email, subject, html });
+
+    // Send notification copy to admin store email if configured
+    const adminEmail = process.env.ADMIN_CLAIM_NOTIFICATION_EMAIL || process.env.STORE_CONTACT_EMAIL || 'ventas@superlaptop.pe';
+    if (adminEmail && adminEmail !== claim.email) {
+      this.sendEmail({
+        to: adminEmail,
+        subject: `[NUEVO ${claim.claim_type || 'RECLAMO'}] Hoja #${claim.claim_code || ''} - ${claim.first_name} ${claim.last_name}`,
+        html
+      }).catch(err => logger.error('[EmailService] Error notifying admin of new claim:', err));
+    }
+
+    return result.success;
+  }
+
+  /**
    * Order Status Update Email
    */
   async sendOrderStatusUpdate(userEmail, orderNumber, newStatus) {
@@ -99,3 +122,4 @@ class EmailService {
 }
 
 module.exports = new EmailService();
+

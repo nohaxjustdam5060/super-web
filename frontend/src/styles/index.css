@@ -42,6 +42,15 @@
   background: #94A3B8;
 }
 
+/* Hide scrollbar for clean carousels */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Infinite Marquee Animation for Mobile Value Proposition Bar */
 @keyframes marquee {
   0% {

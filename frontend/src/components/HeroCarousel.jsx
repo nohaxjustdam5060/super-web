@@ -114,8 +114,8 @@ export default function HeroCarousel() {
                 <div className="absolute inset-0 bg-slate-950/50" />
               </div>
 
-              {/* Slide Text & Content Grid (Centered Content inside max-w-7xl) */}
-              <div className="relative z-20 h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
+              {/* Slide Text & Content Grid (Centered Content inside max-w-[1440px]) */}
+              <div className="relative z-20 h-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full py-8">
                   {/* Left Column: Headline & Action Buttons */}
                   <div className="lg:col-span-8 space-y-4 sm:space-y-6">
@@ -282,7 +282,7 @@ export default function HeroCarousel() {
         </div>
 
         {/* Desktop View: Centered Static 3-Column Grid (sm:) */}
-        <div className="hidden md:grid sm:grid-cols-3 gap-4 max-w-7xl mx-auto">
+        <div className="hidden md:grid sm:grid-cols-3 gap-4 max-w-[1440px] mx-auto">
           <div className="flex items-center justify-start space-x-3 text-gray-300">
             <div className="p-2 bg-brand-red/10 text-brand-red-accent rounded-md border border-brand-red/20 flex-shrink-0">
               <Truck className="w-5 h-5" />

@@ -69,7 +69,7 @@ export default function CheckoutButton({
       ) : (
         <>
           <CreditCard className="w-5 h-5" />
-          <span>Pagar con Mercado Pago (Checkout Pro)</span>
+          <span>Pagar con Tarjeta/Yape/Mercado Pago</span>
         </>
       )}
     </button>

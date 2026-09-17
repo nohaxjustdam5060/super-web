@@ -397,7 +397,7 @@ export default function Catalog() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8 space-y-6">
+    <div className="max-w-[1440px] mx-auto px-4 py-6 sm:py-8 space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-sm">
         <div>

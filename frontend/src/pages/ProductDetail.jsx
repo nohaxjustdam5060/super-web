@@ -182,12 +182,12 @@ export default function ProductDetail() {
   };
 
   if (loading) {
-    return <div className="max-w-7xl mx-auto px-4 py-16 text-center text-gray-500 font-bold">Cargando detalles del producto...</div>;
+    return <div className="max-w-[1440px] mx-auto px-4 py-16 text-center text-gray-500 font-bold">Cargando detalles del producto...</div>;
   }
 
   if (!product) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16 text-center space-y-4">
+      <div className="max-w-[1440px] mx-auto px-4 py-16 text-center space-y-4">
         <h2 className="text-2xl font-black text-gray-900">Producto no encontrado</h2>
         <Link to="/catalog" className="text-brand-red font-bold hover:underline">Volver al Catálogo</Link>
       </div>
@@ -218,7 +218,7 @@ export default function ProductDetail() {
   const highlightedSpecs = specsData.filter(s => s.highlight);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-10">
+    <div className="max-w-[1440px] mx-auto px-4 py-8 space-y-10">
       {/* Breadcrumb Navigation */}
       <div className="flex items-center space-x-2 text-sm text-gray-500 flex-wrap gap-y-1">
         <Link to="/catalog" className="hover:text-brand-red flex items-center transition-colors">
@@ -637,7 +637,7 @@ export default function ProductDetail() {
           <h3 className="text-xl font-black text-gray-900 flex items-center">
             <RefreshCw className="w-5 h-5 mr-2 text-brand-red" /> Productos Relacionados
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
             {relatedProducts.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}

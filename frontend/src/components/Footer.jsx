@@ -1,13 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Truck, CreditCard, RefreshCw, Mail, Phone, MapPin } from 'lucide-react';
+import { ShieldCheck, Truck, CreditCard, RefreshCw, Mail, Phone, MapPin, BookOpen } from 'lucide-react';
 import PaymentBadges from './PaymentBadges';
 
 export default function Footer() {
   return (
     <footer className="bg-brand-dark text-gray-300 border-t border-gray-800 pt-12 pb-8">
       {/* Features Bar */}
-      <div className="max-w-7xl mx-auto px-4 pb-10 border-b border-gray-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="max-w-[1440px] mx-auto px-4 pb-10 border-b border-gray-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="flex items-center space-x-3.5 bg-gray-900/60 p-4 rounded-xl border border-gray-800/80 hover:border-gray-700/80 transition-all duration-200">
           <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 flex-shrink-0 flex items-center justify-center">
             <Truck className="w-6 h-6 text-red-500" />
@@ -47,7 +47,7 @@ export default function Footer() {
       </div>
 
       {/* Main Footer Links (5 Balanced Columns) */}
-      <div className="max-w-7xl mx-auto px-4 py-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
+      <div className="max-w-[1440px] mx-auto px-4 py-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
         {/* Col 1: Brand Info */}
         <div>
           <div className="flex items-center space-x-2 mb-4">
@@ -62,7 +62,7 @@ export default function Footer() {
             Tu tienda de confianza en hardware y componentes de alto rendimiento. Las mejores marcas del mundo al mejor precio.
           </p>
           <div className="space-y-2 text-sm text-gray-400">
-            <p className="flex items-center"><MapPin className="w-4 h-4 mr-2 text-brand-red-accent flex-shrink-0" /> Av. Javier Prado Este 1234, Lima</p>
+            <p className="flex items-center"><MapPin className="w-4 h-4 mr-2 text-brand-red-accent flex-shrink-0" /> Jr.Velarde 172, Lima</p>
             <p className="flex items-center"><Phone className="w-4 h-4 mr-2 text-brand-red-accent flex-shrink-0" /> +51 933 347 488</p>
             <p className="flex items-center"><Mail className="w-4 h-4 mr-2 text-brand-red-accent flex-shrink-0" /> ventas@superlaptop.pe</p>
           </div>
@@ -98,22 +98,44 @@ export default function Footer() {
           <h4 className="text-white font-bold text-base mb-4 border-b border-brand-red-accent inline-block pb-1">Servicio al Cliente</h4>
           <ul className="space-y-2.5 text-sm">
             <li><Link to="/profile" className="hover:text-white transition-colors">Estado de mi Pedido</Link></li>
-            <li><Link to="/catalog" className="hover:text-white transition-colors">Guía de Compras y Armado</Link></li>
+            <li><Link to="/politicas?tab=envios" className="hover:text-white transition-colors">Envíos y Despacho</Link></li>
             <li><Link to="/compare" className="hover:text-white transition-colors">Comparador de Componentes</Link></li>
-            <li><a href="#politicas" className="hover:text-white transition-colors">Términos y Condiciones</a></li>
-            <li><a href="#garantia" className="hover:text-white transition-colors">Políticas de Garantía</a></li>
+            <li><Link to="/libro-de-reclamaciones" className="hover:text-brand-red-accent transition-colors font-medium text-gray-200">Libro de Reclamaciones</Link></li>
+            <li><Link to="/politicas?tab=terminos" className="hover:text-white transition-colors">Términos y Condiciones</Link></li>
+            <li><Link to="/politicas?tab=garantia" className="hover:text-white transition-colors">Políticas de Garantía</Link></li>
+            <li><Link to="/politicas?tab=devoluciones" className="hover:text-white transition-colors">Devoluciones y Cambios</Link></li>
           </ul>
         </div>
 
-        {/* Col 5: Medios de Pago */}
+        {/* Col 5: Medios de Pago & Libro de Reclamaciones */}
         <div>
           <h4 className="text-white font-bold text-base mb-4 border-b border-brand-red-accent inline-block pb-1">Medios de Pago</h4>
-          <p className="text-xs text-gray-400 mb-4">Aceptamos todas las tarjetas y pagos digitales:</p>
+          <p className="text-xs text-gray-400 mb-3">Aceptamos todas las tarjetas y pagos digitales:</p>
           <PaymentBadges />
+
+          {/* INDECOPI Virtual Complaints Book Badge */}
+          <div className="mt-6 pt-4 border-t border-gray-800">
+            <Link
+              to="/libro-de-reclamaciones"
+              className="group flex items-center space-x-3 bg-gray-900/90 hover:bg-gray-800/90 border border-gray-700/70 hover:border-brand-red/50 p-3 rounded-xl transition-all duration-200"
+            >
+              <div className="p-2 bg-brand-red/10 border border-brand-red/30 rounded-lg group-hover:scale-105 transition-transform flex-shrink-0">
+                <BookOpen className="w-5 h-5 text-brand-red" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-white block group-hover:text-brand-red-accent transition-colors">
+                  Libro de Reclamaciones
+                </span>
+                <span className="text-[10px] text-gray-400 block">
+                  Virtual • D.S. 011-2011-PCM
+                </span>
+              </div>
+            </Link>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 pt-6 border-t border-gray-800 text-center text-xs text-gray-500">
+      <div className="max-w-[1440px] mx-auto px-4 pt-6 border-t border-gray-800 text-center text-xs text-gray-500">
         © {new Date().getFullYear()} SUPERLAPTOP. Todos los derechos reservados. Diseñado para alto rendimiento y producción.
       </div>
     </footer>
