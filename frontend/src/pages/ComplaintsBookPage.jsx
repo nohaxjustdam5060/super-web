@@ -1,17 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   BookOpen, 
   AlertCircle, 
   CheckCircle2, 
-  Printer, 
   Clock, 
   ArrowLeft, 
   Send, 
   User, 
   ShoppingBag, 
-  Building2 
+  Building2,
+  Download,
+  Loader2,
+  FileCheck
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import axiosClient from '../api/axiosClient';
 
 const DOC_SPECS = {
@@ -58,8 +62,10 @@ export default function ComplaintsBookPage() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successClaim, setSuccessClaim] = useState(null);
+  const sheetRef = useRef(null);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -186,8 +192,55 @@ export default function ComplaintsBookPage() {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handleDownloadPDF = async () => {
+    if (!sheetRef.current || !successClaim) return;
+    setDownloadingPDF(true);
+    try {
+      const element = sheetRef.current;
+      
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      const margin = 8;
+      const contentWidth = pdfWidth - (margin * 2);
+      const imgProps = pdf.getImageProperties(imgData);
+      const contentHeight = (imgProps.height * contentWidth) / imgProps.width;
+
+      let heightLeft = contentHeight;
+      let position = margin;
+
+      pdf.addImage(imgData, 'PNG', margin, position, contentWidth, contentHeight, '', 'FAST');
+      heightLeft -= (pdfHeight - (margin * 2));
+
+      while (heightLeft > 0) {
+        position = margin - (contentHeight - heightLeft);
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', margin, position, contentWidth, contentHeight, '', 'FAST');
+        heightLeft -= (pdfHeight - (margin * 2));
+      }
+
+      const fileName = `Hoja_Reclamacion_${successClaim.claim_code || 'REC'}.pdf`;
+      pdf.save(fileName);
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      window.print();
+    } finally {
+      setDownloadingPDF(false);
+    }
   };
 
   const resetForm = () => {
@@ -267,108 +320,162 @@ export default function ComplaintsBookPage() {
         </div>
 
         {/* ========================================================================= */}
-        {/* CASE 1: SUCCESS CONFIRMATION SCREEN (PRINTABLE SHEET)                     */}
+        {/* CASE 1: SUCCESS CONFIRMATION SCREEN (PRINTABLE / PDF SHEET)               */}
         {/* ========================================================================= */}
         {successClaim ? (
           <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-10 mb-10 print:shadow-none print:border-none print:p-0">
-            {/* Header / Proof Banner */}
-            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 text-center mb-8 print:bg-white print:border-2 print:border-gray-800">
-              <div className="w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto mb-3 print:hidden">
-                <CheckCircle2 className="w-7 h-7" />
-              </div>
-              <span className="text-xs font-bold text-emerald-800 uppercase tracking-widest block">
-                Hoja de Reclamación Registrada
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-emerald-900 print:text-black tracking-wide my-1">
-                {successClaim.claim_code}
-              </h2>
-              <p className="text-xs text-emerald-700 print:text-gray-600">
-                Fecha y Hora de Envío: {new Date(successClaim.created_at || Date.now()).toLocaleString('es-PE')}
-              </p>
-            </div>
-
-            {/* Legal Notice */}
-            <div className="bg-blue-50 border-l-4 border-blue-600 p-4 rounded-r-xl mb-8 text-xs text-blue-900 leading-relaxed">
-              <div className="flex items-center space-x-2 font-bold mb-1">
-                <Clock className="w-4 h-4 text-blue-600" />
-                <span>Plazo Legal de Atención: Máximo 15 días hábiles</span>
-              </div>
-              De conformidad con la Ley N° 29571, se ha enviado una copia íntegra de esta constancia al correo 
-              electrónico proporcionado (<strong>{successClaim.email}</strong>). Nuestro equipo revisará 
-              los hechos y le notificará la respuesta formal dentro del plazo estipulado.
-            </div>
-
-            {/* Summary Data Sections */}
-            <div className="space-y-6 text-sm text-gray-800">
+            
+            {/* PDF Printable Document Container */}
+            <div ref={sheetRef} className="bg-white p-4 sm:p-6 rounded-xl space-y-6 text-gray-900">
               
-              {/* Consumidor */}
-              <div className="border border-gray-200 rounded-xl p-5 bg-gray-50/50">
-                <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wide border-b border-gray-200 pb-2 mb-3 flex items-center">
-                  <User className="w-4 h-4 mr-2 text-brand-red" />
-                  1. Identificación del Consumidor Reclamante
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
-                  <p><span className="text-gray-500">Nombres y Apellidos:</span> <strong className="text-gray-900">{successClaim.first_name} {successClaim.last_name}</strong></p>
-                  <p><span className="text-gray-500">Documento:</span> <strong className="text-gray-900">{successClaim.doc_type} {successClaim.doc_number}</strong></p>
-                  <p><span className="text-gray-500">Correo Electrónico:</span> <strong className="text-gray-900">{successClaim.email}</strong></p>
-                  <p><span className="text-gray-500">Teléfono / Celular:</span> <strong className="text-gray-900">{successClaim.phone}</strong></p>
-                  <p className="sm:col-span-2"><span className="text-gray-500">Domicilio:</span> <strong className="text-gray-900">{successClaim.address}</strong></p>
+              {/* Document Official Header */}
+              <div className="border-b-2 border-gray-900 pb-5">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <span className="text-[11px] font-black text-brand-red uppercase tracking-widest block">
+                      SUPERLAPTOP E.I.R.L. &bull; RUC: 20608594210
+                    </span>
+                    <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
+                      LIBRO DE RECLAMACIONES VIRTUAL
+                    </h2>
+                    <p className="text-xs text-gray-500">
+                      Conforme a la Ley N° 29571 y D.S. N° 011-2011-PCM &bull; Av. Javier Prado Este 1234, Lima
+                    </p>
+                  </div>
+                  
+                  <div className="bg-gray-100 border border-gray-300 rounded-xl p-3 text-left sm:text-right flex-shrink-0">
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
+                      Hoja de Reclamación N°
+                    </span>
+                    <span className="text-base sm:text-lg font-black text-gray-900 font-mono block">
+                      {successClaim.claim_code}
+                    </span>
+                    <span className="text-[11px] text-gray-500 block">
+                      {new Date(successClaim.created_at || Date.now()).toLocaleString('es-PE')}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Bien Contratado */}
-              <div className="border border-gray-200 rounded-xl p-5 bg-gray-50/50">
-                <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wide border-b border-gray-200 pb-2 mb-3 flex items-center">
-                  <ShoppingBag className="w-4 h-4 mr-2 text-brand-red" />
-                  2. Identificación del Bien Contratado
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
-                  <p><span className="text-gray-500">Tipo de Bien:</span> <strong className="text-gray-900 uppercase">{successClaim.contracted_good_type}</strong></p>
-                  <p><span className="text-gray-500">Monto Reclamado:</span> <strong className="text-gray-900">S/ {Number(successClaim.claimed_amount || 0).toFixed(2)}</strong></p>
-                  <p className="sm:col-span-2"><span className="text-gray-500">Descripción:</span> <strong className="text-gray-900">{successClaim.good_description}</strong></p>
+              {/* Status & Plazo Notice */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-xs text-blue-900 leading-relaxed space-y-1">
+                <div className="flex items-center space-x-2 font-bold text-blue-950">
+                  <Clock className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                  <span>Plazo Legal de Atención: Máximo 15 días hábiles</span>
                 </div>
+                <p>
+                  Se ha remitido una copia fiel de esta constancia al correo electrónico: <strong>{successClaim.email}</strong>. Conforme al Código de Protección y Defensa del Consumidor, SUPERLAPTOP brindará respuesta formal a los hechos expuestos dentro del plazo legal.
+                </p>
               </div>
 
-              {/* Reclamación y Pedido */}
-              <div className="border border-gray-200 rounded-xl p-5 bg-gray-50/50">
-                <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wide border-b border-gray-200 pb-2 mb-3 flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-2 text-brand-red" />
-                  3. Detalle de la Reclamación y Pedido
-                </h3>
-                <div className="space-y-3 text-xs sm:text-sm">
-                  <p><span className="text-gray-500">Naturaleza:</span> <span className="inline-block px-2.5 py-0.5 rounded-full font-bold bg-red-100 text-red-700 uppercase">{successClaim.claim_type}</span></p>
-                  <div>
-                    <span className="text-gray-500 block mb-1">Detalle de los hechos:</span>
-                    <div className="p-3 bg-white border border-gray-200 rounded-lg text-gray-800 whitespace-pre-line">
-                      {successClaim.claim_detail}
-                    </div>
+              {/* Summary Data Sections */}
+              <div className="space-y-5 text-sm text-gray-800">
+                
+                {/* 1. Consumidor */}
+                <div className="border border-gray-300 rounded-xl p-4 sm:p-5 bg-gray-50/70">
+                  <h3 className="font-extrabold text-gray-900 text-xs sm:text-sm uppercase tracking-wider border-b border-gray-200 pb-2 mb-3 flex items-center">
+                    <User className="w-4 h-4 mr-2 text-brand-red flex-shrink-0" />
+                    1. Identificación del Consumidor Reclamante
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs sm:text-sm">
+                    <p><span className="text-gray-500">Nombres y Apellidos:</span> <strong className="text-gray-900">{successClaim.first_name} {successClaim.last_name}</strong></p>
+                    <p><span className="text-gray-500">Documento:</span> <strong className="text-gray-900">{successClaim.doc_type} {successClaim.doc_number}</strong></p>
+                    <p><span className="text-gray-500">Correo Electrónico:</span> <strong className="text-gray-900">{successClaim.email}</strong></p>
+                    <p><span className="text-gray-500">Teléfono / Celular:</span> <strong className="text-gray-900">{successClaim.phone}</strong></p>
+                    <p className="sm:col-span-2">
+                      <span className="text-gray-500">Domicilio:</span> <strong className="text-gray-900">{successClaim.address}</strong>
+                      {(successClaim.district || successClaim.province || successClaim.department) && (
+                        <span className="text-gray-600"> ({[successClaim.district, successClaim.province, successClaim.department].filter(Boolean).join(', ')})</span>
+                      )}
+                    </p>
+
+                    {successClaim.is_minor && successClaim.guardian_name && (
+                      <div className="sm:col-span-2 pt-2 border-t border-gray-200 mt-1">
+                        <span className="text-[11px] font-bold text-gray-700 uppercase block mb-1">Padre, Madre o Tutor (Menor de edad):</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                          <p><span className="text-gray-500">Nombre del Tutor:</span> <strong className="text-gray-900">{successClaim.guardian_name}</strong></p>
+                          <p><span className="text-gray-500">Documento Tutor:</span> <strong className="text-gray-900">{successClaim.guardian_doc_type || 'DNI'} {successClaim.guardian_doc_number}</strong></p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <span className="text-gray-500 block mb-1">Pedido concreto del consumidor:</span>
-                    <div className="p-3 bg-white border border-gray-200 rounded-lg text-gray-800 whitespace-pre-line font-medium">
-                      {successClaim.consumer_request}
+                </div>
+
+                {/* 2. Bien Contratado */}
+                <div className="border border-gray-300 rounded-xl p-4 sm:p-5 bg-gray-50/70">
+                  <h3 className="font-extrabold text-gray-900 text-xs sm:text-sm uppercase tracking-wider border-b border-gray-200 pb-2 mb-3 flex items-center">
+                    <ShoppingBag className="w-4 h-4 mr-2 text-brand-red flex-shrink-0" />
+                    2. Identificación del Bien Contratado
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs sm:text-sm">
+                    <p><span className="text-gray-500">Tipo de Bien:</span> <strong className="text-gray-900 uppercase">{successClaim.contracted_good_type}</strong></p>
+                    <p><span className="text-gray-500">Monto Reclamado:</span> <strong className="text-gray-900">{successClaim.currency || 'PEN'} S/ {Number(successClaim.claimed_amount || 0).toFixed(2)}</strong></p>
+                    <p className="sm:col-span-2"><span className="text-gray-500">Descripción del Bien:</span> <strong className="text-gray-900">{successClaim.good_description}</strong></p>
+                  </div>
+                </div>
+
+                {/* 3. Reclamación y Pedido */}
+                <div className="border border-gray-300 rounded-xl p-4 sm:p-5 bg-gray-50/70">
+                  <h3 className="font-extrabold text-gray-900 text-xs sm:text-sm uppercase tracking-wider border-b border-gray-200 pb-2 mb-3 flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-2 text-brand-red flex-shrink-0" />
+                    3. Detalle de la Reclamación y Pedido del Consumidor
+                  </h3>
+                  <div className="space-y-3 text-xs sm:text-sm">
+                    <p>
+                      <span className="text-gray-500">Naturaleza de la Reclamación:</span>{' '}
+                      <span className="inline-block px-2.5 py-0.5 rounded-full font-bold bg-red-100 text-brand-red uppercase text-xs">
+                        {successClaim.claim_type}
+                      </span>
+                    </p>
+                    <div>
+                      <span className="text-gray-500 block mb-1">Detalle de los hechos:</span>
+                      <div className="p-3 bg-white border border-gray-300 rounded-lg text-gray-800 whitespace-pre-line text-xs sm:text-sm">
+                        {successClaim.claim_detail}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block mb-1">Pedido concreto del consumidor:</span>
+                      <div className="p-3 bg-white border border-gray-300 rounded-lg text-gray-800 whitespace-pre-line font-medium text-xs sm:text-sm">
+                        {successClaim.consumer_request}
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Legal Certification Footer */}
+                <div className="text-[11px] text-gray-500 text-center border-t border-gray-200 pt-3">
+                  <p>Constancia virtual de reclamación expedida en cumplimiento del D.S. N° 011-2011-PCM y la Ley N° 29571 &bull; SUPERLAPTOP E.I.R.L.</p>
+                </div>
+
               </div>
 
             </div>
 
-            {/* Action Buttons (Print / Reset) */}
+            {/* Action Buttons (Download PDF / Reset) */}
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-gray-200 print:hidden">
               <button
                 type="button"
-                onClick={handlePrint}
-                className="w-full sm:w-auto px-6 py-3 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors flex items-center justify-center space-x-2 shadow-sm cursor-pointer"
+                onClick={handleDownloadPDF}
+                disabled={downloadingPDF}
+                className="w-full sm:w-auto px-6 py-3.5 bg-brand-red text-white rounded-xl font-bold text-sm hover:bg-brand-red-accent transition-all duration-200 flex items-center justify-center space-x-2 shadow-md hover:shadow-red-600/30 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99]"
               >
-                <Printer className="w-4 h-4" />
-                <span>Imprimir / Guardar en PDF</span>
+                {downloadingPDF ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    <span>Generando PDF...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2" />
+                    <span>Descargar Constancia en PDF</span>
+                  </>
+                )}
               </button>
 
               <button
                 type="button"
                 onClick={resetForm}
-                className="w-full sm:w-auto px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+                className="w-full sm:w-auto px-6 py-3.5 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors cursor-pointer"
               >
                 Registrar otra reclamación
               </button>
