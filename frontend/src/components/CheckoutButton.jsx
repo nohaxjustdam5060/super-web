@@ -10,12 +10,15 @@ export default function CheckoutButton({
   onSuccess = null,
   className = '',
   disabled = false,
-  onBeforePay = null
+  onBeforePay = null,
+  onError = null
 }) {
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handlePayWithMercadoPago = async () => {
     if (disabled) return;
+    setErrorMessage('');
 
     if (onBeforePay) {
       const canProceed = onBeforePay();
@@ -25,7 +28,9 @@ export default function CheckoutButton({
     const payload = getOrderPayload ? getOrderPayload() : orderPayload;
 
     if (!payload && !orderId) {
-      alert('Error: Datos del pedido no encontrados.');
+      const msg = 'Error: Datos del pedido no encontrados.';
+      setErrorMessage(msg);
+      if (onError) onError(msg);
       return;
     }
 
@@ -44,34 +49,43 @@ export default function CheckoutButton({
         // Redirect to Mercado Pago Checkout Pro hosted environment
         window.location.href = res.data.init_point;
       } else {
-        alert('No se pudo generar el enlace de pago con Mercado Pago.');
+        const msg = 'No se pudo generar el enlace de pago con Mercado Pago.';
+        setErrorMessage(msg);
+        if (onError) onError(msg);
       }
     } catch (err) {
       console.error('❌ [CheckoutButton Error]:', err.response?.data || err.message);
-      alert(err.response?.data?.message || 'Ocurrió un error al conectar con Mercado Pago.');
+      const msg = err.response?.data?.message || 'Ocurrió un error al conectar con Mercado Pago.';
+      setErrorMessage(msg);
+      if (onError) onError(msg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <button
-      type="button"
-      onClick={handlePayWithMercadoPago}
-      disabled={loading || disabled}
-      className={`w-full bg-[#009EE3] hover:bg-[#0087C4] text-white font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-all active:scale-95 text-base disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
-    >
-      {loading ? (
-        <>
-          <Loader2 className="w-5 h-5 animate-spin" />
-          <span>Redirigiendo a Mercado Pago...</span>
-        </>
-      ) : (
-        <>
-          <CreditCard className="w-5 h-5" />
-          <span>Pagar con Tarjeta/Yape/Mercado Pago</span>
-        </>
+    <div className="space-y-2">
+      <button
+        type="button"
+        onClick={handlePayWithMercadoPago}
+        disabled={loading || disabled}
+        className={`w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg hover:shadow-red-600/20 transition-all active:scale-95 text-base disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      >
+        {loading ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span>Redirigiendo a Mercado Pago...</span>
+          </>
+        ) : (
+          <>
+            <CreditCard className="w-5 h-5" />
+            <span>Pagar con Tarjeta/Yape/Mercado Pago</span>
+          </>
+        )}
+      </button>
+      {errorMessage && (
+        <p className="text-xs text-red-600 font-medium text-center">{errorMessage}</p>
       )}
-    </button>
+    </div>
   );
 }

@@ -208,7 +208,7 @@ export default function Navbar() {
         <form
           ref={searchContainerRef}
           onSubmit={handleSearchSubmit}
-          className="hidden md:flex flex-1 max-w-2xl relative mx-2 items-center"
+          className="hidden md:flex flex-1 max-w-2xl relative mx-2 items-center outline-none focus:outline-none"
         >
           <input
             type="text"
@@ -218,11 +218,11 @@ export default function Navbar() {
             onFocus={() => {
               if (searchQuery.trim().length >= 2) setShowLiveSearch(true);
             }}
-            className="w-full bg-slate-800/90 border-2 border-brand-red rounded-md py-2 pl-4 pr-11 text-sm font-medium text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-red/40 shadow-inner transition-all"
+            className="w-full bg-slate-800/90 border-2 border-brand-red rounded-md py-2 pl-4 pr-11 text-sm font-medium text-white placeholder:text-slate-400 outline-none focus:outline-none focus-visible:outline-none focus:ring-2 focus:ring-brand-red/20 focus:ring-offset-0 focus:ring-offset-transparent ring-0 ring-offset-0 shadow-inner transition-all"
           />
           <button
             type="submit"
-            className="absolute right-2 text-brand-red-accent hover:text-white p-1.5 rounded-md transition-colors flex items-center justify-center cursor-pointer"
+            className="absolute right-2 text-brand-red-accent hover:text-white p-1.5 rounded-md transition-colors flex items-center justify-center cursor-pointer outline-none focus:outline-none focus-visible:outline-none ring-0 ring-offset-0"
             title="Buscar"
             aria-label="Buscar"
           >
@@ -395,10 +395,10 @@ export default function Navbar() {
                 >
                   <button
                     onClick={() => handleSubcategoryClick(parentCat.slug)}
-                    className={`px-3 py-2.5 text-xs font-bold flex items-center transition-all ${
+                    className={`px-3 py-2.5 text-xs font-bold flex items-center transition-colors border-b-2 cursor-pointer ${
                       isActive
-                        ? 'text-white bg-slate-800 border-b-2 border-brand-red rounded-t-md rounded-b-none'
-                        : 'text-gray-300 hover:text-white hover:bg-slate-800/60 rounded-md'
+                        ? 'text-white border-brand-red'
+                        : 'text-gray-300 hover:text-white border-transparent hover:border-brand-red/60'
                     }`}
                   >
                     <DynamicIcon name={parentCat.icon_name} className="w-4 h-4 mr-1.5 text-brand-red-accent flex-shrink-0" />
@@ -412,7 +412,7 @@ export default function Navbar() {
             {/* Integrated "Ofertas" Button (In same row) */}
             <Link
               to="/catalog?is_featured=true"
-              className="px-3 py-2.5 text-xs font-black text-amber-400 hover:text-amber-300 flex items-center space-x-1 uppercase tracking-wider flex-shrink-0 rounded-md hover:bg-slate-800/60 transition-colors"
+              className="px-3 py-2.5 text-xs font-black text-amber-400 hover:text-amber-300 flex items-center space-x-1 uppercase tracking-wider flex-shrink-0 border-b-2 border-transparent hover:border-amber-400 transition-colors"
               onMouseEnter={() => setActiveParentSlug(null)}
             >
               <Flame className="w-4 h-4 mr-1 text-amber-400 animate-pulse" />
@@ -439,18 +439,18 @@ export default function Navbar() {
               className="max-w-[1440px] mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-4 gap-6 animate-in fade-in duration-200"
             >
               {/* Left Parent Category Featured Card */}
-              <div className="bg-gradient-to-br from-brand-dark to-slate-800 text-white rounded-lg p-6 flex flex-col justify-between space-y-4 shadow-lg border border-slate-700">
-                <div className="space-y-3">
+              <div className="bg-gradient-to-br from-brand-dark to-slate-800 text-white rounded-lg p-5 flex flex-col justify-between space-y-3 shadow-lg border border-slate-700">
+                <div className="space-y-2.5">
                   <div className="flex items-center space-x-2">
-                    <span className="p-2.5 bg-brand-red text-white rounded-md shadow-md">
-                      <DynamicIcon name={currentCategory.icon_name} className="w-6 h-6" />
+                    <span className="p-2 bg-brand-red text-white rounded-md shadow-md">
+                      <DynamicIcon name={currentCategory.icon_name} className="w-5 h-5" />
                     </span>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-brand-red-accent bg-brand-red/10 px-2.5 py-0.5 rounded-md border border-brand-red/20">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-brand-red-accent bg-brand-red/10 px-2 py-0.5 rounded-md border border-brand-red/20">
                       Categoría Principal
                     </span>
                   </div>
-                  <h3 className="text-xl font-black leading-snug">{currentCategory.name}</h3>
-                  <p className="text-xs text-gray-300 leading-relaxed">
+                  <h3 className="text-lg font-black leading-snug">{currentCategory.name}</h3>
+                  <p className="text-xs text-gray-300 leading-relaxed line-clamp-2">
                     {currentCategory.description || 'Componentes informáticos seleccionados con la mejor garantía oficial en Perú.'}
                   </p>
                 </div>
@@ -458,15 +458,21 @@ export default function Navbar() {
                 <Link
                   to={`/catalog?category_id=${currentCategory.slug}`}
                   onClick={() => setActiveParentSlug(null)}
-                  className="bg-brand-red hover:bg-brand-red-hover text-white text-xs font-extrabold px-4 py-3 rounded-md flex items-center justify-between shadow transition-all active:scale-95 group/link"
+                  className="bg-brand-red hover:bg-brand-red-hover text-white text-xs font-extrabold px-3.5 py-2.5 rounded-md flex items-center justify-between shadow transition-all active:scale-95 group/link mt-2"
                 >
                   <span>Ver todo en {currentCategory.name}</span>
                   <ChevronRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
                 </Link>
               </div>
 
-              {/* Right Subcategories Grid (Spans 3 Columns) */}
-              <div className="lg:col-span-3 grid grid-cols-2 sm:grid-cols-3 gap-3 items-start">
+              {/* Right Subcategories Grid (Spans 3 Columns with Adaptive Layout) */}
+              <div
+                className={`lg:col-span-3 grid gap-3 items-start ${
+                  currentCategory.subcategories.length <= 4
+                    ? 'grid-cols-2'
+                    : 'grid-cols-2 sm:grid-cols-3'
+                }`}
+              >
                 {currentCategory.subcategories.map((sub) => (
                   <button
                     key={sub.id}
@@ -496,15 +502,15 @@ export default function Navbar() {
       {mobileMenuOpen && (
         <div className="bg-brand-dark border-b border-slate-800 p-4 space-y-4 shadow-2xl max-h-[85vh] overflow-y-auto border-t border-slate-800 text-white">
           {/* Search Mobile */}
-          <form onSubmit={handleSearchSubmit} className="flex md:hidden">
+          <form onSubmit={handleSearchSubmit} className="flex md:hidden outline-none focus:outline-none">
             <input
               type="text"
               placeholder="Buscar en la tienda..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-l-xl py-2.5 px-3 text-xs text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-red"
+              className="w-full bg-slate-800 border border-slate-700 rounded-l-xl py-2.5 px-3 text-xs text-white placeholder:text-slate-400 outline-none focus:outline-none focus-visible:outline-none focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 focus:ring-offset-0 focus:ring-offset-transparent ring-0 ring-offset-0"
             />
-            <button type="submit" className="bg-brand-red text-white px-4 rounded-r-xl font-bold text-xs flex items-center">
+            <button type="submit" className="bg-brand-red text-white px-4 rounded-r-xl font-bold text-xs flex items-center outline-none focus:outline-none focus-visible:outline-none ring-0 ring-offset-0">
               <Search className="w-3.5 h-3.5 mr-1" /> Buscar
             </button>
           </form>

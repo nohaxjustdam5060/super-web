@@ -308,7 +308,7 @@ export default function ComplaintsBookPage() {
             <div className="text-left sm:text-right text-xs text-gray-400 print:text-gray-700 bg-gray-900/60 print:bg-gray-100 p-3 rounded-lg border border-gray-800 print:border-gray-300">
               <p className="font-bold text-white print:text-black">SUPERLAPTOP E.I.R.L.</p>
               <p>RUC: 20608594210</p>
-              <p>Av. Javier Prado Este 1234, Lima</p>
+              <p>Jr.Velarde 172, Lima</p>
             </div>
           </div>
 
@@ -339,7 +339,7 @@ export default function ComplaintsBookPage() {
                       LIBRO DE RECLAMACIONES VIRTUAL
                     </h2>
                     <p className="text-xs text-gray-500">
-                      Conforme a la Ley N° 29571 y D.S. N° 011-2011-PCM &bull; Av. Javier Prado Este 1234, Lima
+                      Conforme a la Ley N° 29571 y D.S. N° 011-2011-PCM &bull; Jr.Velarde 172, Lima
                     </p>
                   </div>
                   

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShieldCheck, CreditCard, Truck, CheckCircle2, ArrowRight, ArrowLeft, Building2, FileText, Check, Copy, Clock, MessageSquare, MapPin, Store, AlertCircle, Info } from 'lucide-react';
+import { ShieldCheck, CreditCard, Truck, CheckCircle2, ArrowRight, ArrowLeft, Building2, FileText, Check, Copy, Clock, MessageSquare, MapPin, Store, AlertCircle, Info, PackageCheck } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
 import CheckoutButton from '../components/CheckoutButton';
@@ -36,6 +36,27 @@ function detectDocumentType(doc) {
   // If contains letters, or length is greater than 8 chars (up to 12 alphanumeric) -> CE
   if (/[a-zA-Z]/.test(clean) || clean.length > 8) return 'CE';
   return 'DNI';
+}
+
+// Helper: Render dedicated vector icon for each shipping method
+function renderShippingMethodIcon(method, isSelected) {
+  const code = String(method?.code || '').toLowerCase();
+  const name = String(method?.name || '').toLowerCase();
+  const isPickup = code.includes('pickup') || code.includes('recojo') || name.includes('recojo') || name.includes('tienda') || Number(method?.cost) === 0;
+  const isProvincia = code.includes('provincia') || code.includes('agencia') || name.includes('provincia') || name.includes('agencia');
+
+  const iconClass = `w-5 h-5 mr-2 flex-shrink-0 transition-colors ${
+    isSelected ? 'text-slate-900' : 'text-slate-700'
+  }`;
+
+  if (isPickup) {
+    return <Store className={iconClass} strokeWidth={2} />;
+  }
+  if (isProvincia) {
+    return <Truck className={iconClass} strokeWidth={2} />;
+  }
+  // Default: Envío Express (Lima y Trujillo / Domicilio)
+  return <PackageCheck className={iconClass} strokeWidth={2} />;
 }
 
 export default function Checkout() {
@@ -78,6 +99,7 @@ export default function Checkout() {
   // Shipping Methods fetched from DB
   const [shippingMethods, setShippingMethods] = useState([]);
   const [selectedShippingMethod, setSelectedShippingMethod] = useState(null);
+  const [loadingShippingMethods, setLoadingShippingMethods] = useState(true);
 
   // Invoice / Receipt State (Boleta / Factura)
   const [invoiceInfo, setInvoiceInfo] = useState({
@@ -107,6 +129,34 @@ export default function Checkout() {
     Number(selectedShippingMethod?.cost) === 0 ||
     selectedShippingMethod?.name?.toLowerCase().includes('recojo')
   );
+
+  // Form Validation & Inline Feedback States
+  const [errors, setErrors] = useState({});
+  const [couponMessage, setCouponMessage] = useState({ type: '', text: '' });
+  const [submitError, setSubmitError] = useState('');
+
+  // Clear a specific field's error when user modifies the input
+  const clearError = (field) => {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  // Scroll smoothly and place focus on the first input with validation error
+  const focusFirstError = (errObj) => {
+    const firstKey = Object.keys(errObj)[0];
+    if (!firstKey) return;
+    setTimeout(() => {
+      const el = document.getElementById(firstKey) || document.querySelector(`[name="${firstKey}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.focus();
+      }
+    }, 50);
+  };
 
   useEffect(() => {
     if (user) {
@@ -187,6 +237,7 @@ export default function Checkout() {
 
   // Load Shipping Methods from API
   useEffect(() => {
+    setLoadingShippingMethods(true);
     axiosClient.get('/orders/shipping-methods')
       .then((res) => {
         if (res.data.success && res.data.shippingMethods?.length > 0) {
@@ -194,14 +245,17 @@ export default function Checkout() {
           setSelectedShippingMethod(res.data.shippingMethods[0]);
         }
       })
-      .catch((err) => console.error('[Checkout] Error loading shipping methods:', err));
+      .catch((err) => console.error('[Checkout] Error loading shipping methods:', err))
+      .finally(() => {
+        setLoadingShippingMethods(false);
+      });
   }, []);
 
   const [couponCode, setCouponCode] = useState('');
   const [discountAmount, setDiscountAmount] = useState(0);
 
   const subtotal = getSubtotal();
-  const shippingCost = selectedShippingMethod ? Number(selectedShippingMethod.cost) : 15.00;
+  const shippingCost = selectedShippingMethod ? Number(selectedShippingMethod.cost) : 0.00;
   const total = Math.max(0, subtotal - discountAmount + shippingCost);
 
   if (items.length === 0 && !createdOrder) {
@@ -232,7 +286,7 @@ export default function Checkout() {
               Inicia sesión para continuar con tu compra
             </h2>
             <p className="text-sm text-gray-600 max-w-md mx-auto leading-relaxed">
-              Para asegurar tu pedido, emitir tu comprobante (Boleta o Factura) y poder realizar el seguimiento de tu envío en <strong>SUPERLAPTOP</strong>, necesitas contar con una cuenta activa.
+              Para asegurar tu pedido, emitir tu comprobante (Boleta o Factura) y que puedas visualizar tus pedidos, necesitas contar con una cuenta activa.
             </p>
           </div>
 
@@ -253,7 +307,7 @@ export default function Checkout() {
           </div>
 
           <div className="pt-4 border-t border-gray-100 text-xs text-gray-400">
-            🔒 Tu carrito de compras con ({items.length}) producto(s) permanecerá guardado.
+            Tu carrito de compras con ({items.length}) producto(s) permanecerá guardado.
           </div>
         </div>
       </div>
@@ -262,12 +316,17 @@ export default function Checkout() {
 
   const applyCoupon = () => {
     const upper = couponCode.trim().toUpperCase();
+    if (!upper) {
+      setCouponMessage({ type: 'error', text: 'Por favor ingresa un código de cupón.' });
+      return;
+    }
     if (upper === 'SUPERLAPTOP10' || upper === 'SUPERTECH10') {
       const disc = (subtotal * 10) / 100;
       setDiscountAmount(disc);
-      alert(`¡Cupón ${upper} aplicado! 10% de descuento.`);
+      setCouponMessage({ type: 'success', text: `¡Cupón ${upper} aplicado! 10% de descuento.` });
     } else {
-      alert('Cupón no válido');
+      setDiscountAmount(0);
+      setCouponMessage({ type: 'error', text: 'Cupón no válido o no disponible.' });
     }
   };
 
@@ -301,44 +360,52 @@ export default function Checkout() {
 
   // Step 1 Submission: Validate and advance to Payment & Invoice Step instantly (0ms)
   const handleProceedToPaymentStep = (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
+    const newErrors = {};
 
     // 1. Common validations: Name and Phone
     if (!shippingAddress.recipient_name?.trim()) {
-      alert(`Por favor completa el nombre y apellidos de quien ${isPickup ? 'recoge' : 'recibe'}.`);
-      return;
+      newErrors.recipient_name = `Por favor introduce el nombre y apellidos de quien ${isPickup ? 'recoge' : 'recibe'}.`;
     }
 
     if (!shippingAddress.phone?.trim()) {
-      alert('El teléfono de contacto es obligatorio.');
-      return;
+      newErrors.phone = 'Introduce tu número de teléfono celular de contacto.';
+    } else if (!isValidPhone(shippingAddress.phone)) {
+      newErrors.phone = 'Introduce un número de teléfono válido (mínimo 9 dígitos).';
     }
 
-    if (!isValidPhone(shippingAddress.phone)) {
-      alert('Por favor ingresa un número de teléfono de contacto válido (mínimo 9 dígitos).');
-      return;
-    }
-
-    // 2. Conditional validations by method
+    // 2. Conditional validations by delivery method
     if (isPickup) {
       if (!shippingAddress.recipient_document?.trim()) {
-        alert('Por favor ingresa el DNI o Carné de Extranjería de la persona que recogerá en tienda.');
-        return;
-      }
-      if (isFakeOrSequentialDocument(shippingAddress.recipient_document)) {
-        alert('El documento de identidad ingresado no es válido o contiene una secuencia repetida.');
-        return;
+        newErrors.recipient_document = 'Introduce el DNI o Carné de Extranjería de la persona que recogerá en tienda.';
+      } else if (isFakeOrSequentialDocument(shippingAddress.recipient_document)) {
+        newErrors.recipient_document = 'El documento de identidad ingresado no es válido.';
       }
     } else {
       if (!shippingAddress.address_line1?.trim()) {
-        alert('Por favor ingresa la dirección completa de entrega.');
-        return;
+        newErrors.address_line1 = 'Introduce la dirección completa de entrega (calle, avenida, número).';
       }
-      if (!shippingAddress.department?.trim() || !shippingAddress.province?.trim() || !shippingAddress.district?.trim()) {
-        alert('Por favor completa el Departamento, Provincia y Distrito de entrega.');
-        return;
+      if (!shippingAddress.department?.trim()) {
+        newErrors.department = 'Introduce el departamento.';
+      }
+      if (!shippingAddress.province?.trim()) {
+        newErrors.province = 'Introduce la provincia.';
+      }
+      if (!shippingAddress.district?.trim()) {
+        newErrors.district = 'Introduce el distrito.';
+      }
+      if (shippingAddress.recipient_document?.trim() && isFakeOrSequentialDocument(shippingAddress.recipient_document)) {
+        newErrors.recipient_document = 'El documento de identidad ingresado no es válido.';
       }
     }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      focusFirstError(newErrors);
+      return;
+    }
+
+    setErrors({});
 
     // UX Optimization: Sincronización reactiva de Boleta con los datos más recientes del Paso 1
     if (invoiceInfo.invoice_type === 'boleta') {
@@ -376,69 +443,61 @@ export default function Checkout() {
 
     // Instant transition (0ms): purely client-side state
     setStep(2);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Comprehensive Invoice & Terms Validator (SUNAT & Anti-fraud rules)
   const validateBeforePayment = () => {
+    const newErrors = {};
+
     if (!acceptedTerms) {
-      alert('Debes aceptar los Términos y Condiciones y las Políticas de Garantía para continuar.');
-      return false;
+      newErrors.terms_agree = 'Debes aceptar los Términos y Condiciones y Políticas de Garantía para continuar.';
     }
 
     const num = String(invoiceInfo.document_number || '').trim();
 
     if (invoiceInfo.invoice_type === 'boleta') {
       if (!num) {
-        alert('Para Boleta de Venta, debes ingresar tu documento de identidad (DNI o Carné de Extranjería).');
-        return false;
-      }
-
-      if (invoiceInfo.document_type === 'DNI') {
+        newErrors.invoice_document = 'Introduce tu documento de identidad (DNI o Carné de Extranjería).';
+      } else if (invoiceInfo.document_type === 'DNI') {
         if (!/^\d{8}$/.test(num)) {
-          alert('Para Boleta de Venta con DNI, debe contener exactamente 8 dígitos numéricos.');
-          return false;
-        }
-        if (isFakeOrSequentialDocument(num)) {
-          alert('El número de DNI ingresado no es válido o corresponde a una secuencia numérica no permitida.');
-          return false;
+          newErrors.invoice_document = 'El DNI debe contener exactamente 8 dígitos numéricos.';
+        } else if (isFakeOrSequentialDocument(num)) {
+          newErrors.invoice_document = 'El número de DNI ingresado no es válido.';
         }
       } else if (invoiceInfo.document_type === 'CE') {
         if (!/^[a-zA-Z0-9]{8,12}$/.test(num)) {
-          alert('Para Boleta de Venta con Carné de Extranjería (CE), debe contener entre 8 y 12 caracteres alfanuméricos.');
-          return false;
-        }
-        if (isFakeOrSequentialDocument(num)) {
-          alert('El Carné de Extranjería ingresado no es válido.');
-          return false;
+          newErrors.invoice_document = 'El Carné de Extranjería (CE) debe contener entre 8 y 12 caracteres alfanuméricos.';
+        } else if (isFakeOrSequentialDocument(num)) {
+          newErrors.invoice_document = 'El Carné de Extranjería ingresado no es válido.';
         }
       }
     } else if (invoiceInfo.invoice_type === 'factura') {
       if (!num) {
-        alert('Para Factura Electrónica, debes ingresar el número de RUC.');
-        return false;
+        newErrors.invoice_document = 'Introduce el número de RUC de la empresa.';
+      } else if (!/^\d{11}$/.test(num)) {
+        newErrors.invoice_document = 'El RUC debe contener exactamente 11 dígitos numéricos.';
+      } else if (!/^(10|20|15|17)\d{9}$/.test(num)) {
+        newErrors.invoice_document = 'El RUC debe comenzar con 10, 20, 15 o 17 para ser válido ante SUNAT.';
+      } else if (isFakeOrSequentialDocument(num)) {
+        newErrors.invoice_document = 'El número de RUC ingresado contiene una secuencia no permitida o es inválido.';
       }
-      if (!/^\d{11}$/.test(num)) {
-        alert('Para Factura Electrónica, el RUC debe contener exactamente 11 dígitos numéricos.');
-        return false;
-      }
-      if (!/^(10|20|15|17)\d{9}$/.test(num)) {
-        alert('El RUC ingresado no es válido para SUNAT. Debe comenzar con 10, 20, 15 o 17.');
-        return false;
-      }
-      if (isFakeOrSequentialDocument(num)) {
-        alert('El número de RUC ingresado contiene una secuencia no permitida o es inválido.');
-        return false;
-      }
+
       if (!invoiceInfo.company_name?.trim()) {
-        alert('Por favor ingresa la Razón Social de la empresa para la Factura Electrónica.');
-        return false;
+        newErrors.company_name = 'Introduce la Razón Social de la empresa.';
       }
       if (!invoiceInfo.fiscal_address?.trim()) {
-        alert('Por favor ingresa el Domicilio Fiscal de la empresa para la Factura Electrónica.');
-        return false;
+        newErrors.fiscal_address = 'Introduce el Domicilio Fiscal de la empresa.';
       }
     }
 
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      focusFirstError(newErrors);
+      return false;
+    }
+
+    setErrors({});
     return true;
   };
 
@@ -455,6 +514,7 @@ export default function Checkout() {
         shippingAddress.department
       ].filter(Boolean).join(', ');
       setInvoiceInfo((prev) => ({ ...prev, fiscal_address: deliveryFormatted }));
+      clearError('fiscal_address');
     }
   };
 
@@ -463,6 +523,7 @@ export default function Checkout() {
     if (!validateBeforePayment()) return;
 
     setLoading(true);
+    setSubmitError('');
     try {
       const payload = getConsolidatedPayload('bank_transfer');
       const res = await axiosClient.post('/orders/bank-transfer', payload);
@@ -474,7 +535,7 @@ export default function Checkout() {
       }
     } catch (err) {
       console.error('[BankTransferError]:', err);
-      alert(err.response?.data?.message || 'Error al registrar el pedido por transferencia.');
+      setSubmitError(err.response?.data?.message || 'Error al registrar el pedido por transferencia.');
     } finally {
       setLoading(false);
     }
@@ -597,56 +658,153 @@ export default function Checkout() {
 
                 {/* 1.1 SHIPPING METHOD SELECTION (PLACED AT THE TOP) */}
                 <div className="space-y-3">
-                  <label className="block text-xs font-black uppercase tracking-wider text-brand-blue">
+                  <label className="block text-xs font-black uppercase tracking-wider text-brand-red">
                     Selecciona el Método de Entrega *
                   </label>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {shippingMethods.map((method) => {
-                      const isSelected = selectedShippingMethod?.id === method.id;
-                      const methodIsPickup = method.code === 'pickup' || Number(method.cost) === 0 || method.name?.toLowerCase().includes('recojo');
-
-                      return (
+                  {loadingShippingMethods ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {[1, 2, 3].map((n) => (
                         <div
-                          key={method.id}
-                          onClick={() => setSelectedShippingMethod(method)}
-                          className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
-                            isSelected
-                              ? 'border-brand-red bg-red-50/20 shadow-md ring-1 ring-brand-red/30'
-                              : 'border-gray-200 hover:border-gray-300 bg-white'
-                          }`}
+                          key={n}
+                          className="p-4 rounded-2xl border-2 border-slate-200/70 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 animate-pulse flex flex-col justify-between h-[155px]"
                         >
-                          <div className="space-y-2">
+                          <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-brand-red bg-brand-red' : 'border-gray-300'}`}>
-                                {isSelected && <Check className="w-3 h-3 text-white stroke-[3]" />}
-                              </div>
-                              <span className={`font-black text-xs px-2 py-0.5 rounded-full ${methodIsPickup ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-50 text-blue-800'}`}>
-                                {methodIsPickup ? '¡Gratis!' : `S/ ${Number(method.cost).toFixed(2)}`}
-                              </span>
+                              <div className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700" />
+                              <div className="w-16 h-5 rounded-full bg-slate-200 dark:bg-slate-700" />
                             </div>
 
-                            <p className="font-extrabold text-gray-900 text-sm flex items-center pt-1">
-                              {methodIsPickup ? <Store className="w-4 h-4 mr-1.5 text-emerald-600 flex-shrink-0" /> : <Truck className="w-4 h-4 mr-1.5 text-brand-blue flex-shrink-0" />}
-                              <span>{method.name}</span>
-                            </p>
+                            <div className="flex items-center space-x-2 pt-1">
+                              <div className="w-5 h-5 rounded-md bg-slate-200 dark:bg-slate-700 shrink-0" />
+                              <div className="h-4 w-3/4 rounded bg-slate-200 dark:bg-slate-700" />
+                            </div>
 
-                            <p className="text-[11px] text-gray-500 leading-tight">
-                              {method.description}
-                            </p>
+                            <div className="space-y-1.5">
+                              <div className="h-3 w-full rounded bg-slate-200 dark:bg-slate-700" />
+                              <div className="h-3 w-2/3 rounded bg-slate-200 dark:bg-slate-700" />
+                            </div>
                           </div>
 
-                          <div className="pt-3 border-t border-gray-100 mt-2 text-[10px] text-gray-400 font-bold">
-                            ⏱ {method.estimated_delivery}
+                          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 mt-2 flex items-center space-x-1.5">
+                            <div className="w-3 h-3 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
+                            <div className="h-2.5 w-1/2 rounded bg-slate-200 dark:bg-slate-700" />
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {shippingMethods.map((method) => {
+                        const isSelected = selectedShippingMethod?.id === method.id;
+                        const methodIsPickup = method.code === 'pickup' || Number(method.cost) === 0 || method.name?.toLowerCase().includes('recojo');
+
+                        return (
+                          <div
+                            key={method.id}
+                            onClick={() => setSelectedShippingMethod(method)}
+                            className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                              isSelected
+                                ? 'border-brand-red bg-red-50/20 shadow-md ring-1 ring-brand-red/30'
+                                : 'border-gray-200 hover:border-gray-300 bg-white'
+                            }`}
+                          >
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-brand-red bg-brand-red' : 'border-gray-300'}`}>
+                                  {isSelected && <Check className="w-3 h-3 text-white stroke-[3]" />}
+                                </div>
+                                <span className={`font-black text-xs px-2 py-0.5 rounded-full ${methodIsPickup ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-50 text-blue-800'}`}>
+                                  {methodIsPickup ? '¡Gratis!' : `S/ ${Number(method.cost).toFixed(2)}`}
+                                </span>
+                              </div>
+
+                              <p className="font-extrabold text-gray-900 text-sm flex items-center pt-1">
+                                {renderShippingMethodIcon(method, isSelected)}
+                                <span>{method.name}</span>
+                              </p>
+
+                              <p className="text-[11px] text-gray-500 leading-tight">
+                                {method.description}
+                              </p>
+                            </div>
+
+                            <div className="pt-3 border-t border-gray-100 mt-2 text-[10px] text-gray-400 font-bold flex items-center">
+                              <Clock className="w-3 h-3 mr-1 text-gray-400" strokeWidth={2} />
+                              <span>{method.estimated_delivery}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* 1.2 CONDITIONAL FIELDS BASED ON METHOD */}
-                {isPickup ? (
+                {loadingShippingMethods ? (
+                  <div className="space-y-6 pt-2">
+                    {/* Store Physical Info Card Skeleton */}
+                    <div className="bg-emerald-50/40 dark:bg-slate-800/40 border-2 border-emerald-100/60 dark:border-slate-800 rounded-2xl p-5 space-y-3 animate-pulse">
+                      <div className="flex items-center space-x-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-700 shrink-0" />
+                        <div className="space-y-1.5 flex-1">
+                          <div className="h-4 w-60 rounded bg-slate-200 dark:bg-slate-700" />
+                          <div className="h-3 w-40 rounded bg-slate-200 dark:bg-slate-700" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        <div className="bg-white/80 dark:bg-slate-800/80 p-3 rounded-xl border border-emerald-100/70 dark:border-slate-700/70 flex items-start space-x-3">
+                          <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
+                          <div className="space-y-2 flex-1 pt-0.5">
+                            <div className="h-2.5 w-16 rounded bg-slate-200 dark:bg-slate-700" />
+                            <div className="h-3.5 w-36 rounded bg-slate-200 dark:bg-slate-700" />
+                            <div className="h-2.5 w-48 rounded bg-slate-200 dark:bg-slate-700" />
+                          </div>
+                        </div>
+
+                        <div className="bg-white/80 dark:bg-slate-800/80 p-3 rounded-xl border border-emerald-100/70 dark:border-slate-700/70 flex items-start space-x-3">
+                          <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
+                          <div className="space-y-2 flex-1 pt-0.5">
+                            <div className="h-2.5 w-24 rounded bg-slate-200 dark:bg-slate-700" />
+                            <div className="h-3.5 w-44 rounded bg-slate-200 dark:bg-slate-700" />
+                            <div className="h-2.5 w-40 rounded bg-slate-200 dark:bg-slate-700" />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-emerald-100/30 dark:bg-slate-800/60 p-2.5 rounded-xl border border-emerald-200/50 dark:border-slate-700/60 flex items-start space-x-2.5">
+                        <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
+                        <div className="space-y-1.5 flex-1 pt-1.5">
+                          <div className="h-2.5 w-full rounded bg-slate-200 dark:bg-slate-700" />
+                          <div className="h-2.5 w-4/5 rounded bg-slate-200 dark:bg-slate-700" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Store Pickup Form Fields Skeleton */}
+                    <div className="space-y-4">
+                      <div className="h-4 w-64 rounded bg-slate-200 dark:bg-slate-700" />
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <div className="h-3 w-48 rounded bg-slate-200 dark:bg-slate-700" />
+                          <div className="h-12 w-full rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 animate-pulse" />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <div className="h-3 w-56 rounded bg-slate-200 dark:bg-slate-700" />
+                          <div className="h-12 w-full rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 animate-pulse" />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <div className="h-3 w-40 rounded bg-slate-200 dark:bg-slate-700" />
+                        <div className="h-12 w-full rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 animate-pulse" />
+                      </div>
+                    </div>
+                  </div>
+                ) : isPickup ? (
                   /* CASE A: STORE PICKUP */
                   <div className="space-y-6 pt-2">
                     {/* Store Physical Info Card */}
@@ -662,25 +820,41 @@ export default function Checkout() {
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs text-emerald-950 font-medium">
-                        <div className="bg-white/80 p-3 rounded-xl border border-emerald-100">
-                          <span className="text-[11px] font-bold text-emerald-800 block">📍 Dirección:</span>
-                          <span className="font-black text-gray-900">Jr. Velarde 172, Lima</span>
-                          <span className="text-[10px] text-gray-500 block">(Ref: Altura Wilson y Av. Bolivia, Cercado de Lima)</span>
+                        <div className="bg-white/80 p-3 rounded-xl border border-emerald-100 flex items-start space-x-3">
+                          <div className="bg-slate-100 dark:bg-slate-800 rounded-full p-2 shrink-0">
+                            <MapPin className="w-4 h-4 text-emerald-700 dark:text-emerald-400" strokeWidth={2} />
+                          </div>
+                          <div>
+                            <span className="text-[11px] font-bold text-emerald-800 block">Dirección:</span>
+                            <span className="font-black text-gray-900">Jr. Velarde 172, Lima</span>
+                            <span className="text-[10px] text-gray-500 block">(Ref: Altura Wilson y Av. Bolivia, Cercado de Lima)</span>
+                          </div>
                         </div>
-                        <div className="bg-white/80 p-3 rounded-xl border border-emerald-100">
-                          <span className="text-[11px] font-bold text-emerald-800 block">🕒 Horarios de Atención:</span>
-                          <span className="font-black text-gray-900">Lunes a Sábado: 9:30 AM – 7:30 PM</span>
-                          <span className="text-[10px] text-gray-500 block">Domingos y feriados no hay atención</span>
+
+                        <div className="bg-white/80 p-3 rounded-xl border border-emerald-100 flex items-start space-x-3">
+                          <div className="bg-slate-100 dark:bg-slate-800 rounded-full p-2 shrink-0">
+                            <Clock className="w-4 h-4 text-emerald-700 dark:text-emerald-400" strokeWidth={2} />
+                          </div>
+                          <div>
+                            <span className="text-[11px] font-bold text-emerald-800 block">Horarios de Atención:</span>
+                            <span className="font-black text-gray-900">Lunes a Sábado: 9:30 AM – 7:30 PM</span>
+                            <span className="text-[10px] text-gray-500 block">Domingos y feriados no hay atención</span>
+                          </div>
                         </div>
                       </div>
 
-                      <p className="text-[11px] text-emerald-800 bg-emerald-100/50 p-2.5 rounded-xl border border-emerald-200/60 leading-relaxed font-semibold">
-                        ℹ️ <strong>Requisitos de retiro:</strong> Para retirar tu pedido en tienda, la persona indicada debe presentar su documento de identidad físico (DNI o Carné de Extranjería) y el código de pedido.
-                      </p>
+                      <div className="text-[11px] text-emerald-800 bg-emerald-100/50 p-2.5 rounded-xl border border-emerald-200/60 leading-relaxed font-semibold flex items-start space-x-2.5">
+                        <div className="bg-slate-100 dark:bg-slate-800 rounded-full p-2 shrink-0">
+                          <AlertCircle className="w-4 h-4 text-emerald-700 dark:text-emerald-400" strokeWidth={2} />
+                        </div>
+                        <p className="pt-0.5">
+                          <strong>Requisitos de retiro:</strong> Para retirar tu pedido en tienda, la persona indicada debe presentar su documento de identidad físico (DNI o Carné de Extranjería) y el código de pedido.
+                        </p>
+                      </div>
                     </div>
 
                     {/* Store Pickup Form Fields */}
-                    <div className="space-y-4" >
+                    <div className="space-y-4">
                       <h4 className="font-black text-gray-900 text-sm flex items-center">
                         <ShieldCheck className="w-4 h-4 mr-1.5 text-brand-red" /> Datos de la Persona que Recoge en Tienda
                       </h4>
@@ -689,13 +863,27 @@ export default function Checkout() {
                         <div>
                           <label className="block text-xs font-bold text-gray-700 mb-1">Nombre y Apellidos de quien recoge *</label>
                           <input
+                            id="recipient_name"
+                            name="recipient_name"
                             type="text"
-                            required
                             placeholder="Nombre completo"
                             value={shippingAddress.recipient_name}
-                            onChange={(e) => setShippingAddress({ ...shippingAddress, recipient_name: e.target.value })}
-                            className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
+                            onChange={(e) => {
+                              setShippingAddress({ ...shippingAddress, recipient_name: e.target.value });
+                              clearError('recipient_name');
+                            }}
+                            className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                              errors.recipient_name
+                                ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                                : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                            }`}
                           />
+                          {errors.recipient_name && (
+                            <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                              <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
+                              <span>{errors.recipient_name}</span>
+                            </p>
+                          )}
                         </div>
 
                         <div>
@@ -703,17 +891,32 @@ export default function Checkout() {
                             DNI o Carné de Extranjería de quien recoge *
                           </label>
                           <input
+                            id="recipient_document"
+                            name="recipient_document"
                             type="text"
-                            required
                             maxLength={12}
                             placeholder="DNI o Carné de Extranjería"
                             value={shippingAddress.recipient_document}
-                            onChange={(e) => setShippingAddress({ ...shippingAddress, recipient_document: e.target.value.trim() })}
-                            className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
+                            onChange={(e) => {
+                              setShippingAddress({ ...shippingAddress, recipient_document: e.target.value.trim() });
+                              clearError('recipient_document');
+                            }}
+                            className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                              errors.recipient_document
+                                ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                                : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                            }`}
                           />
-                          <span className="text-[10px] text-gray-400 mt-1 block">
-                            💡 Se autocompletará en tu Boleta de Venta en el Paso 2.
-                          </span>
+                          {errors.recipient_document ? (
+                            <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                              <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
+                              <span>{errors.recipient_document}</span>
+                            </p>
+                          ) : (
+                            <span className="text-[10px] text-gray-400 mt-1 block">
+                              Se autocompletará en tu Boleta de Venta en el Paso 2.
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -722,17 +925,32 @@ export default function Checkout() {
                           Teléfono de contacto celular *
                         </label>
                         <input
+                          id="phone"
+                          name="phone"
                           type="tel"
-                          required
                           maxLength={15}
                           placeholder="Teléfono celular"
                           value={shippingAddress.phone}
-                          onChange={(e) => setShippingAddress({ ...shippingAddress, phone: e.target.value.replace(/[^\d+ ]/g, '') })}
-                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
+                          onChange={(e) => {
+                            setShippingAddress({ ...shippingAddress, phone: e.target.value.replace(/[^\d+ ]/g, '') });
+                            clearError('phone');
+                          }}
+                          className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                            errors.phone
+                              ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                              : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                          }`}
                         />
-                        <span className="text-[10px] text-gray-400 mt-1 block">
-                          Te notificaremos por WhatsApp o llamada cuando tus productos estén listos para el recojo.
-                        </span>
+                        {errors.phone ? (
+                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                            <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
+                            <span>{errors.phone}</span>
+                          </p>
+                        ) : (
+                          <span className="text-[10px] text-gray-400 mt-1 block">
+                            Te notificaremos por WhatsApp o llamada cuando tus productos estén listos para el recojo.
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -747,27 +965,55 @@ export default function Checkout() {
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1">Nombre de quien recibe *</label>
                         <input
+                          id="recipient_name"
+                          name="recipient_name"
                           type="text"
-                          required
                           placeholder="Nombre completo"
                           value={shippingAddress.recipient_name}
-                          onChange={(e) => setShippingAddress({ ...shippingAddress, recipient_name: e.target.value })}
-                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
+                          onChange={(e) => {
+                            setShippingAddress({ ...shippingAddress, recipient_name: e.target.value });
+                            clearError('recipient_name');
+                          }}
+                          className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                            errors.recipient_name
+                              ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                              : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                          }`}
                         />
+                        {errors.recipient_name && (
+                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                            <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
+                            <span>{errors.recipient_name}</span>
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1">
                           Teléfono de contacto celular *
                         </label>
                         <input
+                          id="phone"
+                          name="phone"
                           type="tel"
-                          required
                           maxLength={15}
                           placeholder="Teléfono celular"
                           value={shippingAddress.phone}
-                          onChange={(e) => setShippingAddress({ ...shippingAddress, phone: e.target.value.replace(/[^\d+ ]/g, '') })}
-                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
+                          onChange={(e) => {
+                            setShippingAddress({ ...shippingAddress, phone: e.target.value.replace(/[^\d+ ]/g, '') });
+                            clearError('phone');
+                          }}
+                          className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                            errors.phone
+                              ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                              : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                          }`}
                         />
+                        {errors.phone && (
+                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                            <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
+                            <span>{errors.phone}</span>
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -777,27 +1023,57 @@ export default function Checkout() {
                           DNI o Carné de Extranjería de quien recibe (Opcional)
                         </label>
                         <input
+                          id="recipient_document"
+                          name="recipient_document"
                           type="text"
                           maxLength={12}
                           placeholder="DNI o Carné de Extranjería"
                           value={shippingAddress.recipient_document}
-                          onChange={(e) => setShippingAddress({ ...shippingAddress, recipient_document: e.target.value.trim() })}
-                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
+                          onChange={(e) => {
+                            setShippingAddress({ ...shippingAddress, recipient_document: e.target.value.trim() });
+                            clearError('recipient_document');
+                          }}
+                          className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                            errors.recipient_document
+                              ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                              : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                          }`}
                         />
-                        <span className="text-[10px] text-gray-400 mt-1 block">
-                          Requerido para envíos por agencia y autocompletado de Boleta.
-                        </span>
+                        {errors.recipient_document ? (
+                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                            <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
+                            <span>{errors.recipient_document}</span>
+                          </p>
+                        ) : (
+                          <span className="text-[10px] text-gray-400 mt-1 block">
+                            Requerido para envíos por agencia y autocompletado de Boleta.
+                          </span>
+                        )}
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1">Dirección (Calle, Avenida y Número) *</label>
                         <input
+                          id="address_line1"
+                          name="address_line1"
                           type="text"
-                          required
                           placeholder="Dirección (Calle, Avenida y Número)"
                           value={shippingAddress.address_line1}
-                          onChange={(e) => setShippingAddress({ ...shippingAddress, address_line1: e.target.value })}
-                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
+                          onChange={(e) => {
+                            setShippingAddress({ ...shippingAddress, address_line1: e.target.value });
+                            clearError('address_line1');
+                          }}
+                          className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                            errors.address_line1
+                              ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                              : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                          }`}
                         />
+                        {errors.address_line1 && (
+                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                            <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
+                            <span>{errors.address_line1}</span>
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -806,35 +1082,77 @@ export default function Checkout() {
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1">Departamento *</label>
                         <input
+                          id="department"
+                          name="department"
                           type="text"
-                          required
                           placeholder="Departamento"
                           value={shippingAddress.department}
-                          onChange={(e) => setShippingAddress({ ...shippingAddress, department: e.target.value })}
-                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
+                          onChange={(e) => {
+                            setShippingAddress({ ...shippingAddress, department: e.target.value });
+                            clearError('department');
+                          }}
+                          className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                            errors.department
+                              ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                              : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                          }`}
                         />
+                        {errors.department && (
+                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                            <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
+                            <span>{errors.department}</span>
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1">Provincia *</label>
                         <input
+                          id="province"
+                          name="province"
                           type="text"
-                          required
                           placeholder="Provincia"
                           value={shippingAddress.province}
-                          onChange={(e) => setShippingAddress({ ...shippingAddress, province: e.target.value })}
-                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
+                          onChange={(e) => {
+                            setShippingAddress({ ...shippingAddress, province: e.target.value });
+                            clearError('province');
+                          }}
+                          className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                            errors.province
+                              ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                              : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                          }`}
                         />
+                        {errors.province && (
+                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                            <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
+                            <span>{errors.province}</span>
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1">Distrito *</label>
                         <input
+                          id="district"
+                          name="district"
                           type="text"
-                          required
                           placeholder="Distrito"
                           value={shippingAddress.district}
-                          onChange={(e) => setShippingAddress({ ...shippingAddress, district: e.target.value })}
-                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
+                          onChange={(e) => {
+                            setShippingAddress({ ...shippingAddress, district: e.target.value });
+                            clearError('district');
+                          }}
+                          className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                            errors.district
+                              ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                              : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                          }`}
                         />
+                        {errors.district && (
+                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                            <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
+                            <span>{errors.district}</span>
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -842,6 +1160,8 @@ export default function Checkout() {
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1">Dpto / Interior (Opcional)</label>
                         <input
+                          id="apartment_notes"
+                          name="apartment_notes"
                           type="text"
                           placeholder="Dpto / Interior (Opcional)"
                           value={shippingAddress.apartment_notes}
@@ -852,6 +1172,8 @@ export default function Checkout() {
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1">Referencia de ubicación (Opcional)</label>
                         <input
+                          id="reference"
+                          name="reference"
                           type="text"
                           placeholder="Referencia de ubicación"
                           value={shippingAddress.reference}
@@ -878,8 +1200,8 @@ export default function Checkout() {
 
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-base"
+                  disabled={loading || loadingShippingMethods}
+                  className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span>Continuar al Paso 2: Comprobante & Pago</span>
                   <ArrowRight className="w-5 h-5" />
@@ -895,7 +1217,7 @@ export default function Checkout() {
                   <button
                     type="button"
                     onClick={() => setStep(1)}
-                    className="text-xs text-brand-blue font-bold hover:underline flex items-center bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100 transition-colors hover:bg-blue-100"
+                    className="text-xs text-brand-red font-bold hover:underline flex items-center bg-red-50 px-3 py-1.5 rounded-xl border border-red-100 transition-colors hover:bg-red-100 cursor-pointer"
                   >
                     <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Volver a Envío
                   </button>
@@ -934,10 +1256,10 @@ export default function Checkout() {
                             : targetDoc.toUpperCase().slice(0, 12)
                         }));
                       }}
-                      className={`p-3 rounded-xl font-extrabold text-xs border text-center transition-all ${
+                      className={`p-3 rounded-xl font-extrabold text-xs border text-center transition-all cursor-pointer ${
                         invoiceInfo.invoice_type === 'boleta'
-                          ? 'bg-brand-red text-white border-brand-red shadow-sm'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-brand-red/50 hover:bg-red-50/30'
+                          ? 'bg-brand-red hover:bg-brand-red-hover text-white border-brand-red shadow-sm'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-brand-red/60 hover:bg-red-50/40 hover:text-brand-red'
                       }`}
                     >
                       Boleta de Venta
@@ -960,10 +1282,10 @@ export default function Checkout() {
                           document_number: documentDrafts.RUC || ''
                         }));
                       }}
-                      className={`p-3 rounded-xl font-extrabold text-xs border text-center transition-all ${
+                      className={`p-3 rounded-xl font-extrabold text-xs border text-center transition-all cursor-pointer ${
                         invoiceInfo.invoice_type === 'factura'
-                          ? 'bg-brand-red text-white border-brand-red shadow-sm'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-brand-red/50 hover:bg-red-50/30'
+                          ? 'bg-brand-red hover:bg-brand-red-hover text-white border-brand-red shadow-sm'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-brand-red/60 hover:bg-red-50/40 hover:text-brand-red'
                       }`}
                     >
                       Factura Electrónica (RUC)
@@ -1002,10 +1324,10 @@ export default function Checkout() {
                                 document_number: targetDNI
                               }));
                             }}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
+                            className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                               invoiceInfo.document_type === 'DNI'
-                                ? 'bg-brand-red text-white border-brand-red shadow-xs'
-                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                                ? 'bg-brand-red hover:bg-brand-red-hover text-white border-brand-red shadow-xs'
+                                : 'bg-white text-gray-700 border-gray-300 hover:border-brand-red/60 hover:bg-red-50/40 hover:text-brand-red'
                             }`}
                           >
                             DNI (8 dígitos)
@@ -1034,10 +1356,10 @@ export default function Checkout() {
                                 document_number: targetCE
                               }));
                             }}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
+                            className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                               invoiceInfo.document_type === 'CE'
-                                ? 'bg-brand-red text-white border-brand-red shadow-xs'
-                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                                ? 'bg-brand-red hover:bg-brand-red-hover text-white border-brand-red shadow-xs'
+                                : 'bg-white text-gray-700 border-gray-300 hover:border-brand-red/60 hover:bg-red-50/40 hover:text-brand-red'
                             }`}
                           >
                             Carné de Extranjería (CE)
@@ -1050,12 +1372,14 @@ export default function Checkout() {
                           {invoiceInfo.document_type === 'DNI' ? 'DNI (exactamente 8 dígitos numéricos) *' : 'Carné de Extranjería (8 a 12 caracteres alfanuméricos) *'}
                         </label>
                         <input
+                          id="invoice_document"
+                          name="invoice_document"
                           type="text"
-                          required
                           maxLength={invoiceInfo.document_type === 'DNI' ? 8 : 12}
                           placeholder={invoiceInfo.document_type === 'DNI' ? 'DNI (8 dígitos)' : 'Carné de Extranjería'}
                           value={invoiceInfo.document_number}
                           onChange={(e) => {
+                            clearError('invoice_document');
                             const raw = e.target.value;
                             if (invoiceInfo.document_type === 'DNI') {
                               // Si el usuario escribe letras o más de 8 caracteres, auto-conmutar a CE sin perder caracteres
@@ -1085,11 +1409,22 @@ export default function Checkout() {
                               }));
                             }
                           }}
-                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
+                          className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                            errors.invoice_document
+                              ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                              : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                          }`}
                         />
-                        <span className="text-[10px] text-gray-400 mt-1 block">
-                          Autocompletado desde los datos del paso anterior si ingresaste tu documento.
-                        </span>
+                        {errors.invoice_document ? (
+                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                            <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
+                            <span>{errors.invoice_document}</span>
+                          </p>
+                        ) : (
+                          <span className="text-[10px] text-gray-400 mt-1 block">
+                            Autocompletado desde los datos del paso anterior si ingresaste tu documento.
+                          </span>
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -1101,18 +1436,30 @@ export default function Checkout() {
                             Número de RUC (11 dígitos, inicia con 10, 20, 15 o 17) *
                           </label>
                           <input
+                            id="invoice_document"
+                            name="invoice_document"
                             type="text"
-                            required
                             maxLength={11}
                             placeholder="Número de RUC (11 dígitos)"
                             value={invoiceInfo.document_number}
                             onChange={(e) => {
+                              clearError('invoice_document');
                               const cleanRUC = e.target.value.replace(/\D/g, '').slice(0, 11);
                               setDocumentDrafts((prev) => ({ ...prev, RUC: cleanRUC }));
                               setInvoiceInfo((prev) => ({ ...prev, document_number: cleanRUC }));
                             }}
-                            className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
+                            className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                              errors.invoice_document
+                                ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                                : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                            }`}
                           />
+                          {errors.invoice_document && (
+                            <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                              <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
+                              <span>{errors.invoice_document}</span>
+                            </p>
+                          )}
                         </div>
 
                         <div>
@@ -1120,13 +1467,27 @@ export default function Checkout() {
                             Razón Social (Empresa) *
                           </label>
                           <input
+                            id="company_name"
+                            name="company_name"
                             type="text"
-                            required
                             placeholder="Razón Social"
                             value={invoiceInfo.company_name}
-                            onChange={(e) => setInvoiceInfo({ ...invoiceInfo, company_name: e.target.value })}
-                            className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
+                            onChange={(e) => {
+                              setInvoiceInfo({ ...invoiceInfo, company_name: e.target.value });
+                              clearError('company_name');
+                            }}
+                            className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                              errors.company_name
+                                ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                                : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                            }`}
                           />
+                          {errors.company_name && (
+                            <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                              <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
+                              <span>{errors.company_name}</span>
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -1148,16 +1509,28 @@ export default function Checkout() {
                           )}
                         </div>
                         <input
+                          id="fiscal_address"
+                          name="fiscal_address"
                           type="text"
-                          required
                           placeholder="Domicilio Fiscal de la Empresa"
                           value={invoiceInfo.fiscal_address}
                           onChange={(e) => {
                             setUseDeliveryAsFiscalAddress(false);
                             setInvoiceInfo({ ...invoiceInfo, fiscal_address: e.target.value });
+                            clearError('fiscal_address');
                           }}
-                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
+                          className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                            errors.fiscal_address
+                              ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                              : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
+                          }`}
                         />
+                        {errors.fiscal_address && (
+                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                            <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
+                            <span>{errors.fiscal_address}</span>
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}
@@ -1171,10 +1544,10 @@ export default function Checkout() {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('mercadopago')}
-                      className={`p-4 rounded-2xl border-2 font-black text-xs text-left flex items-center justify-between transition-all ${
+                      className={`p-4 rounded-2xl border-2 font-black text-xs text-left flex items-center justify-between transition-all cursor-pointer ${
                         paymentMethod === 'mercadopago'
                           ? 'border-brand-red bg-red-50/20 text-brand-red shadow-sm'
-                          : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                          : 'border-gray-200 text-gray-700 hover:border-brand-red/50 hover:bg-red-50/20'
                       }`}
                     >
                       <div className="flex items-center space-x-2">
@@ -1187,10 +1560,10 @@ export default function Checkout() {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('bank_transfer')}
-                      className={`p-4 rounded-2xl border-2 font-black text-xs text-left flex items-center justify-between transition-all ${
+                      className={`p-4 rounded-2xl border-2 font-black text-xs text-left flex items-center justify-between transition-all cursor-pointer ${
                         paymentMethod === 'bank_transfer'
                           ? 'border-brand-red bg-red-50/20 text-brand-red shadow-sm'
-                          : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                          : 'border-gray-200 text-gray-700 hover:border-brand-red/50 hover:bg-red-50/20'
                       }`}
                     >
                       <div className="flex items-center space-x-2">
@@ -1203,25 +1576,38 @@ export default function Checkout() {
                 </div>
 
                 {/* TERMS AND CONDITIONS CHECKBOX (REQUIRED BEFORE PAYMENT) */}
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-start space-x-3 transition-colors hover:bg-slate-100/70">
-                  <input
-                    type="checkbox"
-                    id="terms_agree"
-                    checked={acceptedTerms}
-                    onChange={(e) => setAcceptedTerms(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 text-brand-red rounded border-gray-300 focus:ring-brand-red cursor-pointer"
-                  />
-                  <label htmlFor="terms_agree" className="text-xs text-gray-700 font-bold cursor-pointer select-none leading-relaxed">
-                    He leído y acepto los{' '}
-                    <Link to="/politicas?tab=terminos" target="_blank" rel="noopener noreferrer" className="text-brand-red underline hover:text-brand-red-hover">
-                      Términos y Condiciones de Compra
-                    </Link>{' '}
-                    y las{' '}
-                    <Link to="/politicas?tab=garantia" target="_blank" rel="noopener noreferrer" className="text-brand-red underline hover:text-brand-red-hover">
-                      Políticas de Garantía
-                    </Link>{' '}
-                    de SUPERLAPTOP (*)
-                  </label>
+                <div>
+                  <div className={`p-4 rounded-2xl border transition-colors flex items-start space-x-3 ${
+                    errors.terms_agree ? 'bg-red-50/60 border-brand-red' : 'bg-slate-50 border-slate-200 hover:bg-slate-100/70'
+                  }`}>
+                    <input
+                      type="checkbox"
+                      id="terms_agree"
+                      checked={acceptedTerms}
+                      onChange={(e) => {
+                        setAcceptedTerms(e.target.checked);
+                        clearError('terms_agree');
+                      }}
+                      className="mt-0.5 w-4 h-4 text-brand-red rounded border-gray-300 focus:ring-brand-red cursor-pointer"
+                    />
+                    <label htmlFor="terms_agree" className="text-xs text-gray-700 font-bold cursor-pointer select-none leading-relaxed">
+                      He leído y acepto los{' '}
+                      <Link to="/politicas?tab=terminos" target="_blank" rel="noopener noreferrer" className="text-brand-red underline hover:text-brand-red-hover">
+                        Términos y Condiciones de Compra
+                      </Link>{' '}
+                      y las{' '}
+                      <Link to="/politicas?tab=garantia" target="_blank" rel="noopener noreferrer" className="text-brand-red underline hover:text-brand-red-hover">
+                        Políticas de Garantía
+                      </Link>{' '}
+                      de SUPERLAPTOP (*)
+                    </label>
+                  </div>
+                  {errors.terms_agree && (
+                    <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                      <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
+                      <span>{errors.terms_agree}</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* OPTION A: MERCADO PAGO CHECKOUT PRO */}
@@ -1236,14 +1622,8 @@ export default function Checkout() {
                       invoiceInfo={invoiceInfo}
                       getOrderPayload={() => getConsolidatedPayload('mercadopago')}
                       onSuccess={(order) => setCreatedOrder(order)}
-                      disabled={!acceptedTerms}
                       onBeforePay={validateBeforePayment}
                     />
-                    {!acceptedTerms && (
-                      <p className="text-[11px] text-amber-600 font-bold flex items-center justify-center">
-                        ⚠️ Debes marcar la casilla de Términos y Condiciones para habilitar el botón de pago.
-                      </p>
-                    )}
                   </div>
                 ) : (
                   /* OPTION B: BANK TRANSFER DETAILS & RESERVATION */
@@ -1284,20 +1664,22 @@ export default function Checkout() {
                       </p>
                     </div>
 
+                    {submitError && (
+                      <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center space-x-2">
+                        <AlertCircle className="w-4 h-4 text-brand-red shrink-0" />
+                        <span>{submitError}</span>
+                      </div>
+                    )}
+
                     <button
                       type="button"
                       onClick={handleConfirmBankTransfer}
-                      disabled={loading || !acceptedTerms}
-                      className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={loading}
+                      className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-base disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                       <Building2 className="w-5 h-5" />
                       <span>Confirmar Pedido por Transferencia</span>
                     </button>
-                    {!acceptedTerms && (
-                      <p className="text-[11px] text-amber-600 font-bold flex items-center justify-center">
-                        ⚠️ Debes marcar la casilla de Términos y Condiciones para habilitar la confirmación.
-                      </p>
-                    )}
                   </div>
                 )}
               </div>
@@ -1323,21 +1705,31 @@ export default function Checkout() {
             </div>
 
             {/* Coupon input */}
-            <div className="pt-3 border-t border-gray-100 flex space-x-2">
-              <input
-                type="text"
-                placeholder="Código de cupón"
-                value={couponCode}
-                onChange={(e) => setCouponCode(e.target.value)}
-                className="flex-1 bg-white border border-gray-300 rounded-xl px-3.5 py-2.5 text-xs text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
-              />
-              <button
-                type="button"
-                onClick={applyCoupon}
-                className="bg-brand-dark text-white text-xs font-bold px-3.5 py-2.5 rounded-xl hover:bg-slate-800 transition-colors"
-              >
-                Aplicar
-              </button>
+            <div className="pt-3 border-t border-gray-100 space-y-1.5">
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  placeholder="Código de cupón"
+                  value={couponCode}
+                  onChange={(e) => {
+                    setCouponCode(e.target.value);
+                    if (couponMessage.text) setCouponMessage({ type: '', text: '' });
+                  }}
+                  className="flex-1 bg-white border border-gray-300 rounded-xl px-3.5 py-2.5 text-xs text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red uppercase"
+                />
+                <button
+                  type="button"
+                  onClick={applyCoupon}
+                  className="bg-brand-dark text-white text-xs font-bold px-3.5 py-2.5 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  Aplicar
+                </button>
+              </div>
+              {couponMessage.text && (
+                <p className={`text-xs font-medium ${couponMessage.type === 'success' ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {couponMessage.text}
+                </p>
+              )}
             </div>
 
             {/* Price Calculations */}

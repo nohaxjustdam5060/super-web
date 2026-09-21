@@ -296,7 +296,7 @@ const OrderDetailsModal = memo(function OrderDetailsModal({ selectedOrder, loadi
           </div>
 
           <div className="pt-2 text-[11px] text-gray-500 space-y-1 border-t border-slate-200 mt-2">
-            <p><strong>Forma de Pago:</strong> {selectedOrder.payment_method === 'bank_transfer' ? 'Transferencia Bancaria Directa' : 'Mercado Pago (Checkout Pro)'}</p>
+            <p><strong>Forma de Pago:</strong> {selectedOrder.payment_method === 'bank_transfer' ? 'Transferencia Bancaria Directa' : 'Mercado Pago'}</p>
             {selectedOrder.mp_payment_id && <p><strong>ID Pago Mercado Pago:</strong> <span className="font-mono text-gray-800 font-bold">{selectedOrder.mp_payment_id}</span></p>}
             {selectedOrder.preference_id && <p><strong>ID Preferencia MP:</strong> <span className="font-mono text-gray-400 text-[10px]">{selectedOrder.preference_id}</span></p>}
           </div>
