@@ -7,6 +7,7 @@ export default function ProductCarousel({
   title,
   subtitle,
   icon: Icon,
+  iconClassName = "w-6 h-6 text-brand-red",
   viewAllLink,
   viewAllText = 'Ver Todo',
   products = [],
@@ -55,7 +56,7 @@ export default function ProductCarousel({
         <div>
           <h2 className="text-2xl sm:text-3xl font-black text-gray-900 flex items-center space-x-2">
             <span>{title}</span>
-            {Icon && <Icon className="w-6 h-6 text-amber-500 fill-amber-500" />}
+            {Icon && <Icon className={iconClassName} />}
           </h2>
           {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
         </div>

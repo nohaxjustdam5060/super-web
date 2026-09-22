@@ -78,9 +78,9 @@ export default function HeroCarousel() {
 
   return (
     <div className="w-full relative overflow-hidden bg-slate-950 text-white select-none">
-      {/* Carousel Outer Slider Box */}
+      {/* Carousel Outer Slider Box with Responsive Heights */}
       <div
-        className="w-full relative h-[440px] sm:h-[500px] lg:h-[540px]"
+        className="w-full relative h-[260px] sm:h-[360px] md:h-[500px] lg:h-[560px] xl:h-[600px]"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
@@ -116,44 +116,44 @@ export default function HeroCarousel() {
 
               {/* Slide Text & Content Grid (Centered Content inside max-w-[1440px]) */}
               <div className="relative z-20 h-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 items-center w-full py-3 sm:py-6 lg:py-8">
                   {/* Left Column: Headline & Action Buttons */}
-                  <div className="lg:col-span-8 space-y-4 sm:space-y-6">
-                    <span className="inline-flex items-center space-x-2 bg-brand-red/20 text-brand-red-accent border border-brand-red/40 text-xs font-black px-3.5 py-1.5 rounded-md uppercase tracking-wider shadow-sm">
-                      <BadgeIcon className={`w-4 h-4 ${isActive ? 'animate-bounce' : ''}`} />
+                  <div className="lg:col-span-8 space-y-2 sm:space-y-4 lg:space-y-6">
+                    <span className="inline-flex items-center space-x-1.5 sm:space-x-2 bg-brand-red/20 text-brand-red-accent border border-brand-red/40 text-[10px] sm:text-xs font-black px-2.5 py-0.5 sm:px-3.5 sm:py-1.5 rounded-md uppercase tracking-wider shadow-sm">
+                      <BadgeIcon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isActive ? 'animate-bounce' : ''}`} />
                       <span>{slide.badge}</span>
                     </span>
 
-                    <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight sm:leading-none font-heading break-words">
+                    <h1 className="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-black tracking-tight leading-tight sm:leading-none font-heading break-words">
                       {slide.title}{' '}
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-red-accent via-amber-400 to-amber-300">
                         {slide.highlightTitle}
                       </span>
                     </h1>
 
-                    <p className="text-gray-300 text-sm sm:text-base lg:text-lg max-w-2xl leading-relaxed">
+                    <p className="hidden sm:block text-gray-300 text-xs sm:text-base lg:text-lg max-w-2xl leading-relaxed">
                       {slide.description}
                     </p>
 
-                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-2">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 pt-1 sm:pt-2">
                       <Link
                         to={slide.primaryBtnLink}
-                        className="bg-brand-red hover:bg-brand-red-hover text-white font-extrabold px-6 sm:px-8 py-3 sm:py-3.5 rounded-md shadow-lg hover:shadow-brand-red/40 transition-all flex items-center space-x-2 text-sm sm:text-base active:scale-95 cursor-pointer"
+                        className="bg-brand-red hover:bg-brand-red-hover text-white font-extrabold px-3.5 sm:px-8 py-1.5 sm:py-3.5 rounded-md shadow-lg hover:shadow-brand-red/40 transition-all flex items-center space-x-1.5 sm:space-x-2 text-xs sm:text-base active:scale-95 cursor-pointer"
                       >
                         <span>{slide.primaryBtnText}</span>
-                        <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <ArrowRight className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
                       </Link>
 
                       <Link
                         to={slide.secondaryBtnLink}
-                        className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold px-5 sm:px-6 py-3 sm:py-3.5 rounded-md transition-colors text-sm sm:text-base cursor-pointer"
+                        className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold px-3 sm:px-6 py-1.5 sm:py-3.5 rounded-md transition-colors text-xs sm:text-base cursor-pointer"
                       >
                         {slide.secondaryBtnText}
                       </Link>
                     </div>
                   </div>
 
-                  {/* Right Column: Featured Image Graphic (Hidden on mobile for clean vertical alignment) */}
+                  {/* Right Column: Featured Image Graphic (Visible on desktop) */}
                   <div className="hidden lg:flex lg:col-span-4 justify-center items-center">
                     <div className="relative group">
                       <div className="absolute inset-0 bg-brand-red/15 rounded-lg opacity-80 group-hover:bg-brand-red/25 transition-colors" />
@@ -163,7 +163,7 @@ export default function HeroCarousel() {
                         loading="eager"
                         decoding="async"
                         style={{ willChange: 'transform, opacity' }}
-                        className={`relative z-10 max-h-[340px] lg:max-h-[380px] w-auto max-w-full object-contain rounded-lg border border-white/10 shadow-2xl transform transition-transform duration-700 ease-out ${
+                        className={`relative z-10 max-h-[300px] lg:max-h-[360px] w-auto max-w-full object-contain rounded-lg border border-white/10 shadow-2xl transform transition-transform duration-700 ease-out ${
                           isActive ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
                         }`}
                       />
@@ -179,29 +179,29 @@ export default function HeroCarousel() {
         <button
           onClick={prevSlide}
           aria-label="Diapositiva Anterior"
-          className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-md bg-slate-900/60 hover:bg-brand-red text-white border border-white/10 flex items-center justify-center backdrop-blur-md shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer"
+          className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-7 h-7 sm:w-11 sm:h-11 rounded-md bg-slate-900/60 hover:bg-brand-red text-white border border-white/10 flex items-center justify-center backdrop-blur-md shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer"
         >
-          <ChevronLeft className="w-6 h-6" />
+          <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
         </button>
 
         {/* Navigation Arrow: Next */}
         <button
           onClick={nextSlide}
           aria-label="Siguiente Diapositiva"
-          className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-md bg-slate-900/60 hover:bg-brand-red text-white border border-white/10 flex items-center justify-center backdrop-blur-md shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer"
+          className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-7 h-7 sm:w-11 sm:h-11 rounded-md bg-slate-900/60 hover:bg-brand-red text-white border border-white/10 flex items-center justify-center backdrop-blur-md shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer"
         >
-          <ChevronRight className="w-6 h-6" />
+          <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
         </button>
 
         {/* Pagination Dots (Bottom Center) */}
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-30 flex items-center space-x-2">
+        <div className="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center space-x-1.5 sm:space-x-2">
           {SLIDES.map((_, idx) => (
             <button
               key={idx}
               onClick={() => setCurrentIndex(idx)}
               aria-label={`Ir a diapositiva ${idx + 1}`}
-              className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-                idx === currentIndex ? 'w-8 bg-brand-red shadow-lg' : 'w-2.5 bg-white/40 hover:bg-white/70'
+              className={`h-1.5 sm:h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                idx === currentIndex ? 'w-5 sm:w-8 bg-brand-red shadow-lg' : 'w-1.5 sm:w-2.5 bg-white/40 hover:bg-white/70'
               }`}
             />
           ))}
@@ -209,107 +209,107 @@ export default function HeroCarousel() {
       </div>
 
       {/* Full-Width Informative Value Proposition Bar (Edge-to-Edge) */}
-      <div className="w-full bg-slate-900 border-t border-b border-blue-800 py-2 px-4 overflow-hidden">
-        {/* Mobile View: Continuous Infinite Marquee Loop (< sm) */}
+      <div className="w-full bg-slate-900 border-t border-b border-slate-800 py-3 px-4 overflow-hidden">
+        {/* Mobile View: Continuous Infinite Marquee Loop (< md) */}
         <div className="md:hidden overflow-hidden w-full">
           <div className="flex w-max animate-marquee hover:[animation-play-state:paused] active:[animation-play-state:paused] cursor-pointer">
             {/* Track Set 1 */}
             <div className="flex items-center space-x-8 pr-8">
-              <div className="flex items-center space-x-3 text-gray-300 flex-shrink-0">
-                <div className="p-2 bg-brand-red/10 text-brand-red-accent rounded-md border border-brand-red/20 flex-shrink-0">
-                  <Truck className="w-5 h-5" />
+              <div className="flex items-center gap-3.5 shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
+                  <Truck className="w-5 h-5 text-brand-red" strokeWidth={2} />
                 </div>
                 <div>
-                  <span className="font-extrabold text-xs text-white block">Envío Express a Todo el Perú</span>
-                  <span className="text-[11px] text-gray-400">Entregas en 24-48 horas garantizadas</span>
+                  <span className="text-white font-bold text-sm block">Envío Express a Todo el Perú</span>
+                  <span className="text-slate-400 text-xs block">Entregas en 24-48 horas garantizadas</span>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-3 text-gray-300 flex-shrink-0">
-                <div className="p-2 bg-brand-blue/10 text-brand-blue-bright rounded-md border border-brand-blue/20 flex-shrink-0">
-                  <ShieldCheck className="w-5 h-5" />
+              <div className="flex items-center gap-3.5 shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-5 h-5 text-brand-red" strokeWidth={2} />
                 </div>
                 <div>
-                  <span className="font-extrabold text-xs text-white block">Garantía Oficial E-Commerce</span>
-                  <span className="text-[11px] text-gray-400">100% productos nuevos y sellados</span>
+                  <span className="text-white font-bold text-sm block">Garantía Oficial E-Commerce</span>
+                  <span className="text-slate-400 text-xs block">100% productos nuevos y sellados</span>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-3 text-gray-300 flex-shrink-0">
-                <div className="p-2 bg-amber-500/10 text-amber-400 rounded-md border border-amber-500/20 flex-shrink-0">
-                  <CreditCard className="w-5 h-5" />
+              <div className="flex items-center gap-3.5 shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
+                  <CreditCard className="w-5 h-5 text-brand-red" strokeWidth={2} />
                 </div>
                 <div>
-                  <span className="font-extrabold text-xs text-white block">Medios de Pago Seguros</span>
-                  <span className="text-[11px] text-gray-400">Tarjeta, Yape, Plin y transferencia</span>
+                  <span className="text-white font-bold text-sm block">Medios de Pago Seguros</span>
+                  <span className="text-slate-400 text-xs block">Tarjeta, Yape, Plin y transferencia</span>
                 </div>
               </div>
             </div>
 
             {/* Track Set 2 (Identical Duplicate for Seamless Infinite Loop) */}
             <div className="flex items-center space-x-8 pr-8">
-              <div className="flex items-center space-x-3 text-gray-300 flex-shrink-0">
-                <div className="p-2 bg-brand-red/10 text-brand-red-accent rounded-md border border-brand-red/20 flex-shrink-0">
-                  <Truck className="w-5 h-5" />
+              <div className="flex items-center gap-3.5 shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
+                  <Truck className="w-5 h-5 text-brand-red" strokeWidth={2} />
                 </div>
                 <div>
-                  <span className="font-extrabold text-xs text-white block">Envío Express a Todo el Perú</span>
-                  <span className="text-[11px] text-gray-400">Entregas en 24-48 horas garantizadas</span>
+                  <span className="text-white font-bold text-sm block">Envío Express a Todo el Perú</span>
+                  <span className="text-slate-400 text-xs block">Entregas en 24-48 horas garantizadas</span>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-3 text-gray-300 flex-shrink-0">
-                <div className="p-2 bg-brand-blue/10 text-brand-blue-bright rounded-md border border-brand-blue/20 flex-shrink-0">
-                  <ShieldCheck className="w-5 h-5" />
+              <div className="flex items-center gap-3.5 shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-5 h-5 text-brand-red" strokeWidth={2} />
                 </div>
                 <div>
-                  <span className="font-extrabold text-xs text-white block">Garantía Oficial E-Commerce</span>
-                  <span className="text-[11px] text-gray-400">100% productos nuevos y sellados</span>
+                  <span className="text-white font-bold text-sm block">Garantía Oficial E-Commerce</span>
+                  <span className="text-slate-400 text-xs block">100% productos nuevos y sellados</span>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-3 text-gray-300 flex-shrink-0">
-                <div className="p-2 bg-amber-500/10 text-amber-400 rounded-md border border-amber-500/20 flex-shrink-0">
-                  <CreditCard className="w-5 h-5" />
+              <div className="flex items-center gap-3.5 shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
+                  <CreditCard className="w-5 h-5 text-brand-red" strokeWidth={2} />
                 </div>
                 <div>
-                  <span className="font-extrabold text-xs text-white block">Medios de Pago Seguros</span>
-                  <span className="text-[11px] text-gray-400">Tarjeta, Yape, Plin y transferencia</span>
+                  <span className="text-white font-bold text-sm block">Medios de Pago Seguros</span>
+                  <span className="text-slate-400 text-xs block">Tarjeta, Yape, Plin y transferencia</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Desktop View: Centered Static 3-Column Grid (sm:) */}
-        <div className="hidden md:grid sm:grid-cols-3 gap-4 max-w-[1440px] mx-auto">
-          <div className="flex items-center justify-start space-x-3 text-gray-300">
-            <div className="p-2 bg-brand-red/10 text-brand-red-accent rounded-md border border-brand-red/20 flex-shrink-0">
-              <Truck className="w-5 h-5" />
+        {/* Desktop View: Centered Static 3-Column Grid (md:) */}
+        <div className="hidden md:grid md:grid-cols-3 gap-6 max-w-[1440px] mx-auto py-1">
+          <div className="flex items-center justify-start gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
+              <Truck className="w-5 h-5 text-brand-red" strokeWidth={2} />
             </div>
             <div>
-              <span className="font-extrabold text-xs text-white block">Envío Express a Todo el Perú</span>
-              <span className="text-[11px] text-gray-400">Entregas en 24-48 horas garantizadas</span>
+              <span className="text-white font-bold text-sm block">Envío Express a Todo el Perú</span>
+              <span className="text-slate-400 text-xs block">Entregas en 24-48 horas garantizadas</span>
             </div>
           </div>
 
-          <div className="flex items-center justify-start space-x-3 text-gray-300 border-l border-slate-800 pl-6">
-            <div className="p-2 bg-brand-blue/10 text-brand-blue-bright rounded-md border border-brand-blue/20 flex-shrink-0">
-              <ShieldCheck className="w-5 h-5" />
+          <div className="flex items-center justify-start gap-3.5 border-l border-slate-800/80 pl-6">
+            <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-5 h-5 text-brand-red" strokeWidth={2} />
             </div>
             <div>
-              <span className="font-extrabold text-xs text-white block">Garantía Oficial E-Commerce</span>
-              <span className="text-[11px] text-gray-400">100% productos nuevos y sellados</span>
+              <span className="text-white font-bold text-sm block">Garantía Oficial E-Commerce</span>
+              <span className="text-slate-400 text-xs block">100% productos nuevos y sellados</span>
             </div>
           </div>
 
-          <div className="flex items-center justify-start space-x-3 text-gray-300 border-l border-slate-800 pl-6">
-            <div className="p-2 bg-amber-500/10 text-amber-400 rounded-md border border-amber-500/20 flex-shrink-0">
-              <CreditCard className="w-5 h-5" />
+          <div className="flex items-center justify-start gap-3.5 border-l border-slate-800/80 pl-6">
+            <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
+              <CreditCard className="w-5 h-5 text-brand-red" strokeWidth={2} />
             </div>
             <div>
-              <span className="font-extrabold text-xs text-white block">Medios de Pago Seguros</span>
-              <span className="text-[11px] text-gray-400">Tarjeta, Yape, Plin y transferencia</span>
+              <span className="text-white font-bold text-sm block">Medios de Pago Seguros</span>
+              <span className="text-slate-400 text-xs block">Tarjeta, Yape, Plin y transferencia</span>
             </div>
           </div>
         </div>

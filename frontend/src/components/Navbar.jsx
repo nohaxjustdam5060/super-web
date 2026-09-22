@@ -10,6 +10,7 @@ import {
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useCompareStore } from '../store/useCompareStore';
+import { WHATSAPP_NUMBER, STORE_NAME } from '../utils/whatsappMessage';
 import axiosClient from '../api/axiosClient';
 
 // Map icon names from DB to Lucide Icon components
@@ -173,16 +174,23 @@ export default function Navbar() {
         <div className="max-w-[1440px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-1 sm:gap-2">
           <div className="flex items-center space-x-2 sm:space-x-6 min-w-0">
             <span className="flex items-center text-gray-300 font-medium truncate">
-              <Truck className="w-3.5 h-3.5 mr-1.5 text-brand-red-accent flex-shrink-0" />
+              <Truck className="w-3.5 h-3.5 mr-1.5 text-brand-red flex-shrink-0" />
               <span>Envío Express a Todo el Perú (24-48h)</span>
             </span>
             <span className="hidden sm:flex items-center text-gray-300 font-medium">
-              <ShieldCheck className="w-3.5 h-3.5 mr-1.5 text-brand-blue-bright flex-shrink-0" />
+              <ShieldCheck className="w-3.5 h-3.5 mr-1.5 text-brand-red flex-shrink-0" />
               Garantía Oficial 100% E-Commerce
             </span>
           </div>
           <div className="flex items-center space-x-3 text-gray-300 text-[10px] sm:text-xs">
-            <span>Atención: +51 933 347 488 </span>
+            <a
+              href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hola, tengo una consulta sobre un producto en ${STORE_NAME}`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cursor-pointer transition-colors hover:text-brand-red flex items-center"
+            >
+              Atención: +51 933 347 488
+            </a>
             {user?.role === 'admin' || user?.role === 'super_admin' ? (
               <Link to="/admin" className="text-slate-100 font-bold hover:text-brand-red-accent hover:underline">
                 [ Panel Admin ]
@@ -193,13 +201,13 @@ export default function Navbar() {
       </div>
 
       {/* Main Header */}
-      <div className="max-w-[1440px] mx-auto px-2.5 sm:px-4 py-2 sm:py-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-4 bg-brand-dark">
+      <div className="max-w-[1440px] mx-auto px-3 sm:px-4 py-1.5 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-4 bg-brand-dark min-h-[56px] sm:min-h-[64px]">
         {/* Brand Logo */}
-        <Link to="/" className="flex items-center space-x-1.5 sm:space-x-2 group">
-          <div className="bg-brand-red text-white px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md font-black tracking-widest text-base sm:text-xl shadow-md group-hover:scale-105 transition-transform">
+        <Link to="/" className="flex items-center space-x-1.5 sm:space-x-2 group flex-shrink-0">
+          <div className="bg-brand-red text-white px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md font-black tracking-widest text-sm sm:text-xl shadow-md group-hover:scale-105 transition-transform">
             SUPER
           </div>
-          <span className="text-base sm:text-xl font-black tracking-tight text-white">
+          <span className="text-sm sm:text-xl font-black tracking-tight text-white">
             LAPTOP<span className="text-brand-red">.</span>
           </span>
         </Link>
@@ -208,7 +216,7 @@ export default function Navbar() {
         <form
           ref={searchContainerRef}
           onSubmit={handleSearchSubmit}
-          className="hidden md:flex flex-1 max-w-2xl relative mx-2 items-center outline-none focus:outline-none"
+          className="group hidden md:flex flex-1 max-w-2xl relative mx-2 items-center outline-none focus:outline-none"
         >
           <input
             type="text"
@@ -218,15 +226,15 @@ export default function Navbar() {
             onFocus={() => {
               if (searchQuery.trim().length >= 2) setShowLiveSearch(true);
             }}
-            className="w-full bg-slate-800/90 border-2 border-brand-red rounded-md py-2 pl-4 pr-11 text-sm font-medium text-white placeholder:text-slate-400 outline-none focus:outline-none focus-visible:outline-none focus:ring-2 focus:ring-brand-red/20 focus:ring-offset-0 focus:ring-offset-transparent ring-0 ring-offset-0 shadow-inner transition-all"
+            className="w-full bg-slate-800/60 border border-slate-700/60 focus:border-brand-red focus:bg-slate-800/90 rounded-md py-2 pl-4 pr-11 text-sm font-medium text-white placeholder:text-slate-400 outline-none focus:outline-none focus-visible:outline-none ring-0 ring-offset-0 focus:ring-0 shadow-inner transition-colors duration-200"
           />
           <button
             type="submit"
-            className="absolute right-2 text-brand-red-accent hover:text-white p-1.5 rounded-md transition-colors flex items-center justify-center cursor-pointer outline-none focus:outline-none focus-visible:outline-none ring-0 ring-offset-0"
+            className="absolute right-2 text-slate-400 group-focus-within:text-brand-red hover:text-white p-1.5 rounded-md transition-colors duration-200 flex items-center justify-center cursor-pointer outline-none focus:outline-none focus-visible:outline-none ring-0 ring-offset-0"
             title="Buscar"
             aria-label="Buscar"
           >
-            <Search className="w-5 h-5 text-brand-red-accent" />
+            <Search className="w-5 h-5 transition-colors duration-200" />
           </button>
 
           {/* Live Search Predictively Suggested Dropdown Menu */}
@@ -305,7 +313,7 @@ export default function Navbar() {
         </form>
 
         {/* Header Right Actions (Profile, Cart & Hamburger on Mobile/Tablet; Compare HIDDEN on mobile) */}
-        <div className="flex items-center space-x-1.5 sm:space-x-2.5 flex-wrap sm:flex-nowrap justify-end">
+        <div className="flex items-center space-x-1.5 sm:space-x-2.5 flex-nowrap justify-end flex-shrink-0">
           {/* Compare Button (HIDDEN ON MOBILE, VISIBLE ON SM+) */}
           <Link
             to="/compare"
@@ -379,7 +387,7 @@ export default function Navbar() {
               className="px-3 py-2.5 text-xs font-extrabold text-white bg-brand-red hover:bg-brand-red-hover flex items-center transition-colors uppercase tracking-wider rounded-md flex-shrink-0"
               onMouseEnter={() => setActiveParentSlug(null)}
             >
-              <Cpu className="w-4 h-4 mr-1.5" /> Todo el Catálogo
+              Todo el Catálogo
             </Link>
 
             {/* Dynamic Parent Categories Tabs */}
@@ -502,13 +510,13 @@ export default function Navbar() {
       {mobileMenuOpen && (
         <div className="bg-brand-dark border-b border-slate-800 p-4 space-y-4 shadow-2xl max-h-[85vh] overflow-y-auto border-t border-slate-800 text-white">
           {/* Search Mobile */}
-          <form onSubmit={handleSearchSubmit} className="flex md:hidden outline-none focus:outline-none">
+          <form onSubmit={handleSearchSubmit} className="group flex md:hidden outline-none focus:outline-none">
             <input
               type="text"
               placeholder="Buscar en la tienda..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-l-xl py-2.5 px-3 text-xs text-white placeholder:text-slate-400 outline-none focus:outline-none focus-visible:outline-none focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 focus:ring-offset-0 focus:ring-offset-transparent ring-0 ring-offset-0"
+              className="w-full bg-slate-800/60 border border-slate-700/60 focus:border-brand-red focus:bg-slate-800/90 rounded-l-xl py-2.5 px-3 text-xs text-white placeholder:text-slate-400 outline-none focus:outline-none focus-visible:outline-none ring-0 ring-offset-0 transition-colors duration-200"
             />
             <button type="submit" className="bg-brand-red text-white px-4 rounded-r-xl font-bold text-xs flex items-center outline-none focus:outline-none focus-visible:outline-none ring-0 ring-offset-0">
               <Search className="w-3.5 h-3.5 mr-1" /> Buscar

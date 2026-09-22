@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Sparkles, Star } from 'lucide-react';
+import { ChevronRight, Sparkles, Flame } from 'lucide-react';
 import LocationMap from '../components/LocationMap';
 import HeroCarousel from '../components/HeroCarousel';
 import ProductCarousel from '../components/ProductCarousel';
@@ -84,19 +84,19 @@ export default function Home() {
               className="group flex flex-col items-center cursor-pointer w-full max-w-[200px]"
             >
               {/* Circular Product Image Container */}
-              <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-gradient-to-b from-slate-100 to-gray-200/80 border border-gray-200/80 shadow-sm p-4 flex items-center justify-center overflow-hidden group-hover:scale-105 group-hover:shadow-xl group-hover:border-brand-red/40 transition-all duration-300">
+              <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-gradient-to-b from-slate-100 to-gray-200/80 border border-gray-200/80 shadow-sm p-4 flex items-center justify-center overflow-hidden group-hover:scale-105 group-hover:shadow-xl group-hover:border-brand-red/40 transition-all duration-300 ease-out isolate transform-gpu">
                 <img
                   src={cat.image}
                   alt={cat.name}
-                  className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
+                  className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-300 ease-out transform-gpu will-change-transform"
                 />
                 {/* Subtle Inner Ring Glow */}
-                <div className="absolute inset-0 rounded-full ring-1 ring-inset ring-black/5" />
+                <div className="absolute inset-0 rounded-full ring-1 ring-inset ring-black/5 pointer-events-none" />
               </div>
 
               {/* Title & Badge Underneath */}
               <div className="mt-4 text-center space-y-1">
-                <h3 className="font-extrabold text-sm sm:text-base text-slate-800 group-hover:text-brand-red transition-colors leading-tight">
+                <h3 className="font-extrabold text-sm sm:text-base text-slate-800 group-hover:text-brand-red transition-colors duration-200 leading-tight">
                   {cat.name}
                 </h3>
                 <span className="text-[11px] font-semibold text-gray-400 block">
@@ -112,7 +112,8 @@ export default function Home() {
       <ProductCarousel
         title="Productos Destacados"
         subtitle="Hardware seleccionado por rendimiento y disponibilidad inmediata"
-        icon={Star}
+        icon={Flame}
+        iconClassName="w-6 h-6 text-brand-red fill-brand-red"
         viewAllLink="/catalog?is_featured=true"
         viewAllText="Ver Todo"
         products={featuredProducts}
@@ -120,19 +121,22 @@ export default function Home() {
         limit={10}
       />
 
-      {/* 4. Bloques Promocionales Grandes (2 Banners) */}
+      {/* 4. Bloques Promocionales Grandes (2 Banners 100% Clicables y Optimizados) */}
       <section className="max-w-[1440px] mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Promo Banner 1: Tablets & Móviles */}
-          <div className="relative rounded-lg overflow-hidden shadow-2xl min-h-[340px] sm:min-h-[380px] group border border-slate-800 flex flex-col justify-end p-8 text-white">
+          <Link
+            to="/catalog?category_id=moviles-y-wearables"
+            className="relative rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl min-h-[340px] sm:min-h-[380px] group border border-slate-800/90 hover:border-slate-700/80 flex flex-col justify-end p-8 text-white transition-all duration-300 ease-out cursor-pointer block isolate transform-gpu"
+          >
             {/* Background Image */}
             <img
               src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=800&auto=format&fit=crop"
               alt="Tablets & Móviles"
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 z-0"
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out z-0 transform-gpu will-change-transform"
             />
             {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-900/30 z-10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-900/30 z-10 pointer-events-none" />
             {/* Red Accent Bar */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-red via-brand-red-accent to-transparent z-10" />
 
@@ -141,34 +145,32 @@ export default function Home() {
               <span className="inline-block text-[11px] font-black text-brand-red-accent uppercase tracking-widest bg-brand-red/20 border border-brand-red/30 px-3 py-1 rounded-md">
                 LO MÁS NUEVO EN
               </span>
-              <h3 className="text-3xl sm:text-4xl font-black tracking-tight leading-none font-heading text-white">
+              <h3 className="text-3xl sm:text-4xl font-black tracking-tight leading-none font-heading text-white group-hover:text-brand-red-accent transition-colors duration-200">
                 Tablets & Móviles
               </h3>
               <p className="text-gray-300 text-xs sm:text-sm line-clamp-2 leading-relaxed">
                 Tablets táctiles, celulares inteligentes y dispositivos móviles para máxima productividad y entretenimiento.
               </p>
-              <div className="pt-2">
-                <Link
-                  to="/catalog?category_id=moviles-y-wearables"
-                  className="inline-flex items-center space-x-2 bg-brand-blue-bright hover:bg-brand-blue-hover text-white font-black text-xs px-6 py-2.5 rounded-md shadow-lg transition-all transform hover:scale-105 active:scale-95 uppercase tracking-wider"
-                >
-                  <span>VER TODO</span>
-                  <ChevronRight className="w-4 h-4" />
-                </Link>
+              <div className="pt-2 flex items-center text-xs font-black uppercase tracking-wider text-white group-hover:text-brand-red transition-colors duration-200 space-x-1.5">
+                <span>VER TODO</span>
+                <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1.5 transition-transform duration-300 ease-out" />
               </div>
             </div>
-          </div>
+          </Link>
 
           {/* Promo Banner 2: Workstations & All in One */}
-          <div className="relative rounded-lg overflow-hidden shadow-2xl min-h-[340px] sm:min-h-[380px] group border border-slate-800 flex flex-col justify-end p-8 text-white">
+          <Link
+            to="/catalog?category_id=computadoras-y-componentes"
+            className="relative rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl min-h-[340px] sm:min-h-[380px] group border border-slate-800/90 hover:border-slate-700/80 flex flex-col justify-end p-8 text-white transition-all duration-300 ease-out cursor-pointer block isolate transform-gpu"
+          >
             {/* Background Image */}
             <img
               src="/images/laptop_hogar_banner.jpg"
               alt="Workstations & All in One"
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 z-0"
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out z-0 transform-gpu will-change-transform"
             />
             {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-900/30 z-10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-900/30 z-10 pointer-events-none" />
             {/* Red Accent Bar */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-red-accent via-amber-400 to-transparent z-10" />
 
@@ -177,23 +179,18 @@ export default function Home() {
               <span className="inline-block text-[11px] font-black text-amber-400 uppercase tracking-widest bg-amber-500/20 border border-amber-500/30 px-3 py-1 rounded-md">
                 EQUIPAMIENTO PROFESIONAL
               </span>
-              <h3 className="text-3xl sm:text-4xl font-black tracking-tight leading-none font-heading text-white">
+              <h3 className="text-3xl sm:text-4xl font-black tracking-tight leading-none font-heading text-white group-hover:text-amber-300 transition-colors duration-200">
                 Workstations & All in One
               </h3>
               <p className="text-gray-300 text-xs sm:text-sm line-clamp-2 leading-relaxed">
                 Estaciones de trabajo de alto rendimiento preparadas para renderizado 3D, IA y desarrollo.
               </p>
-              <div className="pt-2">
-                <Link
-                  to="/catalog?category_id=computadoras-y-componentes"
-                  className="inline-flex items-center space-x-2 bg-brand-blue-bright hover:bg-brand-blue-hover text-white font-black text-xs px-6 py-2.5 rounded-md shadow-lg transition-all transform hover:scale-105 active:scale-95 uppercase tracking-wider"
-                >
-                  <span>VER TODO</span>
-                  <ChevronRight className="w-4 h-4" />
-                </Link>
+              <div className="pt-2 flex items-center text-xs font-black uppercase tracking-wider text-white group-hover:text-amber-400 transition-colors duration-200 space-x-1.5">
+                <span>VER TODO</span>
+                <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1.5 transition-transform duration-300 ease-out" />
               </div>
             </div>
-          </div>
+          </Link>
         </div>
       </section>
 
@@ -202,6 +199,7 @@ export default function Home() {
         title="Novedades"
         subtitle="Productos añadidos recientemente"
         icon={Sparkles}
+        iconClassName="w-6 h-6 text-brand-red"
         viewAllLink="/catalog?sort=newest"
         viewAllText="Ver Todas"
         products={newestProducts}
