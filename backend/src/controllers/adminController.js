@@ -215,3 +215,43 @@ exports.syncCuadradoCatalog = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.updateOrderInvoice = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { invoice_number, invoice_series, invoice_status = 'issued', invoice_pdf_url } = req.body;
+
+    const order = await Order.findByPk(id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Orden no encontrada' });
+    }
+
+    if (invoice_number !== undefined) order.invoice_number = invoice_number ? String(invoice_number).trim() : null;
+    if (invoice_series !== undefined) order.invoice_series = invoice_series ? String(invoice_series).trim() : null;
+    if (invoice_status !== undefined) order.invoice_status = invoice_status;
+    if (invoice_pdf_url !== undefined) order.invoice_pdf_url = invoice_pdf_url ? String(invoice_pdf_url).trim() : null;
+    order.invoice_error_message = null;
+
+    await order.save();
+
+    await AuditLog.create({
+      user_id: req.user.id,
+      action: 'UPDATE_INVOICE_INFO',
+      entity: 'Order',
+      entity_id: order.id,
+      details: {
+        invoice_number: order.invoice_number,
+        invoice_series: order.invoice_series,
+        invoice_status: order.invoice_status
+      }
+    });
+
+    return res.json({
+      success: true,
+      message: 'Comprobante fiscal actualizado exitosamente',
+      order
+    });
+  } catch (error) {
+    next(error);
+  }
+};

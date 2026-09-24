@@ -286,7 +286,7 @@ exports.verifyBankTransfer = async (req, res, next) => {
       created_by_user_id: req.user.id
     });
 
-    // Ejecutar envío de correo y emisión de boleta en paralelo para reducir latencia
+    // Ejecutar envío de correo y decremento de stock en paralelo
     const emailTemplates = require('../utils/emailTemplates');
     const html = emailTemplates.generateOrderConfirmationHTML(order);
 
@@ -296,11 +296,11 @@ exports.verifyBankTransfer = async (req, res, next) => {
       html
     }).catch((emailErr) => console.error('[VerifyPaymentEmailError]', emailErr));
 
-    const nubeFactService = require('../services/nubeFactService');
-    const invoicePromise = nubeFactService.generateInvoiceForOrder(order.id)
-      .catch((invoiceErr) => console.error('[VerifyBankTransfer] Error emitting NubeFact invoice:', invoiceErr));
+    const cuadradoSyncService = require('../services/cuadradoSyncService');
+    const stockDecrementPromise = cuadradoSyncService.decrementStockForOrder(order)
+      .catch((stockErr) => console.error('[VerifyBankTransfer] Error decrementing stock:', stockErr));
 
-    await Promise.allSettled([emailPromise, invoicePromise]);
+    await Promise.allSettled([emailPromise, stockDecrementPromise]);
 
     return res.json({
       success: true,

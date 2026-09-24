@@ -1,15 +1,16 @@
 const crypto = require('crypto');
 const paymentService = require('../services/paymentService');
 const emailService = require('../services/emailService');
-const nubeFactService = require('../services/nubeFactService');
 const sequelize = require('../config/database');
 const { Transaction } = require('sequelize');
 const { Order, OrderItem, Payment, OrderStatusHistory, User } = require('../models');
 const orderService = require('../services/orderService');
 const logger = require('../config/logger');
 
+const cuadradoSyncService = require('../services/cuadradoSyncService');
+
 /**
- * Shared helper function to update order status, store payment record, and trigger NubeFact & Resend email.
+ * Shared helper function to update order status, store payment record, and trigger Resend email & stock decrement.
  * Ensures idempotency via row-locking transaction.
  */
 async function processSuccessfulOrder(orderId, paymentData) {
@@ -107,7 +108,7 @@ async function processSuccessfulOrder(orderId, paymentData) {
     }
   });
 
-  // Execute secondary actions (email & NubeFact console output) AFTER transaction finishes cleanly
+  // Execute secondary actions (email & Cuadrado ERP stock decrement) AFTER transaction finishes cleanly
   if (shouldTriggerActions && targetOrder) {
     const fullOrder = await Order.findByPk(targetOrder.id, {
       include: [
@@ -121,13 +122,15 @@ async function processSuccessfulOrder(orderId, paymentData) {
     // Ejecutar tareas secundarias en paralelo para reducir la latencia
     const emailPromise = (recipientEmail && fullOrder)
       ? emailService.sendOrderConfirmation(recipientEmail, fullOrder)
-          .catch((emailErr) => logger.error('[PaymentController] Error enviando email de confirmación:', emailErr))
+          .catch((emailErr) => logger.error(`[PaymentController] Error enviando email de confirmación: ${emailErr.message}`))
       : Promise.resolve();
 
-    const invoicePromise = nubeFactService.generateInvoiceForOrder(targetOrder.id)
-      .catch((invoiceErr) => logger.error('[PaymentController] Error emitiendo factura NubeFact:', invoiceErr));
+    const stockDecrementPromise = fullOrder
+      ? cuadradoSyncService.decrementStockForOrder(fullOrder)
+          .catch((stockErr) => logger.error(`[PaymentController] Error decrementando stock en Cuadrado: ${stockErr.message}`))
+      : Promise.resolve();
 
-    await Promise.allSettled([emailPromise, invoicePromise]);
+    await Promise.allSettled([emailPromise, stockDecrementPromise]);
   }
 
   return {

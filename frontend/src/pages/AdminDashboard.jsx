@@ -517,7 +517,10 @@ export default function AdminDashboard() {
       <OrderDetailsModal 
         selectedOrder={selectedOrder} 
         loadingDetail={loadingDetail} 
-        onClose={handleCloseModal} 
+        onClose={handleCloseModal}
+        onOrderUpdated={() => {
+          queryClient.invalidateQueries({ queryKey: ['adminOrders'] });
+        }}
       />
     </div>
   );

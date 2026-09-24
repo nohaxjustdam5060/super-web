@@ -8,57 +8,143 @@ function slugifyString(text) {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-');
 }
-const https = require('https');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
 const { Product, ProductImage, Category, Brand } = require('../models');
 const logger = require('../config/logger');
 
-const CUADRADO_JSON_URL = 'https://cuadrado.pe/lista.json';
-const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+const CUADRADO_API_URL = process.env.CUADRADO_API_URL || 'https://app.cuadrado.pe/cuadrado/api';
+const CUADRADO_API_TOKEN = process.env.CUADRADO_API_TOKEN || '';
+const CUADRADO_SYNC_PAGE_LIMIT = parseInt(process.env.CUADRADO_SYNC_PAGE_LIMIT, 10) || 50;
+const CUADRADO_SYNC_TIMEOUT_MS = parseInt(process.env.CUADRADO_SYNC_TIMEOUT_MS, 10) || 15000;
 
 class CuadradoSyncService {
   /**
-   * Helper to fetch JSON from cuadrado.pe with retries using native https module
+   * Helper to fetch a single page from Cuadrado API with timeout and retries
    */
-  async fetchCatalogData(retries = 3, delayMs = 5000) {
+  async fetchPage(page = 1, limit = parseInt(process.env.CUADRADO_SYNC_PAGE_LIMIT, 10) || 50, retries = 3) {
+    const baseUrl = (process.env.CUADRADO_API_URL || 'https://app.cuadrado.pe/cuadrado/api').replace(/\/+$/, '');
+    const url = `${baseUrl}/products?is_active=true&page=${page}&limit=${limit}`;
+    const rawToken = process.env.CUADRADO_API_TOKEN || '';
+    const token = rawToken.replace(/^["']|["']$/g, '').trim();
+    const timeoutMs = parseInt(process.env.CUADRADO_SYNC_TIMEOUT_MS, 10) || 15000;
+
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        logger.info(`[CuadradoSync] Intentando descargar catálogo desde ${CUADRADO_JSON_URL} (Intento ${attempt}/${retries})...`);
+        const headers = {
+          'Accept': 'application/json',
+          'User-Agent': 'SUPERLAPTOP-CatalogSync/2.0'
+        };
 
-        const dataString = await new Promise((resolve, reject) => {
-          const req = https.get(CUADRADO_JSON_URL, {
-            agent: httpsAgent,
-            headers: { 'User-Agent': 'SUPERLAPTOP-CatalogSync/1.0' }
-          }, (res) => {
-            if (res.statusCode < 200 || res.statusCode >= 300) {
-              return reject(new Error(`HTTP Error ${res.statusCode}: ${res.statusMessage}`));
-            }
-            let rawData = '';
-            res.on('data', (chunk) => { rawData += chunk; });
-            res.on('end', () => resolve(rawData));
-          });
-
-          req.on('error', (err) => reject(err));
-          req.setTimeout(25000, () => {
-            req.destroy(new Error('Timeout de lectura HTTP (25s)'));
-          });
-        });
-
-        const data = JSON.parse(dataString);
-
-        if (Array.isArray(data)) {
-          logger.info(`[CuadradoSync] Catálogo descargado exitosamente. Total items recibidos: ${data.length}`);
-          return data;
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
         }
 
-        throw new Error('La respuesta del servidor origen no es un arreglo JSON válido.');
+        const response = await fetch(url, {
+          method: 'GET',
+          headers,
+          signal: AbortSignal.timeout(timeoutMs)
+        });
+
+        if (!response.ok) {
+          const status = response.status;
+          let errorText = '';
+          try {
+            errorText = await response.text();
+          } catch (_) {}
+
+          if (status === 401 || status === 403) {
+            throw new Error(`HTTP Error ${status}: Autenticación fallida con la API de Cuadrado. Verifique CUADRADO_API_TOKEN en .env. Detalle: ${errorText.slice(0, 200)}`);
+          }
+          throw new Error(`HTTP Error ${status}: ${response.statusText} - ${errorText.slice(0, 200)}`);
+        }
+
+        const data = await response.json();
+        return data;
       } catch (error) {
-        logger.warn(`[CuadradoSync] Fallo en intento ${attempt}/${retries}: ${error.message}`);
+        // Don't retry if authentication error
+        if (error.message.includes('HTTP Error 401') || error.message.includes('HTTP Error 403')) {
+          throw error;
+        }
+        logger.warn(`[CuadradoSync] Fallo al obtener página ${page} (Intento ${attempt}/${retries}): ${error.message}`);
         if (attempt === retries) throw error;
-        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        await new Promise((resolve) => setTimeout(resolve, 2000 * attempt));
       }
     }
+  }
+
+  /**
+   * Fetches all products across all pages from official Cuadrado API
+   */
+  async fetchCatalogData() {
+    logger.info(`[CuadradoSync] Conectando a API oficial de Cuadrado: ${CUADRADO_API_URL}/products (Límite por página: ${CUADRADO_SYNC_PAGE_LIMIT})...`);
+
+    // 1. Fetch first page to obtain pagination metadata
+    const firstPageResponse = await this.fetchPage(1, CUADRADO_SYNC_PAGE_LIMIT);
+
+    let allItems = [];
+    let total = 0;
+    let limit = CUADRADO_SYNC_PAGE_LIMIT;
+
+    if (firstPageResponse && firstPageResponse.data) {
+      if (Array.isArray(firstPageResponse.data.data)) {
+        // Standard structure: { success: true, data: { data: [...], total, page, limit } }
+        allItems = [...firstPageResponse.data.data];
+        total = Number(firstPageResponse.data.total) || allItems.length;
+        limit = Number(firstPageResponse.data.limit) || CUADRADO_SYNC_PAGE_LIMIT;
+      } else if (Array.isArray(firstPageResponse.data)) {
+        // Direct array in data: { success: true, data: [...], total }
+        allItems = [...firstPageResponse.data];
+        total = Number(firstPageResponse.total) || allItems.length;
+      }
+    } else if (Array.isArray(firstPageResponse)) {
+      allItems = [...firstPageResponse];
+      total = allItems.length;
+    }
+
+    const totalPages = Math.ceil(total / limit);
+    logger.info(`[CuadradoSync] Página 1 obtenida (${allItems.length} items). Total en catálogo: ${total} | Total páginas: ${totalPages}`);
+
+    if (totalPages <= 1) {
+      return allItems;
+    }
+
+    // 2. Fetch remaining pages with controlled concurrency (chunks of 3)
+    const pageNumbers = [];
+    for (let p = 2; p <= totalPages; p++) {
+      pageNumbers.push(p);
+    }
+
+    const CHUNK_SIZE = 3;
+    for (let i = 0; i < pageNumbers.length; i += CHUNK_SIZE) {
+      const chunk = pageNumbers.slice(i, i + CHUNK_SIZE);
+      const chunkResults = await Promise.all(
+        chunk.map(async (pageNum) => {
+          try {
+            const pageData = await this.fetchPage(pageNum, limit);
+            if (pageData && pageData.data && Array.isArray(pageData.data.data)) {
+              return pageData.data.data;
+            } else if (pageData && pageData.data && Array.isArray(pageData.data)) {
+              return pageData.data;
+            } else if (Array.isArray(pageData)) {
+              return pageData;
+            }
+            return [];
+          } catch (err) {
+            logger.error(`[CuadradoSync] Error persistente al descargar página ${pageNum}:`, err.message);
+            return [];
+          }
+        })
+      );
+
+      for (const res of chunkResults) {
+        allItems.push(...res);
+      }
+      logger.info(`[CuadradoSync] Progreso de ingesta: ${allItems.length}/${total} productos descargados...`);
+    }
+
+    logger.info(`[CuadradoSync] Ingesta paginada finalizada exitosamente. Total items consolidados: ${allItems.length}`);
+    return allItems;
   }
 
   /**
@@ -209,48 +295,98 @@ class CuadradoSyncService {
   }
 
   /**
-   * Infer or create Brand based on product name keywords
+   * Infer or create Brand based on API brand object or product name keywords
    */
-  async getOrCreateBrandForProduct(productName, brandCache) {
-    const name = (productName || '').toUpperCase();
-    const knownBrands = [
-      'EPSON', 'HP', 'LENOVO', 'ASUS', 'DELL', 'APPLE', 'ACER', 'MSI', 'SAMSUNG',
-      'LOGITECH', 'TEROS', 'KINGSTON', 'CRUCIAL', 'GIGABYTE', 'AMD', 'INTEL',
-      'WESTERN DIGITAL', 'SEAGATE', 'TP-LINK', 'CANON', 'BROTHER', 'LG', 'XIAOMI',
-      'MOTOROLA', 'COUGAR', 'CORSAIR', 'RAZER', 'REDRAGON', 'HAVIT', 'VSG', 'T-FORCE',
-      'PATRIOT', 'EVGA', 'ZOTAC', 'PALIT', 'PNY', 'ASROCK', 'BIOSTAR', 'BENQ',
-      'VIEWSONIC', 'MERCUSYS', 'DLINK', 'NEXXT', 'CYBERTEL', 'HALION', 'KOLINK'
-    ];
+  async getOrCreateBrandForProduct(productName, brandCache, explicitBrand = null) {
+    let brandNameCandidate = null;
 
-    let detectedBrand = null;
-    for (const b of knownBrands) {
-      const regex = new RegExp(`\\b${b.replace('-', '\\-')}\\b`, 'i');
-      if (regex.test(name)) {
-        detectedBrand = b;
-        break;
+    if (explicitBrand) {
+      if (typeof explicitBrand === 'string' && explicitBrand.trim().length > 0) {
+        brandNameCandidate = explicitBrand.trim().toUpperCase();
+      } else if (typeof explicitBrand === 'object' && explicitBrand.name) {
+        brandNameCandidate = String(explicitBrand.name).trim().toUpperCase();
       }
     }
 
-    if (!detectedBrand) return null;
+    if (!brandNameCandidate) {
+      const name = (productName || '').toUpperCase();
+      const knownBrands = [
+        'EPSON', 'HP', 'LENOVO', 'ASUS', 'DELL', 'APPLE', 'ACER', 'MSI', 'SAMSUNG',
+        'LOGITECH', 'TEROS', 'KINGSTON', 'CRUCIAL', 'GIGABYTE', 'AMD', 'INTEL',
+        'WESTERN DIGITAL', 'SEAGATE', 'TP-LINK', 'CANON', 'BROTHER', 'LG', 'XIAOMI',
+        'MOTOROLA', 'COUGAR', 'CORSAIR', 'RAZER', 'REDRAGON', 'HAVIT', 'VSG', 'T-FORCE',
+        'PATRIOT', 'EVGA', 'ZOTAC', 'PALIT', 'PNY', 'ASROCK', 'BIOSTAR', 'BENQ',
+        'VIEWSONIC', 'MERCUSYS', 'DLINK', 'NEXXT', 'CYBERTEL', 'HALION', 'KOLINK'
+      ];
 
-    if (brandCache && brandCache.has(detectedBrand)) {
-      return brandCache.get(detectedBrand);
+      for (const b of knownBrands) {
+        const regex = new RegExp(`\\b${b.replace('-', '\\-')}\\b`, 'i');
+        if (regex.test(name)) {
+          brandNameCandidate = b;
+          break;
+        }
+      }
     }
 
-    const brandSlug = slugifyString(detectedBrand);
+    if (!brandNameCandidate) return null;
+
+    if (brandCache && brandCache.has(brandNameCandidate)) {
+      return brandCache.get(brandNameCandidate);
+    }
+
+    const brandSlug = slugifyString(brandNameCandidate);
     const [brand] = await Brand.findOrCreate({
       where: { slug: brandSlug },
-      defaults: { name: detectedBrand, slug: brandSlug }
+      defaults: { name: brandNameCandidate, slug: brandSlug }
     });
 
-    if (brandCache) brandCache.set(detectedBrand, brand.id);
+    if (brandCache) brandCache.set(brandNameCandidate, brand.id);
     return brand.id;
   }
 
   /**
+   * Helper to normalize product attributes into structured JSONB
+   */
+  normalizeAttributes(rawItem) {
+    const list = [];
+    const rawList = Array.isArray(rawItem.attribute_values)
+      ? rawItem.attribute_values
+      : (Array.isArray(rawItem.atributos) ? rawItem.atributos : []);
+
+    for (const a of rawList) {
+      if (!a) continue;
+      let name = '';
+      let val = '';
+      if (typeof a === 'string') {
+        val = a;
+      } else {
+        name = a.nombre || (a.attribute && a.attribute.name) || a.name || a.key || a.label || '';
+        val = a.valor || a.value || a.val || '';
+      }
+      name = String(name).trim();
+      val = String(val).trim();
+      if (name || val) {
+        list.push({ nombre: name || 'General', valor: val });
+      }
+    }
+
+    const specsMap = {};
+    for (const item of list) {
+      if (item.nombre && item.valor) {
+        specsMap[item.nombre] = item.valor;
+      }
+    }
+
+    return {
+      atributos: list,
+      specs_map: specsMap
+    };
+  }
+
+  /**
    * Helper to extract all valid image URLs from supplier's JSON raw item
-   * Supports: rawItem.imagenes, rawItem.images, rawItem.galeria, rawItem.fotos,
-   * comma-separated strings, and sequential fields (imagen1, imagen2, etc.)
+   * Supports: rawItem.images, rawItem.imagenes, rawItem.galeria, rawItem.fotos,
+   * comma-separated strings, objects with image_url/url/src, and sequential fields (imagen1, etc.)
    */
   extractImageUrlsFromRawItem(rawItem) {
     const urls = [];
@@ -266,13 +402,14 @@ class CuadradoSyncService {
 
     if (!rawItem) return urls;
 
-    // 1. Array fields: rawItem.imagenes, rawItem.images, rawItem.galeria, rawItem.fotos
-    ['imagenes', 'images', 'galeria', 'fotos'].forEach((key) => {
+    // 1. Array fields: rawItem.images, rawItem.imagenes, rawItem.galeria, rawItem.fotos
+    ['images', 'imagenes', 'galeria', 'fotos'].forEach((key) => {
       if (Array.isArray(rawItem[key])) {
         rawItem[key].forEach((imgObj) => {
-          if (typeof imgObj === 'string') addUrl(imgObj);
-          else if (imgObj && (imgObj.url || imgObj.image_url || imgObj.src || imgObj.href)) {
-            addUrl(imgObj.url || imgObj.image_url || imgObj.src || imgObj.href);
+          if (typeof imgObj === 'string') {
+            addUrl(imgObj);
+          } else if (imgObj && typeof imgObj === 'object') {
+            addUrl(imgObj.image_url || imgObj.url || imgObj.src || imgObj.path || imgObj.href);
           }
         });
       } else if (typeof rawItem[key] === 'string') {
@@ -280,16 +417,20 @@ class CuadradoSyncService {
       }
     });
 
-    // 2. Main scalar image field: rawItem.imagen (can be single URL or comma-separated string)
-    if (rawItem.imagen) {
-      if (typeof rawItem.imagen === 'string') {
-        rawItem.imagen.split(/[,;]/).forEach(addUrl);
-      } else if (Array.isArray(rawItem.imagen)) {
-        rawItem.imagen.forEach((img) => typeof img === 'string' && addUrl(img));
+    // 2. Main scalar image fields: rawItem.image, rawItem.imagen, rawItem.image_url, rawItem.foto
+    ['image', 'imagen', 'image_url', 'foto'].forEach((key) => {
+      if (rawItem[key]) {
+        if (typeof rawItem[key] === 'string') {
+          rawItem[key].split(/[,;]/).forEach(addUrl);
+        } else if (Array.isArray(rawItem[key])) {
+          rawItem[key].forEach((img) => typeof img === 'string' && addUrl(img));
+        } else if (typeof rawItem[key] === 'object') {
+          addUrl(rawItem[key].image_url || rawItem[key].url || rawItem[key].src);
+        }
       }
-    }
+    });
 
-    // 3. Sequential image fields: rawItem.imagen1, rawItem.imagen2, rawItem.imagen_1, rawItem.imagen_2, etc.
+    // 3. Sequential image fields: rawItem.imagen1, rawItem.imagen2, rawItem.imagen_1, rawItem.image1, etc.
     for (let i = 1; i <= 10; i++) {
       if (rawItem[`imagen${i}`]) addUrl(rawItem[`imagen${i}`]);
       if (rawItem[`imagen_${i}`]) addUrl(rawItem[`imagen_${i}`]);
@@ -306,13 +447,13 @@ class CuadradoSyncService {
    */
   async syncCatalog() {
     const startTime = Date.now();
-    logger.info('🚀 [CuadradoSync] Iniciando proceso de sincronización condicional en memoria...');
+    logger.info('🚀 [CuadradoSync] Iniciando proceso de sincronización con API oficial de Cuadrado...');
 
     try {
       const items = await this.fetchCatalogData();
       if (!items || items.length === 0) {
         logger.warn('[CuadradoSync] Catálogo recibido está vacío. Abortando sync.');
-        return { success: false, message: 'Catálogo vacío' };
+        return { success: false, message: 'Catálogo vacío o no disponible' };
       }
 
       // Caches for Category and Brand lookups
@@ -327,7 +468,7 @@ class CuadradoSyncService {
 
       // 1. Light index query: Fetch active & inactive products from DB into memory Map
       const existingProducts = await Product.findAll({
-        attributes: ['id', 'sku', 'price', 'stock', 'is_active', 'name', 'slug', 'category_id', 'brand_id']
+        attributes: ['id', 'external_id', 'sku', 'price', 'offer_price', 'stock', 'is_active', 'name', 'slug', 'category_id', 'brand_id']
       });
 
       const existingMap = new Map();
@@ -344,33 +485,50 @@ class CuadradoSyncService {
 
       // 2. Classify items in-memory
       for (const item of items) {
-        if (!item.sku || !item.nombre) continue;
+        const sku = item.sku ? String(item.sku).trim() : null;
+        const name = String(item.name || item.nombre || '').trim();
 
-        const sku = String(item.sku).trim();
+        if (!sku || !name) continue;
+
         incomingJsonSkus.add(sku);
 
-        const price = Number(item.precio) || 0;
-        const stock = Number(item.stock) || 0;
-        const isActive = stock > 0;
-        const atributos = Array.isArray(item.atributos) ? item.atributos : [];
+        const externalId = item.id ? String(item.id).trim() : null;
 
-        // Build technical specs JSONB
-        const technicalSpecs = {
-          atributos,
-          specs_map: atributos.reduce((acc, curr) => {
-            if (curr.nombre && curr.valor) {
-              acc[curr.nombre.trim()] = curr.valor.trim();
-            }
-            return acc;
-          }, {})
-        };
+        // Pricing calculation
+        const basePrice = Number(item.base_price !== undefined && item.base_price !== null ? item.base_price : (item.precio !== undefined ? item.precio : 0)) || 0;
+        const salePrice = Number(item.sale_price) || null;
+        const webPrice = Number(item.web_price) || null;
+
+        let price = basePrice > 0 ? basePrice : (salePrice || webPrice || 0);
+        let offerPrice = null;
+
+        if (webPrice && webPrice > 0 && webPrice < price) {
+          offerPrice = webPrice;
+        } else if (salePrice && salePrice > 0 && salePrice < price) {
+          offerPrice = salePrice;
+        }
+
+        if (price === 0 && offerPrice) {
+          price = offerPrice;
+          offerPrice = null;
+        }
+
+        // Stock and active status
+        const stock = Number(item.stock_quantity !== undefined && item.stock_quantity !== null ? item.stock_quantity : (item.stock !== undefined ? item.stock : 0)) || 0;
+        const isActive = (item.is_active !== false) && stock > 0;
+
+        // Technical specs normalization
+        const technicalSpecs = this.normalizeAttributes(item);
 
         if (!existingMap.has(sku)) {
           // New SKU -> Queue for batch creation
           newItemsToCreate.push({
             sku,
+            externalId,
+            name,
             rawItem: item,
             price,
+            offerPrice,
             stock,
             isActive,
             technicalSpecs
@@ -378,21 +536,28 @@ class CuadradoSyncService {
         } else {
           // Existing SKU -> Conditional comparison
           const existing = existingMap.get(sku);
-          const priceChanged = Math.abs(Number(existing.price) - price) > 0.01;
+
+          const priceChanged = Math.abs(Number(existing.price || 0) - price) > 0.01;
+          const offerPriceChanged = (existing.offer_price === null && offerPrice !== null) ||
+            (existing.offer_price !== null && offerPrice === null) ||
+            (offerPrice !== null && Math.abs(Number(existing.offer_price || 0) - offerPrice) > 0.01);
           const stockChanged = Number(existing.stock) !== stock;
           const statusChanged = Boolean(existing.is_active) !== isActive;
+          const externalIdChanged = Boolean(externalId && existing.external_id !== externalId);
           const missingBrand = !existing.brand_id;
 
           let brandIdToAssign = null;
           if (missingBrand) {
-            brandIdToAssign = await this.getOrCreateBrandForProduct(existing.name || item.nombre, brandCache);
+            brandIdToAssign = await this.getOrCreateBrandForProduct(name, brandCache, item.brand);
           }
 
-          if (priceChanged || stockChanged || statusChanged || (missingBrand && brandIdToAssign)) {
+          if (priceChanged || offerPriceChanged || stockChanged || statusChanged || externalIdChanged || (missingBrand && brandIdToAssign)) {
             itemsToUpdate.push({
               id: existing.id,
               sku,
+              external_id: externalId || existing.external_id,
               price,
+              offer_price: offerPrice,
               stock,
               is_active: isActive,
               technical_specs: technicalSpecs,
@@ -405,7 +570,7 @@ class CuadradoSyncService {
       }
 
       logger.info(`📊 [CuadradoSync] Clasificación en memoria completada:
-        - Total en JSON: ${items.length}
+        - Total en API: ${items.length}
         - Nuevos para crear: ${newItemsToCreate.length}
         - Existentes con cambios (A actualizar): ${itemsToUpdate.length}
         - Sin cambios (Omitidos, 0 impacto en BD): ${skippedCount}`);
@@ -420,10 +585,14 @@ class CuadradoSyncService {
           for (const upd of batch) {
             const updatePayload = {
               price: upd.price,
+              offer_price: upd.offer_price,
               stock: upd.stock,
               is_active: upd.is_active,
               technical_specs: upd.technical_specs
             };
+            if (upd.external_id) {
+              updatePayload.external_id = upd.external_id;
+            }
             if (upd.brand_id) {
               updatePayload.brand_id = upd.brand_id;
             }
@@ -446,23 +615,25 @@ class CuadradoSyncService {
 
         for (const newItem of batch) {
           try {
-            const categoryId = this.getOfficialCategoryForProduct(newItem.rawItem.nombre, newItem.rawItem.atributos);
-            const brandId = await this.getOrCreateBrandForProduct(newItem.rawItem.nombre, brandCache);
+            const categoryId = this.getOfficialCategoryForProduct(newItem.name, newItem.technicalSpecs.atributos);
+            const brandId = await this.getOrCreateBrandForProduct(newItem.name, brandCache, newItem.rawItem.brand);
 
-            const baseSlug = slugifyString(newItem.rawItem.nombre) || 'producto';
+            const baseSlug = slugifyString(newItem.name) || 'producto';
             const uniqueSlug = `${baseSlug.slice(0, 150)}-${slugifyString(newItem.sku)}`;
 
             const createdProduct = await Product.create({
+              external_id: newItem.externalId,
               sku: newItem.sku,
-              name: newItem.rawItem.nombre,
+              name: newItem.name,
               slug: uniqueSlug,
               price: newItem.price,
+              offer_price: newItem.offerPrice,
               stock: newItem.stock,
               is_active: newItem.isActive,
               category_id: categoryId,
               brand_id: brandId,
               technical_specs: newItem.technicalSpecs,
-              description: `Especificaciones del producto ${newItem.rawItem.nombre}`
+              description: newItem.rawItem.description || newItem.rawItem.descripcion || `Especificaciones del producto ${newItem.name}`
             });
 
             // Insert all extracted images for new product
@@ -493,7 +664,7 @@ class CuadradoSyncService {
       let disabledCount = 0;
 
       if (missingSkus.length > 0) {
-        logger.info(`[CuadradoSync] Encontrados ${missingSkus.length} SKUs descontinuados/desaparecidos del JSON. Desactivando...`);
+        logger.info(`[CuadradoSync] Encontrados ${missingSkus.length} SKUs descontinuados/desaparecidos de la API. Desactivando...`);
         const [affected] = await Product.update(
           { is_active: false, stock: 0 },
           { where: { sku: { [Op.in]: missingSkus } } }
@@ -520,8 +691,172 @@ class CuadradoSyncService {
         }
       };
     } catch (error) {
-      logger.error('❌ [CuadradoSync] Error crítico en la sincronización del catálogo:', error);
+      logger.error(`❌ [CuadradoSync] Error crítico en la sincronización del catálogo: ${error.message}`);
       return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Atomic remote stock decrement via POST /inventory/stock/decrement
+   * Reconciles local Postgres product stock immediately with the { to } value returned by the ERP
+   */
+  async decrementRemoteStock(productId, quantity, reason = 'Venta online') {
+    const parsedProductId = parseInt(productId, 10);
+    const parsedQuantity = parseInt(quantity, 10);
+
+    if (isNaN(parsedProductId) || parsedProductId <= 0 || isNaN(parsedQuantity) || parsedQuantity <= 0) {
+      logger.warn(`[CuadradoSync] Parámetros inválidos para decrementRemoteStock: product_id=${productId}, quantity=${quantity}`);
+      return { success: false, message: 'Parámetros inválidos para decremento' };
+    }
+
+    const baseUrl = (process.env.CUADRADO_API_URL || 'https://app.cuadrado.pe/cuadrado/api').replace(/\/+$/, '');
+    const url = `${baseUrl}/inventory/stock/decrement`;
+    const rawToken = process.env.CUADRADO_API_TOKEN || '';
+    const token = rawToken.replace(/^["']|["']$/g, '').trim();
+    const timeoutMs = parseInt(process.env.CUADRADO_SYNC_TIMEOUT_MS, 10) || 15000;
+
+    if (!token || token.includes('placeholder') || token.includes('xxx')) {
+      logger.warn('[CuadradoSync] CUADRADO_API_TOKEN no configurado o es placeholder. Omitiendo decremento remoto en ERP.');
+      return { success: false, message: 'Token de API no configurado' };
+    }
+
+    try {
+      const payload = {
+        product_id: parsedProductId,
+        quantity: parsedQuantity,
+        reason: String(reason || 'Venta online').slice(0, 150)
+      };
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'User-Agent': 'SUPERLAPTOP-CatalogSync/2.0'
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(timeoutMs)
+      });
+
+      if (!response.ok) {
+        let errorBody = '';
+        try {
+          errorBody = await response.text();
+        } catch (_) {}
+        logger.warn(`[CuadradoSync] Error en decremento remoto (HTTP ${response.status}) para product_id ${parsedProductId}: ${errorBody.slice(0, 200)}`);
+        return { success: false, status: response.status, error: errorBody };
+      }
+
+      const json = await response.json();
+      const data = json.data || {};
+      const newStock = typeof data.to === 'number' ? data.to : null;
+
+      // Reconcile local Postgres DB immediately if new stock value is present
+      if (newStock !== null) {
+        await Product.update(
+          {
+            stock: newStock,
+            is_active: newStock > 0
+          },
+          {
+            where: { external_id: String(parsedProductId) }
+          }
+        );
+        logger.info(`✅ [CuadradoSync] Stock decrementado en ERP: product_id ${parsedProductId} (-${parsedQuantity}). Stock reconciliado en BD local: ${newStock}`);
+      }
+
+      return {
+        success: true,
+        data: {
+          product_id: parsedProductId,
+          from: data.from,
+          to: newStock,
+          requested: parsedQuantity,
+          delta: data.delta
+        }
+      };
+    } catch (error) {
+      logger.warn(`[CuadradoSync] Fallo de conexión/timeout al decrementar stock para product_id ${parsedProductId}: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Processes stock decrement for an entire order.
+   * Decrements remote ERP stock for products with external_id, and decrements local DB for native products.
+   */
+  async decrementStockForOrder(order) {
+    if (!order) {
+      return { success: false, message: 'Orden no proporcionada' };
+    }
+
+    const orderNumber = order.order_number || order.id;
+    const items = order.items || [];
+
+    if (items.length === 0) {
+      logger.info(`[CuadradoSync] Orden #${orderNumber} no tiene items para decrementar stock.`);
+      return { success: true, processed: 0 };
+    }
+
+    logger.info(`📦 [CuadradoSync] Iniciando decremento de stock para Orden #${orderNumber} (${items.length} items)...`);
+
+    try {
+      // 1. Fetch products from DB to get their external_id and local stock
+      const productIds = items.map((i) => i.product_id).filter(Boolean);
+      const dbProducts = await Product.findAll({
+        where: { id: { [Op.in]: productIds } },
+        attributes: ['id', 'external_id', 'stock', 'name', 'sku']
+      });
+
+      const productMap = new Map(dbProducts.map((p) => [String(p.id), p]));
+
+      // 2. Prepare decrement tasks
+      const decrementTasks = items.map(async (item) => {
+        const product = productMap.get(String(item.product_id));
+        const quantity = Number(item.quantity) || 1;
+        const reason = `Venta online #${orderNumber}`;
+
+        if (!product) {
+          logger.warn(`[CuadradoSync] Producto id ${item.product_id} no encontrado en base de datos al procesar orden #${orderNumber}`);
+          return { success: false, product_id: item.product_id, message: 'Producto no encontrado' };
+        }
+
+        if (product.external_id) {
+          // Product synced from Cuadrado ERP -> Atomic remote decrement
+          return await this.decrementRemoteStock(product.external_id, quantity, reason);
+        } else {
+          // Local/Native product without external_id -> Decrement directly in local DB
+          const newLocalStock = Math.max(0, (product.stock || 0) - quantity);
+          await Product.update(
+            {
+              stock: newLocalStock,
+              is_active: newLocalStock > 0
+            },
+            {
+              where: { id: product.id }
+            }
+          );
+          logger.info(`[CuadradoSync] Stock local decrementado para producto nativo ${product.name} (-${quantity}). Nuevo stock: ${newLocalStock}`);
+          return { success: true, is_local: true, product_id: product.id, to: newLocalStock };
+        }
+      });
+
+      const results = await Promise.allSettled(decrementTasks);
+      const successfulCount = results.filter((r) => r.status === 'fulfilled' && r.value?.success).length;
+
+      logger.info(`✅ [CuadradoSync] Decremento completado para Orden #${orderNumber}: ${successfulCount}/${items.length} items procesados exitosamente.`);
+
+      return {
+        success: true,
+        orderNumber,
+        totalItems: items.length,
+        successfulCount,
+        results: results.map((r) => (r.status === 'fulfilled' ? r.value : { success: false, error: r.reason?.message }))
+      };
+    } catch (orderErr) {
+      logger.error(`[CuadradoSync] Error general al procesar decremento de stock para orden #${orderNumber}: ${orderErr.message}`);
+      return { success: false, error: orderErr.message };
     }
   }
 }

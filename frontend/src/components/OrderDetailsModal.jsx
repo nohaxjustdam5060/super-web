@@ -1,8 +1,9 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { 
   Package, X, Printer, User, MapPin, Calendar, CreditCard, Clock, Info,
-  CheckCircle2, AlertTriangle, FileText, ExternalLink
+  CheckCircle2, AlertTriangle, FileText, ExternalLink, Copy, Check, Receipt, Save
 } from 'lucide-react';
+import axiosClient from '../api/axiosClient';
 
 const renderShippingBadge = (shippingMethodStr, shippingAddress) => {
   const sm = (shippingMethodStr || '').toLowerCase();
@@ -31,23 +32,76 @@ const renderShippingBadge = (shippingMethodStr, shippingAddress) => {
   );
 };
 
-const OrderDetailsModal = memo(function OrderDetailsModal({ selectedOrder, loadingDetail, onClose }) {
+const OrderDetailsModal = memo(function OrderDetailsModal({ selectedOrder, loadingDetail, onClose, onOrderUpdated }) {
   const [toastNotice, setToastNotice] = useState(null);
+  const [copiedKey, setCopiedKey] = useState(null);
+  const [invoiceNumberInput, setInvoiceNumberInput] = useState('');
+  const [isSavingInvoice, setIsSavingInvoice] = useState(false);
+  const [localOrder, setLocalOrder] = useState(selectedOrder);
 
-  if (!selectedOrder) return null;
+  useEffect(() => {
+    setLocalOrder(selectedOrder);
+    setInvoiceNumberInput(selectedOrder?.invoice_number || '');
+  }, [selectedOrder]);
 
-  const isInvoiceIssued = selectedOrder.invoice_status === 'issued';
-  const isInvoiceRejected = selectedOrder.invoice_status === 'rejected' || selectedOrder.invoice_status === 'failed';
-  const seriesNum = (selectedOrder.invoice_series && selectedOrder.invoice_number) 
-    ? `${selectedOrder.invoice_series}-${selectedOrder.invoice_number}` 
+  if (!localOrder) return null;
+
+  const isInvoiceIssued = localOrder.invoice_status === 'issued' || Boolean(localOrder.invoice_number);
+  const seriesNum = localOrder.invoice_number 
+    ? (localOrder.invoice_series ? `${localOrder.invoice_series}-${localOrder.invoice_number}` : localOrder.invoice_number)
     : '';
 
+  const copyToClipboard = (text, key) => {
+    if (!text || text === '—') return;
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
+
+  const handleSaveInvoice = async (e) => {
+    e.preventDefault();
+    if (!invoiceNumberInput.trim()) {
+      setToastNotice('Por favor ingresa un número de comprobante válido (ej. B001-000123 o F001-000456).');
+      return;
+    }
+
+    try {
+      setIsSavingInvoice(true);
+      const res = await axiosClient.patch(`/admin/orders/${localOrder.id}/invoice`, {
+        invoice_number: invoiceNumberInput.trim(),
+        invoice_status: 'issued'
+      });
+
+      if (res.data?.success) {
+        const savedNumber = invoiceNumberInput.trim();
+        setLocalOrder((prev) => ({
+          ...prev,
+          invoice_number: savedNumber,
+          invoice_status: 'issued',
+          invoice_error_message: null
+        }));
+        setToastNotice('✅ Comprobante fiscal registrado exitosamente en la orden.');
+        if (onOrderUpdated) onOrderUpdated(res.data.order);
+      }
+    } catch (err) {
+      setToastNotice(`❌ Error al guardar comprobante: ${err.response?.data?.message || err.message}`);
+    } finally {
+      setIsSavingInvoice(false);
+    }
+  };
+
   const handlePendingPrint = () => {
-    setToastNotice('El comprobante electrónico aún no ha sido emitido o está pendiente de confirmación de pago.');
+    setToastNotice('El comprobante electrónico aún no ha sido registrado por el administrador.');
     setTimeout(() => {
       setToastNotice(null);
     }, 4000);
   };
+
+  const invDocNum = localOrder.invoice_info?.document_number || '';
+  const invName = localOrder.invoice_info?.company_name || localOrder.shipping_address?.recipient_name || localOrder.user?.name || '';
+  const invAddress = localOrder.invoice_info?.fiscal_address || localOrder.shipping_address?.address_line1 || '';
+  const invType = localOrder.invoice_info?.invoice_type === 'factura' ? 'Factura Electrónica' : 'Boleta de Venta';
+  const invDocType = localOrder.invoice_info?.document_type || (localOrder.invoice_info?.invoice_type === 'factura' ? 'RUC' : 'DNI');
 
   return (
     <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
@@ -74,22 +128,22 @@ const OrderDetailsModal = memo(function OrderDetailsModal({ selectedOrder, loadi
         <div className="flex items-start justify-between border-b border-gray-100 pb-4">
           <div>
             <div className="flex items-center space-x-3 mb-1">
-              <h2 className="text-2xl font-black text-gray-900">Orden #{selectedOrder.order_number}</h2>
-              {renderShippingBadge(selectedOrder.shipping_method, selectedOrder.shipping_address)}
+              <h2 className="text-2xl font-black text-gray-900">Orden #{localOrder.order_number}</h2>
+              {renderShippingBadge(localOrder.shipping_method, localOrder.shipping_address)}
             </div>
             <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 font-medium">
               <span className="flex items-center">
                 <Calendar className="w-3.5 h-3.5 mr-1 text-gray-400" />
-                {new Date(selectedOrder.createdAt).toLocaleString('es-PE', { dateStyle: 'medium', timeStyle: 'short' })}
+                {new Date(localOrder.createdAt).toLocaleString('es-PE', { dateStyle: 'medium', timeStyle: 'short' })}
               </span>
               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase border ${
-                selectedOrder.status === 'paid'
+                localOrder.status === 'paid'
                   ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                  : selectedOrder.status === 'payment_review'
+                  : localOrder.status === 'payment_review'
                   ? 'bg-amber-100 text-amber-800 border-amber-300'
                   : 'bg-gray-100 text-gray-600 border-gray-300'
               }`}>
-                Estado: {selectedOrder.status === 'paid' ? 'Pagado' : selectedOrder.status === 'payment_review' ? 'En Revisión (24h)' : selectedOrder.status}
+                Estado: {localOrder.status === 'paid' ? 'Pagado' : localOrder.status === 'payment_review' ? 'En Revisión (24h)' : localOrder.status}
               </span>
             </div>
           </div>
@@ -104,77 +158,115 @@ const OrderDetailsModal = memo(function OrderDetailsModal({ selectedOrder, loadi
           </button>
         </div>
 
-        {/* SUNAT / NubeFact Rejection or Failure Alert Box */}
-        {isInvoiceRejected && (
-          <div className="bg-red-50 border-2 border-red-300 rounded-2xl p-4 sm:p-5 space-y-3 animate-fadeIn shadow-sm">
-            <div className="flex items-start space-x-3">
-              <div className="p-2 bg-red-100 text-red-700 rounded-xl flex-shrink-0">
-                <AlertTriangle className="w-5 h-5" />
-              </div>
-              <div className="space-y-1 flex-1 min-w-0">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h4 className="text-sm font-black text-red-900 flex items-center">
-                    ⚠️ Comprobante Rechazado por SUNAT / Fallo de Emisión
-                  </h4>
-                  {selectedOrder.invoice_response_code && (
-                    <span className="bg-red-200 text-red-900 font-mono font-bold text-[10px] px-2 py-0.5 rounded">
-                      Código SUNAT: {selectedOrder.invoice_response_code}
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-red-800 font-bold leading-relaxed">
-                  {selectedOrder.invoice_error_message || 'El comprobante electrónico fue rechazado por el servicio de SUNAT / NubeFact.'}
-                </p>
-              </div>
+        {/* Panel de Facturación Manual & Copiado Rápido para NubeFact */}
+        <div className="bg-slate-900 text-white rounded-2xl p-4 sm:p-5 space-y-4 shadow-md border border-slate-800">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+            <div className="flex items-center space-x-2">
+              <Receipt className="w-4 h-4 text-brand-red" />
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-200">
+                Datos Tributarios para Emisión Manual (NubeFact / SUNAT)
+              </h4>
             </div>
-
-            {/* Summary of Fiscal Data Sent by Client for Fast Inspection */}
-            <div className="bg-white/90 rounded-xl p-3.5 border border-red-200 text-xs space-y-2 text-gray-800">
-              <p className="font-extrabold text-[11px] text-red-900 uppercase tracking-wider border-b border-red-100 pb-1">
-                Datos Fiscales Enviados por el Cliente para Emisión:
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
-                <div>
-                  <span className="text-gray-500 font-semibold block">Tipo de Comprobante:</span>
-                  <span className="font-bold uppercase text-brand-blue">
-                    {selectedOrder.invoice_info?.invoice_type === 'factura' ? 'Factura Electrónica' : 'Boleta de Venta'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-500 font-semibold block">
-                    {selectedOrder.invoice_info?.document_type || (selectedOrder.invoice_info?.invoice_type === 'factura' ? 'RUC' : 'DNI')}:
-                  </span>
-                  <span className="font-mono font-bold text-gray-900 select-all">
-                    {selectedOrder.invoice_info?.document_number || '—'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-500 font-semibold block">Razón Social / Nombre:</span>
-                  <span className="font-bold text-gray-900 select-all">
-                    {selectedOrder.invoice_info?.company_name || selectedOrder.shipping_address?.recipient_name || selectedOrder.user?.name || '—'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-500 font-semibold block">Código Único / Ref NubeFact:</span>
-                  <span className="font-mono font-bold text-gray-900 select-all">
-                    {selectedOrder.order_number}
-                  </span>
-                </div>
-                <div className="sm:col-span-2">
-                  <span className="text-gray-500 font-semibold block">Domicilio Fiscal:</span>
-                  <span className="font-medium text-gray-800 select-all">
-                    {selectedOrder.invoice_info?.fiscal_address || selectedOrder.shipping_address?.address_line1 || '—'}
-                  </span>
-                </div>
-              </div>
+            <div className="flex items-center space-x-2">
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-brand-blue/30 text-blue-300 border border-blue-500/30">
+                {invType}
+              </span>
+              {isInvoiceIssued ? (
+                <span className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center space-x-1">
+                  <CheckCircle2 className="w-3 h-3 mr-1" />
+                  <span>Facturado ({localOrder.invoice_number})</span>
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                  Pendiente de Emisión
+                </span>
+              )}
             </div>
           </div>
-        )}
+
+          {/* Quick 1-Click Copy Buttons Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+            {/* Document Number / RUC */}
+            <div className="bg-slate-800/80 rounded-xl p-2.5 border border-slate-700/60 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold block">{invDocType}:</span>
+                <span className="font-mono font-black text-sm text-white select-all">{invDocNum || '—'}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => copyToClipboard(invDocNum, 'doc')}
+                disabled={!invDocNum}
+                className="px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-[11px] font-bold flex items-center space-x-1 transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
+                title="Copiar número de documento"
+              >
+                {copiedKey === 'doc' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedKey === 'doc' ? '¡Copiado!' : 'Copiar'}</span>
+              </button>
+            </div>
+
+            {/* Business / Client Name */}
+            <div className="bg-slate-800/80 rounded-xl p-2.5 border border-slate-700/60 flex items-center justify-between">
+              <div className="min-w-0 pr-2">
+                <span className="text-[10px] text-slate-400 font-bold block">Razón Social / Nombre:</span>
+                <span className="font-bold text-xs text-white truncate block select-all" title={invName}>{invName || '—'}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => copyToClipboard(invName, 'name')}
+                disabled={!invName}
+                className="px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-[11px] font-bold flex items-center space-x-1 transition-all active:scale-95 disabled:opacity-40 flex-shrink-0 cursor-pointer"
+                title="Copiar nombre / razón social"
+              >
+                {copiedKey === 'name' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedKey === 'name' ? '¡Copiado!' : 'Copiar'}</span>
+              </button>
+            </div>
+
+            {/* Fiscal Address */}
+            <div className="bg-slate-800/80 rounded-xl p-2.5 border border-slate-700/60 flex items-center justify-between sm:col-span-2">
+              <div className="min-w-0 pr-2">
+                <span className="text-[10px] text-slate-400 font-bold block">Domicilio Fiscal:</span>
+                <span className="font-medium text-xs text-slate-300 truncate block select-all" title={invAddress}>{invAddress || '—'}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => copyToClipboard(invAddress, 'address')}
+                disabled={!invAddress}
+                className="px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-[11px] font-bold flex items-center space-x-1 transition-all active:scale-95 disabled:opacity-40 flex-shrink-0 cursor-pointer"
+                title="Copiar dirección fiscal"
+              >
+                {copiedKey === 'address' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedKey === 'address' ? '¡Copiado!' : 'Copiar'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Form to Register Manual Invoice Number */}
+          <form onSubmit={handleSaveInvoice} className="pt-2 border-t border-slate-800 flex flex-col sm:flex-row items-center gap-2">
+            <div className="relative flex-1 w-full">
+              <input
+                type="text"
+                value={invoiceNumberInput}
+                onChange={(e) => setInvoiceNumberInput(e.target.value)}
+                placeholder="N° Comprobante emitido en NubeFact (ej. F001-000123 / B001-000456)"
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-red transition-all font-mono"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isSavingInvoice}
+              className="w-full sm:w-auto bg-brand-red hover:bg-red-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center justify-center space-x-1.5 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex-shrink-0 shadow"
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span>{isSavingInvoice ? 'Guardando...' : 'Guardar Comprobante'}</span>
+            </button>
+          </form>
+        </div>
 
         {/* Modal Body: Products List */}
         <div className="space-y-3">
           <h4 className="font-extrabold text-gray-900 text-xs uppercase tracking-wider flex items-center text-brand-blue">
-            <Package className="w-4 h-4 mr-1.5 text-brand-red" /> Productos del Pedido ({(selectedOrder.items || []).length})
+            <Package className="w-4 h-4 mr-1.5 text-brand-red" /> Productos del Pedido ({(localOrder.items || []).length})
           </h4>
           <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200 divide-y divide-gray-200/60 max-h-56 overflow-y-auto space-y-2">
             {loadingDetail ? (
@@ -182,10 +274,10 @@ const OrderDetailsModal = memo(function OrderDetailsModal({ selectedOrder, loadi
                 <Clock className="w-4 h-4 animate-spin text-brand-blue" />
                 <span>Cargando detalle e imágenes de productos...</span>
               </div>
-            ) : (selectedOrder.items || []).length === 0 ? (
+            ) : (localOrder.items || []).length === 0 ? (
               <p className="text-xs text-gray-400 text-center py-2 font-medium">No hay items registrados en el detalle de esta orden.</p>
             ) : (
-              (selectedOrder.items || []).map((item) => {
+              (localOrder.items || []).map((item) => {
                 const prodImg = item.product?.images?.find((i) => i.is_primary)?.image_url || item.product?.images?.[0]?.image_url || '/placeholder-product.png';
                 const unitPrice = Number(item.unit_price) || 0;
                 const itemSubtotal = unitPrice * item.quantity;
@@ -222,33 +314,29 @@ const OrderDetailsModal = memo(function OrderDetailsModal({ selectedOrder, loadi
               <User className="w-3.5 h-3.5 mr-1.5 text-brand-red" /> Datos del Cliente & Comprobante
             </h4>
             <div className="space-y-1 text-gray-700">
-              <p><strong>Cliente / Destinatario:</strong> {selectedOrder.shipping_address?.recipient_name || selectedOrder.user?.name || 'Cliente'}</p>
-              {selectedOrder.user?.name && selectedOrder.shipping_address?.recipient_name && selectedOrder.user.name.trim().toLowerCase() !== selectedOrder.shipping_address.recipient_name.trim().toLowerCase() && (
-                <p className="text-gray-500 text-[11px]"><strong>Titular de la cuenta:</strong> {selectedOrder.user.name}</p>
+              <p><strong>Cliente / Destinatario:</strong> {localOrder.shipping_address?.recipient_name || localOrder.user?.name || 'Cliente'}</p>
+              {localOrder.user?.name && localOrder.shipping_address?.recipient_name && localOrder.user.name.trim().toLowerCase() !== localOrder.shipping_address.recipient_name.trim().toLowerCase() && (
+                <p className="text-gray-500 text-[11px]"><strong>Titular de la cuenta:</strong> {localOrder.user.name}</p>
               )}
-              <p><strong>Email:</strong> {selectedOrder.user?.email || 'No especificado'}</p>
-              <p><strong>Teléfono:</strong> {selectedOrder.shipping_address?.phone || selectedOrder.user?.phone || 'No especificado'}</p>
+              <p><strong>Email:</strong> {localOrder.user?.email || 'No especificado'}</p>
+              <p><strong>Teléfono:</strong> {localOrder.shipping_address?.phone || localOrder.user?.phone || 'No especificado'}</p>
               
               <div className="pt-2 border-t border-gray-200 mt-2 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <p><strong>Tipo:</strong> <span className="uppercase font-bold text-brand-blue">{selectedOrder.invoice_info?.invoice_type || 'Boleta'}</span></p>
+                  <p><strong>Tipo:</strong> <span className="uppercase font-bold text-brand-blue">{localOrder.invoice_info?.invoice_type || 'Boleta'}</span></p>
                   {isInvoiceIssued ? (
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
-                      <CheckCircle2 className="w-2.5 h-2.5 mr-1 text-emerald-600" /> Aceptado por SUNAT
-                    </span>
-                  ) : isInvoiceRejected ? (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-800 border border-red-300">
-                      <AlertTriangle className="w-2.5 h-2.5 mr-1 text-red-600" /> SUNAT: Rechazado
+                      <CheckCircle2 className="w-2.5 h-2.5 mr-1 text-emerald-600" /> Facturado
                     </span>
                   ) : (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-600 border border-gray-200">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">
                       Pendiente
                     </span>
                   )}
                 </div>
 
-                <p><strong>{selectedOrder.invoice_info?.document_type || 'DNI'}:</strong> <span className="font-mono font-bold text-gray-900">{selectedOrder.invoice_info?.document_number || '—'}</span></p>
-                {selectedOrder.invoice_info?.company_name && <p><strong>Razón Social:</strong> {selectedOrder.invoice_info.company_name}</p>}
+                <p><strong>{localOrder.invoice_info?.document_type || 'DNI'}:</strong> <span className="font-mono font-bold text-gray-900">{localOrder.invoice_info?.document_number || '—'}</span></p>
+                {localOrder.invoice_info?.company_name && <p><strong>Razón Social:</strong> {localOrder.invoice_info.company_name}</p>}
                 {seriesNum && <p><strong>N° Comprobante:</strong> <span className="font-mono font-bold text-emerald-700">{seriesNum}</span></p>}
               </div>
             </div>
@@ -260,11 +348,11 @@ const OrderDetailsModal = memo(function OrderDetailsModal({ selectedOrder, loadi
               <MapPin className="w-3.5 h-3.5 mr-1.5 text-brand-red" /> Dirección de Entrega
             </h4>
             <div className="space-y-1 text-gray-700">
-              <p><strong>Método:</strong> {selectedOrder.shipping_method || 'Envío a Domicilio'}</p>
-              <p><strong>Dirección:</strong> {selectedOrder.shipping_address?.address_line1 || 'Sin dirección'}</p>
-              {selectedOrder.shipping_address?.address_line2 && <p><strong>Ref / Dpto:</strong> {selectedOrder.shipping_address.address_line2}</p>}
-              <p><strong>Ubicación:</strong> {[selectedOrder.shipping_address?.district, selectedOrder.shipping_address?.province, selectedOrder.shipping_address?.department].filter(Boolean).join(', ') || 'Lima, Perú'}</p>
-              {selectedOrder.notes && <p className="pt-1 text-amber-700 font-medium"><strong>Notas:</strong> {selectedOrder.notes}</p>}
+              <p><strong>Método:</strong> {localOrder.shipping_method || 'Envío a Domicilio'}</p>
+              <p><strong>Dirección:</strong> {localOrder.shipping_address?.address_line1 || 'Sin dirección'}</p>
+              {localOrder.shipping_address?.address_line2 && <p><strong>Ref / Dpto:</strong> {localOrder.shipping_address.address_line2}</p>}
+              <p><strong>Ubicación:</strong> {[localOrder.shipping_address?.district, localOrder.shipping_address?.province, localOrder.shipping_address?.department].filter(Boolean).join(', ') || 'Lima, Perú'}</p>
+              {localOrder.notes && <p className="pt-1 text-amber-700 font-medium"><strong>Notas:</strong> {localOrder.notes}</p>}
             </div>
           </div>
         </div>
@@ -277,36 +365,36 @@ const OrderDetailsModal = memo(function OrderDetailsModal({ selectedOrder, loadi
           <div className="space-y-1">
             <div className="flex justify-between text-gray-600">
               <span>Subtotal Productos:</span>
-              <span className="font-mono font-bold">S/ {Number(selectedOrder.subtotal).toFixed(2)}</span>
+              <span className="font-mono font-bold">S/ {Number(localOrder.subtotal).toFixed(2)}</span>
             </div>
-            {Number(selectedOrder.discount_amount) > 0 && (
+            {Number(localOrder.discount_amount) > 0 && (
               <div className="flex justify-between text-emerald-600 font-semibold">
-                <span>Descuento ({selectedOrder.coupon_code || 'Cupón'}):</span>
-                <span className="font-mono font-bold">- S/ {Number(selectedOrder.discount_amount).toFixed(2)}</span>
+                <span>Descuento ({localOrder.coupon_code || 'Cupón'}):</span>
+                <span className="font-mono font-bold">- S/ {Number(localOrder.discount_amount).toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between text-gray-600">
               <span>Costo de Envío:</span>
-              <span className="font-mono font-bold">S/ {Number(selectedOrder.shipping_cost).toFixed(2)}</span>
+              <span className="font-mono font-bold">S/ {Number(localOrder.shipping_cost).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm font-black text-gray-900 pt-2 border-t border-slate-200">
               <span>Monto Total:</span>
-              <span className="text-brand-red font-mono">S/ {Number(selectedOrder.total).toFixed(2)}</span>
+              <span className="text-brand-red font-mono">S/ {Number(localOrder.total).toFixed(2)}</span>
             </div>
           </div>
 
           <div className="pt-2 text-[11px] text-gray-500 space-y-1 border-t border-slate-200 mt-2">
-            <p><strong>Forma de Pago:</strong> {selectedOrder.payment_method === 'bank_transfer' ? 'Transferencia Bancaria Directa' : 'Mercado Pago'}</p>
-            {selectedOrder.mp_payment_id && <p><strong>ID Pago Mercado Pago:</strong> <span className="font-mono text-gray-800 font-bold">{selectedOrder.mp_payment_id}</span></p>}
-            {selectedOrder.preference_id && <p><strong>ID Preferencia MP:</strong> <span className="font-mono text-gray-400 text-[10px]">{selectedOrder.preference_id}</span></p>}
+            <p><strong>Forma de Pago:</strong> {localOrder.payment_method === 'bank_transfer' ? 'Transferencia Bancaria Directa' : 'Mercado Pago'}</p>
+            {localOrder.mp_payment_id && <p><strong>ID Pago Mercado Pago:</strong> <span className="font-mono text-gray-800 font-bold">{localOrder.mp_payment_id}</span></p>}
+            {localOrder.preference_id && <p><strong>ID Preferencia MP:</strong> <span className="font-mono text-gray-400 text-[10px]">{localOrder.preference_id}</span></p>}
           </div>
         </div>
 
         {/* Modal Actions Footer */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-4 border-t border-gray-200">
-          {isInvoiceIssued && selectedOrder.invoice_pdf_url ? (
+          {isInvoiceIssued && localOrder.invoice_pdf_url ? (
             <a
-              href={selectedOrder.invoice_pdf_url}
+              href={localOrder.invoice_pdf_url}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2 transition-all active:scale-95 shadow-md cursor-pointer"
@@ -315,10 +403,10 @@ const OrderDetailsModal = memo(function OrderDetailsModal({ selectedOrder, loadi
               <span>Descargar / Imprimir Comprobante (PDF)</span>
               <ExternalLink className="w-3.5 h-3.5 ml-1 opacity-80" />
             </a>
-          ) : isInvoiceRejected ? (
-            <div className="w-full sm:w-auto text-xs text-red-600 font-bold flex items-center space-x-1.5 py-1">
-              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-              <span>Emisión de comprobante bloqueada por rechazo de SUNAT</span>
+          ) : isInvoiceIssued ? (
+            <div className="w-full sm:w-auto text-xs text-emerald-700 font-bold flex items-center space-x-1.5 py-1">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+              <span>Comprobante registrado: {seriesNum}</span>
             </div>
           ) : (
             <button
@@ -334,7 +422,7 @@ const OrderDetailsModal = memo(function OrderDetailsModal({ selectedOrder, loadi
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto bg-brand-dark hover:bg-gray-800 text-white font-extrabold px-6 py-2.5 rounded-xl text-xs transition-all active:scale-95 shadow-md"
+            className="w-full sm:w-auto bg-brand-dark hover:bg-gray-800 text-white font-extrabold px-6 py-2.5 rounded-xl text-xs transition-all active:scale-95 shadow-md cursor-pointer"
           >
             Cerrar Detalle
           </button>

@@ -13,5 +13,6 @@ router.get('/orders/:id', adminController.getAdminOrderDetail);
 router.put('/users/:id/role', requireRole('super_admin'), adminController.updateUserRole);
 router.get('/audit-logs', adminController.getAuditLogs);
 router.post('/sync-cuadrado', adminController.syncCuadradoCatalog);
+router.patch('/orders/:id/invoice', adminController.updateOrderInvoice);
 
 module.exports = router;

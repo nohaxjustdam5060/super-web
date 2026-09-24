@@ -3,10 +3,11 @@ const logger = require('../config/logger');
 
 class SyncCron {
   /**
-   * Starts a 5-minute interval timer for automatic background catalog synchronization
+   * Starts an interval timer for automatic background catalog synchronization
    */
-  startCron(intervalMs = 5 * 60 * 1000) { // 5 minutes
-    logger.info('⏰ [SyncCron] Iniciando programador de sincronización de catálogo cada 5 minutos...');
+  startCron(intervalMs = parseInt(process.env.CUADRADO_SYNC_INTERVAL_MS, 10) || 5 * 60 * 1000) {
+    const minutes = Math.round(intervalMs / 60000);
+    logger.info(`⏰ [SyncCron] Iniciando programador de sincronización de catálogo cada ${minutes} minutos (${intervalMs}ms)...`);
 
     // Run initial sync 10 seconds after server startup to avoid startup congestion
     setTimeout(() => {
@@ -15,10 +16,10 @@ class SyncCron {
       });
     }, 10000);
 
-    // Schedule 5-minute interval
+    // Schedule interval
     const timer = setInterval(() => {
       cuadradoSyncService.syncCatalog().catch((err) => {
-        logger.warn(`[SyncCron] Sincronización omitida por falla en servidor origen (cuadrado.pe): ${err.message}. Se reintentará en 5 minutos.`);
+        logger.warn(`[SyncCron] Sincronización omitida por falla en API de Cuadrado: ${err.message}. Se reintentará en el próximo ciclo.`);
       });
     }, intervalMs);
 
