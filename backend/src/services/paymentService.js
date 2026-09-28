@@ -32,6 +32,22 @@ class PaymentService {
         });
       }
 
+      // Include gateway surcharge (5%) if applicable
+      const subtotal = Number(order.subtotal) || 0;
+      const discount = Number(order.discount_amount) || 0;
+      const baseAmount = Math.max(0, subtotal - discount + shippingCost);
+      const isMercadoPago = order.payment_method === 'mercadopago' || !order.payment_method;
+      const surcharge = isMercadoPago ? parseFloat((baseAmount * 0.05).toFixed(2)) : 0;
+      if (surcharge > 0) {
+        items.push({
+          id: 'GATEWAY_SURCHARGE',
+          title: 'Recargo por pasarela de pago (5%)',
+          quantity: 1,
+          unit_price: surcharge,
+          currency_id: 'PEN'
+        });
+      }
+
       const recipientName = order.shipping_address?.recipient_name || order.user?.name || 'Cliente';
       const recipientEmail = order.user?.email || 'cliente@example.com';
 

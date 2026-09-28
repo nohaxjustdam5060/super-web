@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Plus, Edit2, Package, Check, X, ToggleLeft, ToggleRight, Sparkles, Filter, Search, ChevronLeft, ChevronRight, LayoutDashboard } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import ProductFormModal from '../components/ProductFormModal';
+import ProductImage from '../components/ProductImage';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -264,19 +265,25 @@ export default function AdminProducts() {
                 </td>
               </tr>
             ) : (
-              products.map((p) => (
-                <tr key={p.id} className={`hover:bg-gray-50/80 transition-colors ${!p.is_active ? 'bg-slate-50/50 opacity-80' : ''}`}>
-                  <td className="p-4 flex items-center space-x-3 min-w-[220px]">
-                    <img
-                      src={p.images?.find((i) => i.is_primary)?.image_url || p.images?.[0]?.image_url || 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=100&auto=format&fit=crop'}
-                      alt=""
-                      className="w-10 h-10 object-contain rounded-xl bg-gray-50 p-1 border border-gray-200 flex-shrink-0"
-                    />
-                    <div>
-                      <span className="font-bold text-gray-900 line-clamp-1 max-w-xs">{p.name}</span>
-                      <span className="text-[10px] text-gray-400 block">{p.brand?.name || 'SUPERLAPTOP'}</span>
-                    </div>
-                  </td>
+              products.map((p) => {
+                const prodImg = p.images?.find((i) => i.is_primary)?.image_url || p.images?.[0]?.image_url || p.image_url || null;
+                return (
+                  <tr key={p.id} className={`hover:bg-gray-50/80 transition-colors ${!p.is_active ? 'bg-slate-50/50 opacity-80' : ''}`}>
+                    <td className="p-4 flex items-center space-x-3 min-w-[220px]">
+                      <div className="w-10 h-10 rounded-xl bg-gray-50 p-1 border border-gray-200 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                        <ProductImage
+                          src={prodImg}
+                          alt={p.name}
+                          className="w-full h-full object-contain"
+                          size="xs"
+                          showText={false}
+                        />
+                      </div>
+                      <div>
+                        <span className="font-bold text-gray-900 line-clamp-1 max-w-xs">{p.name}</span>
+                        <span className="text-[10px] text-gray-400 block">{p.brand?.name || 'SUPERLAPTOP'}</span>
+                      </div>
+                    </td>
                   <td className="p-4 font-mono text-gray-500 whitespace-nowrap">{p.sku}</td>
                   <td className="p-4 text-gray-600 whitespace-nowrap">{p.category?.name || '—'}</td>
                   <td className="p-4 font-bold text-gray-900 whitespace-nowrap">S/ {Number(p.price).toFixed(2)}</td>
@@ -314,8 +321,9 @@ export default function AdminProducts() {
                     </button>
                   </td>
                 </tr>
-              ))
-            )}
+              );
+            })
+          )}
           </tbody>
         </table>
       </div>

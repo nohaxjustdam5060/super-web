@@ -90,7 +90,10 @@ async function createOrderCore({
   }
 
   const calculatedShippingCost = shipping_cost !== undefined ? Number(shipping_cost) : 15.00;
-  const total = Math.max(0, subtotal - discountAmount + calculatedShippingCost);
+  const baseAmount = Math.max(0, subtotal - discountAmount + calculatedShippingCost);
+  const isMercadoPago = payment_method === 'mercadopago';
+  const gatewaySurcharge = isMercadoPago ? parseFloat((baseAmount * 0.05).toFixed(2)) : 0.00;
+  const total = parseFloat((baseAmount + gatewaySurcharge).toFixed(2));
 
   // Save address as default if user checked "Guardar mi información" and is not pickup
   if (userId && shipping_address && shipping_address.save_info && !shipping_address.is_pickup && shipping_address.address_line1) {

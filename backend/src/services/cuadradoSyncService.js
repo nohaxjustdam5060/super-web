@@ -791,19 +791,32 @@ class CuadradoSyncService {
       return { success: false, message: 'Orden no proporcionada' };
     }
 
-    const orderNumber = order.order_number || order.id;
+    const orderNumber = order.order_number || order.id || 'TEST';
     const items = order.items || [];
 
     if (items.length === 0) {
       logger.info(`[CuadradoSync] Orden #${orderNumber} no tiene items para decrementar stock.`);
-      return { success: true, processed: 0 };
+      return { success: true, processed: 0, results: [] };
     }
 
-    logger.info(`📦 [CuadradoSync] Iniciando decremento de stock para Orden #${orderNumber} (${items.length} items)...`);
+    // Filter out virtual/service items (shipping, fees, surcharges, etc.)
+    const physicalItems = items.filter((item) => {
+      if (!item || !item.product_id) return false;
+      const pid = String(item.product_id).toUpperCase();
+      if (pid === 'SHIPPING' || pid === 'GATEWAY_SURCHARGE' || pid.startsWith('VIRTUAL_')) return false;
+      return true;
+    });
+
+    if (physicalItems.length === 0) {
+      logger.info(`[CuadradoSync] Orden #${orderNumber} no tiene items físicos para decrementar stock.`);
+      return { success: true, processed: 0, results: [] };
+    }
+
+    logger.info(`📦 [CuadradoSync] Iniciando decremento de stock para Orden #${orderNumber} (${physicalItems.length} items físicos de ${items.length} totales)...`);
 
     try {
       // 1. Fetch products from DB to get their external_id and local stock
-      const productIds = items.map((i) => i.product_id).filter(Boolean);
+      const productIds = physicalItems.map((i) => i.product_id).filter(Boolean);
       const dbProducts = await Product.findAll({
         where: { id: { [Op.in]: productIds } },
         attributes: ['id', 'external_id', 'stock', 'name', 'sku']
@@ -812,7 +825,7 @@ class CuadradoSyncService {
       const productMap = new Map(dbProducts.map((p) => [String(p.id), p]));
 
       // 2. Prepare decrement tasks
-      const decrementTasks = items.map(async (item) => {
+      const decrementTasks = physicalItems.map(async (item) => {
         const product = productMap.get(String(item.product_id));
         const quantity = Number(item.quantity) || 1;
         const reason = `Venta online #${orderNumber}`;
@@ -845,12 +858,13 @@ class CuadradoSyncService {
       const results = await Promise.allSettled(decrementTasks);
       const successfulCount = results.filter((r) => r.status === 'fulfilled' && r.value?.success).length;
 
-      logger.info(`✅ [CuadradoSync] Decremento completado para Orden #${orderNumber}: ${successfulCount}/${items.length} items procesados exitosamente.`);
+      logger.info(`✅ [CuadradoSync] Decremento completado para Orden #${orderNumber}: ${successfulCount}/${physicalItems.length} items físicos procesados exitosamente.`);
 
       return {
         success: true,
         orderNumber,
         totalItems: items.length,
+        physicalItemsCount: physicalItems.length,
         successfulCount,
         results: results.map((r) => (r.status === 'fulfilled' ? r.value : { success: false, error: r.reason?.message }))
       };

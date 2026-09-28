@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Search, ShoppingBag, User, Cpu, Scale, Menu, X, ShieldCheck, Truck, Headphones,
+  Search, ShoppingBag, User, Cpu, Menu, X, ShieldCheck, Truck, Headphones,
   ChevronDown, ChevronRight, Laptop, Gamepad2, Briefcase, Smile, Feather, RefreshCw,
   Monitor, Tv, Box, HardDrive, Database, Layers, Zap, Settings, Smartphone, Tablet,
   Watch, Keyboard, Square, Radio, Mic, BatteryCharging, Wifi, Sliders, Printer,
@@ -9,9 +9,9 @@ import {
 } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
-import { useCompareStore } from '../store/useCompareStore';
 import { WHATSAPP_NUMBER, STORE_NAME } from '../utils/whatsappMessage';
 import axiosClient from '../api/axiosClient';
+import ProductImage from './ProductImage';
 
 // Map icon names from DB to Lucide Icon components
 const ICON_MAP = {
@@ -29,6 +29,7 @@ function DynamicIcon({ name, className = "w-4 h-4" }) {
 export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
   const [categories, setCategories] = useState([]);
+  const [hasOffers, setHasOffers] = useState(false);
   const [activeParentSlug, setActiveParentSlug] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedMobileCategory, setExpandedMobileCategory] = useState(null);
@@ -45,7 +46,6 @@ export default function Navbar() {
   const cartItems = useCartStore((state) => state.items);
   const openCart = useCartStore((state) => state.openCart);
   const user = useAuthStore((state) => state.user);
-  const comparedProducts = useCompareStore((state) => state.comparedProducts);
 
   const totalCartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -55,26 +55,32 @@ export default function Navbar() {
       .then((res) => {
         if (res.data.success) {
           setCategories(res.data.categories || []);
+          setHasOffers(Boolean(res.data.hasOffers));
         }
       })
       .catch((err) => console.error('[Navbar] Error loading categories:', err));
   }, []);
 
-  // Live Search Debounce Effect (280ms)
+  // Live Search Debounce & AbortController Effect (280ms)
   useEffect(() => {
     const trimmed = searchQuery.trim();
     if (trimmed.length < 2) {
       setLiveSearchResults([]);
       setShowLiveSearch(false);
+      setLoadingLiveSearch(false);
       return;
     }
 
     setLoadingLiveSearch(true);
     setShowLiveSearch(true);
 
+    const controller = new AbortController();
+
     const timer = setTimeout(() => {
       axiosClient
-        .get(`/products?search=${encodeURIComponent(trimmed)}&limit=6`)
+        .get(`/products?search=${encodeURIComponent(trimmed)}&limit=6`, {
+          signal: controller.signal
+        })
         .then((res) => {
           if (res.data.success) {
             setLiveSearchResults(res.data.products || []);
@@ -83,15 +89,24 @@ export default function Navbar() {
           }
         })
         .catch((err) => {
+          // Silently ignore aborted / canceled requests to avoid console noise or stale state updates
+          if (err.name === 'CanceledError' || err.name === 'AbortError' || err.code === 'ERR_CANCELED') {
+            return;
+          }
           console.error('[LiveSearch] Error fetching results:', err);
           setLiveSearchResults([]);
         })
         .finally(() => {
-          setLoadingLiveSearch(false);
+          if (!controller.signal.aborted) {
+            setLoadingLiveSearch(false);
+          }
         });
-    }, 100);
+    }, 280);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [searchQuery]);
 
   // Click Outside & Escape key listener to close Live Search dropdown
@@ -248,7 +263,7 @@ export default function Navbar() {
               ) : liveSearchResults.length > 0 ? (
                 <div className="divide-y divide-slate-800">
                   {liveSearchResults.map((prod) => {
-                    const img = prod.images?.find((i) => i.is_primary)?.image_url || prod.images?.[0]?.image_url || prod.image_url || 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=300&auto=format&fit=crop';
+                    const img = prod.images?.find((i) => i.is_primary)?.image_url || prod.images?.[0]?.image_url || prod.image_url || null;
                     const isOffer = Boolean(prod.offer_price && Number(prod.offer_price) < Number(prod.price));
                     const currentPrice = Number(isOffer ? prod.offer_price : prod.price);
                     const formattedPrice = `S/ ${currentPrice.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -261,7 +276,13 @@ export default function Navbar() {
                         className="w-full text-left p-3 hover:bg-slate-800/80 transition-colors flex items-center space-x-3.5 group cursor-pointer"
                       >
                         <div className="w-11 h-11 bg-white rounded-md p-1 flex-shrink-0 flex items-center justify-center border border-slate-700/60 overflow-hidden">
-                          <img src={img} alt={prod.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform" />
+                          <ProductImage
+                            src={img}
+                            alt={prod.name}
+                            className="w-full h-full object-contain group-hover:scale-105 transition-transform"
+                            size="xs"
+                            showText={false}
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="text-xs font-extrabold text-white group-hover:text-brand-red-accent transition-colors truncate">
@@ -312,22 +333,8 @@ export default function Navbar() {
           )}
         </form>
 
-        {/* Header Right Actions (Profile, Cart & Hamburger on Mobile/Tablet; Compare HIDDEN on mobile) */}
+        {/* Header Right Actions (Profile, Cart & Hamburger on Mobile/Tablet) */}
         <div className="flex items-center space-x-1.5 sm:space-x-2.5 flex-nowrap justify-end flex-shrink-0">
-          {/* Compare Button (HIDDEN ON MOBILE, VISIBLE ON SM+) */}
-          <Link
-            to="/compare"
-            className="hidden sm:flex items-center p-1.5 text-slate-300 hover:text-white transition-colors relative"
-            title="Comparar productos"
-          >
-            <Scale className="w-5 h-5" />
-            {comparedProducts.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-brand-red text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center shadow">
-                {comparedProducts.length}
-              </span>
-            )}
-          </Link>
-
           {/* 1. User Profile / Login */}
           {user ? (
             <Link to="/profile" className="flex items-center space-x-1.5 text-xs font-bold text-slate-200 hover:text-white p-1" title="Mi Cuenta">
@@ -417,15 +424,17 @@ export default function Navbar() {
               );
             })}
 
-            {/* Integrated "Ofertas" Button (In same row) */}
-            <Link
-              to="/catalog?is_featured=true"
-              className="px-3 py-2.5 text-xs font-black text-amber-400 hover:text-amber-300 flex items-center space-x-1 uppercase tracking-wider flex-shrink-0 border-b-2 border-transparent hover:border-amber-400 transition-colors"
-              onMouseEnter={() => setActiveParentSlug(null)}
-            >
-              <Flame className="w-4 h-4 mr-1 text-amber-400 animate-pulse" />
-              <span>Ofertas</span>
-            </Link>
+            {/* Integrated "Ofertas" Button (Visible only if there are active offers) */}
+            {hasOffers && (
+              <Link
+                to="/catalog?is_featured=true"
+                className="px-3 py-2.5 text-xs font-black text-amber-400 hover:text-amber-300 flex items-center space-x-1 uppercase tracking-wider flex-shrink-0 border-b-2 border-transparent hover:border-amber-400 transition-colors"
+                onMouseEnter={() => setActiveParentSlug(null)}
+              >
+                <Flame className="w-4 h-4 mr-1 text-amber-400 animate-pulse" />
+                <span>Ofertas</span>
+              </Link>
+            )}
           </div>
         </div>
 
@@ -528,17 +537,19 @@ export default function Navbar() {
             <Link
               to="/catalog"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex-1 bg-brand-red text-white text-center py-2.5 rounded-xl font-bold text-xs uppercase shadow"
+              className={`${hasOffers ? 'flex-1' : 'w-full'} bg-brand-red text-white text-center py-2.5 rounded-xl font-bold text-xs uppercase shadow`}
             >
               Todo el Catálogo
             </Link>
-            <Link
-              to="/catalog?is_featured=true"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex-1 bg-amber-500 text-slate-950 font-black text-center py-2.5 rounded-xl text-xs uppercase shadow"
-            >
-              ⚡ Ofertas
-            </Link>
+            {hasOffers && (
+              <Link
+                to="/catalog?is_featured=true"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex-1 bg-amber-500 text-slate-950 font-black text-center py-2.5 rounded-xl text-xs uppercase shadow"
+              >
+                ⚡ Ofertas
+              </Link>
+            )}
           </div>
 
           {/* Categories Accordion */}

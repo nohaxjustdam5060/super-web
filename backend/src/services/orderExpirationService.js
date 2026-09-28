@@ -12,7 +12,9 @@ class OrderExpirationService {
 
       const expiredOrders = await Order.findAll({
         where: {
-          status: 'pending',
+          status: {
+            [Op.in]: ['pending', 'payment_review']
+          },
           createdAt: {
             [Op.lt]: twentyFourHoursAgo
           }

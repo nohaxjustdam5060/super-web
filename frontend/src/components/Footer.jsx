@@ -99,7 +99,6 @@ export default function Footer() {
           <ul className="space-y-2.5 text-sm">
             <li><Link to="/profile" className="hover:text-white transition-colors">Estado de mi Pedido</Link></li>
             <li><Link to="/politicas?tab=envios" className="hover:text-white transition-colors">Envíos y Despacho</Link></li>
-            <li><Link to="/compare" className="hover:text-white transition-colors">Comparador de Componentes</Link></li>
             <li><Link to="/libro-de-reclamaciones" className="hover:text-brand-red-accent transition-colors font-medium text-gray-200">Libro de Reclamaciones</Link></li>
             <li><Link to="/politicas?tab=terminos" className="hover:text-white transition-colors">Términos y Condiciones</Link></li>
             <li><Link to="/politicas?tab=garantia" className="hover:text-white transition-colors">Políticas de Garantía</Link></li>

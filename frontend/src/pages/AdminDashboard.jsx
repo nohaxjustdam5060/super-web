@@ -111,7 +111,11 @@ export default function AdminDashboard() {
     try {
       const res = await axiosClient.put(`/orders/${orderId}/verify-bank-transfer`);
       if (res.data.success) {
-        alert('¡Transferencia bancaria verificada exitosamente! La orden ha sido marcada como PAGADA.');
+        if (res.data.warning) {
+          alert(`⚠️ Pago verificado, pero con advertencia:\n\n${res.data.warning}\n\nPor favor verifica el stock en Cuadrado ERP.`);
+        } else {
+          alert('✅ ¡Transferencia bancaria verificada exitosamente!\nLa orden ha sido marcada como PAGADA y el stock actualizado.');
+        }
         queryClient.invalidateQueries({ queryKey: ['adminMetrics'] });
         queryClient.invalidateQueries({ queryKey: ['adminOrders'] });
         if (selectedOrder && selectedOrder.id === orderId) {
@@ -119,7 +123,11 @@ export default function AdminDashboard() {
         }
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Error al verificar la transferencia bancaria.');
+      if (err.response?.status === 409) {
+        alert(`❌ ERROR DE STOCK (409 CONFLICT):\n\n${err.response?.data?.message || 'Stock insuficiente para aprobar esta orden.'}\n\nLa orden se mantiene en revisión.`);
+      } else {
+        alert(`❌ Error al verificar transferencia:\n\n${err.response?.data?.message || err.message}`);
+      }
     } finally {
       setVerifyingId(null);
     }

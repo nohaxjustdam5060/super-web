@@ -17,7 +17,7 @@ exports.getProducts = async (req, res, next) => {
     if (sort === 'price_desc') order = [['price', 'DESC']];
     if (sort === 'name') order = [['name', 'ASC']];
 
-    const { count, rows: products } = await Product.findAndCountAll({
+    let { count, rows: products } = await Product.findAndCountAll({
       where,
       limit: Number(limit),
       offset,
@@ -29,6 +29,28 @@ exports.getProducts = async (req, res, next) => {
       ],
       distinct: true
     });
+
+    // Fallback for featured products: If is_featured requested and returns 0 products,
+    // automatically fallback to active products with stock > 0 ordered by highest stock
+    if ((is_featured === 'true' || is_featured === true) && products.length === 0 && !search && !category_id && !brand_id) {
+      const fallbackResult = await Product.findAndCountAll({
+        where: {
+          is_active: true,
+          stock: { [require('sequelize').Op.gt]: 0 }
+        },
+        limit: Number(limit),
+        offset,
+        order: [['stock', 'DESC'], ['createdAt', 'DESC']],
+        include: [
+          { model: Category, as: 'category', attributes: ['id', 'name', 'slug'] },
+          { model: Brand, as: 'brand', attributes: ['id', 'name', 'slug', 'logo_url'] },
+          { model: ProductImage, as: 'images', attributes: ['id', 'image_url', 'is_primary', 'order'] }
+        ],
+        distinct: true
+      });
+      products = fallbackResult.rows;
+      count = fallbackResult.count;
+    }
 
     const pageNum = Math.max(1, Number(page) || 1);
     const limitNum = Math.max(1, Number(limit) || 12);
@@ -121,7 +143,16 @@ exports.getCategories = async (req, res, next) => {
       });
     }
 
-    return res.json({ success: true, categories });
+    // Check if there are active products with discount offers and stock > 0
+    const offersCount = await Product.count({
+      where: {
+        is_active: true,
+        stock: { [require('sequelize').Op.gt]: 0 },
+        offer_price: { [require('sequelize').Op.and]: [{ [require('sequelize').Op.ne]: null }, { [require('sequelize').Op.gt]: 0 }] }
+      }
+    });
+
+    return res.json({ success: true, categories, hasOffers: offersCount > 0 });
   } catch (error) {
     next(error);
   }

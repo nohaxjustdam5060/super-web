@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, MessageSquare } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import { generateWhatsAppOrderUrl } from '../utils/whatsappMessage';
+import ProductImage from './ProductImage';
 
 const CartDrawer = memo(function CartDrawer() {
   const { items, isOpen, closeCart, updateQuantity, removeItem, getSubtotal } = useCartStore();
@@ -63,15 +64,15 @@ const CartDrawer = memo(function CartDrawer() {
             ) : (
               items.map((item) => (
                 <div key={item.id || item.product_id} className="flex items-center space-x-4 p-3 bg-gray-50 border border-gray-200 rounded-xl relative group">
-                  <img
-                    src={item.image_url || 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=150&auto=format&fit=crop'}
-                    alt={item.name}
-                    width={64}
-                    height={64}
-                    decoding="async"
-                    loading="lazy"
-                    className="w-16 h-16 object-contain rounded-lg bg-white p-1 border border-gray-100 flex-shrink-0"
-                  />
+                  <div className="w-16 h-16 rounded-lg bg-white p-1 border border-gray-100 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                    <ProductImage
+                      src={item.image_url}
+                      alt={item.name}
+                      className="w-full h-full object-contain"
+                      size="sm"
+                      fallbackText="Sin imagen"
+                    />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-bold text-xs text-gray-900 line-clamp-2">{item.name}</h4>
                     <p className="text-xs text-brand-red font-black mt-1">

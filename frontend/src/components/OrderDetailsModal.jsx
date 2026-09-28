@@ -4,6 +4,7 @@ import {
   CheckCircle2, AlertTriangle, FileText, ExternalLink, Copy, Check, Receipt, Save
 } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
+import ProductImage from './ProductImage';
 
 const renderShippingBadge = (shippingMethodStr, shippingAddress) => {
   const sm = (shippingMethodStr || '').toLowerCase();
@@ -278,20 +279,21 @@ const OrderDetailsModal = memo(function OrderDetailsModal({ selectedOrder, loadi
               <p className="text-xs text-gray-400 text-center py-2 font-medium">No hay items registrados en el detalle de esta orden.</p>
             ) : (
               (localOrder.items || []).map((item) => {
-                const prodImg = item.product?.images?.find((i) => i.is_primary)?.image_url || item.product?.images?.[0]?.image_url || '/placeholder-product.png';
+                const prodImg = item.product?.images?.find((i) => i.is_primary)?.image_url || item.product?.images?.[0]?.image_url || item.product?.image_url || null;
                 const unitPrice = Number(item.unit_price) || 0;
                 const itemSubtotal = unitPrice * item.quantity;
                 return (
                   <div key={item.id || item.product_id} className="pt-2 first:pt-0 flex items-center justify-between text-xs">
                     <div className="flex items-center space-x-3">
-                      <img
-                        src={prodImg}
-                        alt={item.product_name || item.product?.name || 'Producto'}
-                        decoding="async"
-                        loading="lazy"
-                        className="w-12 h-12 object-cover rounded-xl border border-gray-200 bg-white flex-shrink-0"
-                        onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?auto=format&fit=crop&q=80&w=200'; }}
-                      />
+                      <div className="w-12 h-12 rounded-xl border border-gray-200 bg-white flex-shrink-0 flex items-center justify-center overflow-hidden">
+                        <ProductImage
+                          src={prodImg}
+                          alt={item.product_name || item.product?.name || 'Producto'}
+                          className="w-full h-full object-cover"
+                          size="xs"
+                          fallbackText="Sin imagen"
+                        />
+                      </div>
                       <div>
                         <p className="font-bold text-gray-900 line-clamp-1">{item.product_name || item.product?.name}</p>
                         <p className="text-[10px] text-gray-400 font-mono">SKU: {item.sku || item.product?.sku || 'N/A'}</p>

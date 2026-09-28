@@ -44,7 +44,7 @@ export default function Home() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-2">
           <div>
             <h2 className="text-2xl sm:text-3xl font-black text-gray-900">Categorías Principales</h2>
-            <p className="text-sm text-gray-500">Encuentra el equipo ideal para tu trabajo, estudio o gaming</p>
+            
           </div>
           <Link to="/catalog?category_id=laptops" className="text-brand-red font-bold text-sm flex items-center hover:underline">
             Ver todas las laptops <ChevronRight className="w-4 h-4 ml-1" />
@@ -57,25 +57,25 @@ export default function Home() {
               name: 'Laptops Gaming',
               slug: 'laptops-gaming',
               image: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=500&auto=format&fit=crop',
-              badge: 'Alto Rendimiento'
+              badge: ''
             },
             {
               name: 'Laptops de Consumo',
               slug: 'laptops-consumo',
               image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500&auto=format&fit=crop',
-              badge: 'Estudio y Trabajo'
+              badge: ''
             },
             {
               name: 'Laptops Empresariales',
               slug: 'laptops-empresariales',
               image: 'https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=500&auto=format&fit=crop',
-              badge: 'Seguridad & Pro'
+              badge: ''
             },
             {
               name: '2 en 1 / Convertibles',
               slug: 'convertibles',
               image: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=500&auto=format&fit=crop',
-              badge: 'Pantalla Táctil 360°'
+              badge: ''
             }
           ].map((cat, idx) => (
             <Link
@@ -111,7 +111,7 @@ export default function Home() {
       {/* 3. Productos Destacados (Carrusel 1 sola fila: 5 en Desktop, 2 en Móvil) */}
       <ProductCarousel
         title="Productos Destacados"
-        subtitle="Hardware seleccionado por rendimiento y disponibilidad inmediata"
+        subtitle=""
         icon={Flame}
         iconClassName="w-6 h-6 text-brand-red fill-brand-red"
         viewAllLink="/catalog?is_featured=true"
@@ -197,7 +197,7 @@ export default function Home() {
       {/* 5. Novedades (Carrusel 1 sola fila: 5 en Desktop, 2 en Móvil) */}
       <ProductCarousel
         title="Novedades"
-        subtitle="Productos añadidos recientemente"
+        subtitle=""
         icon={Sparkles}
         iconClassName="w-6 h-6 text-brand-red"
         viewAllLink="/catalog?sort=newest"

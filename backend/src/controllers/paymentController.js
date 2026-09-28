@@ -169,6 +169,15 @@ exports.createPreference = async (req, res, next) => {
         order.invoice_info = invoice_info;
       }
 
+      // Ensure payment_method is mercadopago and total includes 5% surcharge
+      const subtotal = Number(order.subtotal) || 0;
+      const discount = Number(order.discount_amount) || 0;
+      const shippingCost = Number(order.shipping_cost) || 0;
+      const baseAmount = Math.max(0, subtotal - discount + shippingCost);
+      const surcharge = parseFloat((baseAmount * 0.05).toFixed(2));
+      order.payment_method = 'mercadopago';
+      order.total = parseFloat((baseAmount + surcharge).toFixed(2));
+
       preference = await paymentService.createPreference(order);
 
       order.preference_id = preference.id;

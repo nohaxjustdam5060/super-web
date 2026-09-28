@@ -104,6 +104,12 @@ exports.processBankTransferPayment = async (req, res, next) => {
       if (shipping_cost !== undefined) order.shipping_cost = Number(shipping_cost);
       if (invoice_info) order.invoice_info = invoice_info;
       if (notes) order.notes = notes;
+
+      // Recalculate total with 0% surcharge for bank transfer
+      const subtotal = Number(order.subtotal) || 0;
+      const discount = Number(order.discount_amount) || 0;
+      const currentShippingCost = Number(order.shipping_cost) || 0;
+      order.total = Math.max(0, subtotal - discount + currentShippingCost);
       await order.save();
 
       // Create or update Payment record
@@ -166,6 +172,9 @@ exports.processBankTransferPayment = async (req, res, next) => {
 
     // Send Bank Transfer Instruction Email
     try {
+      const whatsappMsg = encodeURIComponent(`Hola SUPERLAPTOP, adjunto mi comprobante de transferencia para el Pedido #${order.order_number} por el monto de S/ ${Number(order.total).toFixed(2)}.`);
+      const whatsappUrl = `https://wa.me/51978529826?text=${whatsappMsg}`;
+
       await emailService.sendEmail({
         to: req.user.email,
         subject: `[SUPERLAPTOP] Reserva de Pedido #${order.order_number} - Instrucciones de Transferencia Bancaria`,
@@ -174,19 +183,33 @@ exports.processBankTransferPayment = async (req, res, next) => {
             <h2 style="color: #dc2626;">¡Tu pedido #${order.order_number} ha sido reservado!</h2>
             <p>Gracias por tu compra en <strong>SUPERLAPTOP</strong>. Tu pedido estará reservado durante <strong>24 horas</strong> mientras se verifica la transferencia bancaria.</p>
 
-            <h3 style="color: #1e3a8a;">Datos Bancarios para Transferir:</h3>
-            <ul>
-              <li><strong>BCP Soles:</strong> 191-98765432-0-89 (CCI: 002-191-0098765432089-54)</li>
-              <li><strong>Interbank Soles:</strong> 200-3001234567 (CCI: 003-200-003001234567-88)</li>
-              <li><strong>BBVA Soles:</strong> 0011-0123-0200987654 (CCI: 011-123-000200987654-12)</li>
-              <li><strong>Titular:</strong> SUPERLAPTOP E-COMMERCE S.A.C.</li>
+            <div style="background: #f1f5f9; padding: 14px; border-radius: 10px; margin-bottom: 16px;">
+              <p style="margin: 0; font-size: 13px;"><strong>Razón Social:</strong> CUADRADO TECHNOLOGY & ADVANCE E.I.R.L.</p>
+              <p style="margin: 4px 0 0; font-size: 13px;"><strong>RUC:</strong> 20606455543</p>
+            </div>
+
+            <h3 style="color: #1e3a8a; margin-bottom: 8px;">Cuentas Bancarias Oficiales (Soles):</h3>
+            <ul style="line-height: 1.6; font-size: 13px;">
+              <li><strong>BCP Soles:</strong> Cta: <code>191-8742112-0-60</code> | CCI: <code>00219100874211206058</code></li>
+              <li><strong>Interbank Soles:</strong> Cta: <code>200-3003161925</code> | CCI: <code>00320000300316192534</code></li>
+              <li><strong>BBVA Soles:</strong> Cta: <code>0011-0175-0100075566</code> | CCI: <code>01117500010007556678</code></li>
+              <li><strong>Scotiabank Soles:</strong> Cta: <code>000-2987321</code> | CCI: <code>00902100000298732173</code></li>
             </ul>
 
-            <p style="background: #f8fafc; padding: 12px; border-radius: 8px; font-weight: bold; border-left: 4px solid #dc2626;">
+            <p style="background: #fef2f2; padding: 12px; border-radius: 8px; font-weight: bold; border-left: 4px solid #dc2626; color: #991b1b; font-size: 15px;">
               Monto Total a Transferir: S/ ${Number(order.total).toFixed(2)}
             </p>
 
-            <p>Envía tu comprobante adjuntando el número de orden <strong>#${order.order_number}</strong> por WhatsApp o respondiendo a este correo.</p>
+            <p style="margin-top: 20px;">Envía tu constancia adjuntando el número de orden <strong>#${order.order_number}</strong>:</p>
+            <div style="margin: 14px 0;">
+              <a href="${whatsappUrl}" style="background: #16a34a; color: #ffffff; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 13px;">
+                📲 Enviar Constancia por WhatsApp
+              </a>
+              <span style="margin: 0 10px; color: #64748b; font-size: 12px;">o por correo a</span>
+              <a href="mailto:ventas@cuadrado.pe?subject=Constancia%20Pedido%20${order.order_number}" style="color: #1e3a8a; font-weight: bold; font-size: 13px;">
+                ventas@cuadrado.pe
+              </a>
+            </div>
           </div>
         `
       });
@@ -245,66 +268,146 @@ exports.getOrderById = async (req, res, next) => {
   }
 };
 
-// Admin Endpoint: Verify Bank Transfer and mark order as Paid
+// Admin Endpoint: Verify Bank Transfer and mark order as Paid with row-lock & anti-overselling stock check
 exports.verifyBankTransfer = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const order = await Order.findByPk(id, {
-      include: [
-        { model: OrderItem, as: 'items' },
-        { model: User, as: 'user' }
-      ]
-    });
+    let order = null;
 
-    if (!order) {
-      return res.status(404).json({ success: false, message: 'Orden no encontrada' });
-    }
-
-    order.status = 'paid';
-    await order.save();
-
-    let payment = await Payment.findOne({ where: { order_id: order.id } });
-    if (payment) {
-      payment.status = 'approved';
-      payment.status_detail = 'Verificado manualmente por administrador';
-      await payment.save();
-    } else {
-      await Payment.create({
-        order_id: order.id,
-        provider: 'bank_transfer',
-        status: 'approved',
-        status_detail: 'Verificado manualmente por administrador',
-        amount: order.total,
-        currency: 'PEN'
+    // Managed transaction with row-level locking on Orders
+    await sequelize.transaction(async (t) => {
+      // 1. Lock exclusive row on Orders without left join
+      order = await Order.findByPk(id, {
+        lock: t.LOCK.UPDATE,
+        transaction: t
       });
-    }
 
-    await OrderStatusHistory.create({
-      order_id: order.id,
-      status: 'paid',
-      comment: 'Transferencia bancaria verificada y aprobada por administrador.',
-      created_by_user_id: req.user.id
+      if (!order) {
+        const err = new Error('Orden no encontrada');
+        err.statusCode = 404;
+        throw err;
+      }
+
+      // 2. Idempotency check: prevent duplicate processing / double click
+      if (order.status === 'paid') {
+        const err = new Error('Esta orden ya fue aprobada y procesada previamente.');
+        err.statusCode = 400;
+        throw err;
+      }
+
+      // 3. Load associations within the active transaction
+      const [orderItems, orderUser] = await Promise.all([
+        OrderItem.findAll({ where: { order_id: order.id }, transaction: t }),
+        order.user_id ? User.findByPk(order.user_id, { transaction: t }) : null
+      ]);
+
+      order.items = orderItems;
+      order.user = orderUser;
+
+      // 4. Anti-overselling validation: verify current stock before approving
+      const physicalItems = (orderItems || []).filter((item) => {
+        if (!item || !item.product_id) return false;
+        const pid = String(item.product_id).toUpperCase();
+        return pid !== 'SHIPPING' && pid !== 'GATEWAY_SURCHARGE' && !pid.startsWith('VIRTUAL_');
+      });
+
+      if (physicalItems.length > 0) {
+        const productIds = physicalItems.map((i) => i.product_id);
+        const dbProducts = await Product.findAll({
+          where: { id: { [Op.in]: productIds } },
+          transaction: t
+        });
+
+        const productMap = new Map(dbProducts.map((p) => [String(p.id), p]));
+
+        for (const item of physicalItems) {
+          const product = productMap.get(String(item.product_id));
+          const reqQty = Number(item.quantity) || 1;
+          const currentStock = product ? Number(product.stock) : 0;
+
+          if (!product || !product.is_active || currentStock < reqQty) {
+            const prodName = product ? product.name : (item.product_name || 'Producto');
+            const err = new Error(`Stock insuficiente para "${prodName}". Stock disponible: ${currentStock}, Requerido: ${reqQty}. No se puede aprobar la orden.`);
+            err.statusCode = 409;
+            err.code = 'INSUFFICIENT_STOCK';
+            throw err;
+          }
+        }
+      }
+
+      order.status = 'paid';
+      await order.save({ transaction: t });
+
+      let payment = await Payment.findOne({ where: { order_id: order.id }, transaction: t });
+      if (payment) {
+        payment.status = 'approved';
+        payment.status_detail = 'Verificado manualmente por administrador';
+        await payment.save({ transaction: t });
+      } else {
+        await Payment.create({
+          order_id: order.id,
+          provider: 'bank_transfer',
+          status: 'approved',
+          status_detail: 'Verificado manualmente por administrador',
+          amount: order.total,
+          currency: 'PEN'
+        }, { transaction: t });
+      }
+
+      await OrderStatusHistory.create({
+        order_id: order.id,
+        status: 'paid',
+        comment: 'Transferencia bancaria verificada y aprobada por administrador.',
+        created_by_user_id: req.user.id
+      }, { transaction: t });
     });
 
-    // Ejecutar envío de correo y decremento de stock en paralelo
+    // Post-transaction notifications and ERP decrement
     const emailTemplates = require('../utils/emailTemplates');
     const html = emailTemplates.generateOrderConfirmationHTML(order);
 
-    const emailPromise = emailService.sendEmail({
+    emailService.sendEmail({
       to: order.user?.email || req.user.email,
       subject: `[SUPERLAPTOP] Pago Verificado - Confirmación de Pedido #${order.order_number}`,
       html
     }).catch((emailErr) => console.error('[VerifyPaymentEmailError]', emailErr));
 
     const cuadradoSyncService = require('../services/cuadradoSyncService');
-    const stockDecrementPromise = cuadradoSyncService.decrementStockForOrder(order)
-      .catch((stockErr) => console.error('[VerifyBankTransfer] Error decrementing stock:', stockErr));
+    let syncWarning = null;
 
-    await Promise.allSettled([emailPromise, stockDecrementPromise]);
+    try {
+      const stockResult = await cuadradoSyncService.decrementStockForOrder(order);
+      if (!stockResult.success || (stockResult.results && stockResult.results.some((r) => !r.success))) {
+        syncWarning = 'Pago aprobado, pero ocurrió una advertencia al decrementar stock en Cuadrado ERP.';
+        await OrderStatusHistory.create({
+          order_id: order.id,
+          status: 'paid',
+          comment: `Advertencia al sincronizar con Cuadrado ERP: ${stockResult.error || 'Uno o más productos no pudieron ser decrementados en el ERP'}`,
+          created_by_user_id: req.user.id
+        });
+      } else {
+        await OrderStatusHistory.create({
+          order_id: order.id,
+          status: 'paid',
+          comment: `Stock decrementado exitosamente en Cuadrado ERP (${stockResult.successfulCount || 1} items).`,
+          created_by_user_id: req.user.id
+        });
+      }
+    } catch (stockErr) {
+      console.error('[VerifyBankTransfer] Error decrementing stock:', stockErr);
+      syncWarning = `Fallo de conexión con Cuadrado ERP: ${stockErr.message}`;
+      await OrderStatusHistory.create({
+        order_id: order.id,
+        status: 'paid',
+        comment: `Fallo de conexión al decrementar en Cuadrado ERP: ${stockErr.message}`,
+        created_by_user_id: req.user.id
+      });
+    }
 
     return res.json({
       success: true,
       message: 'Transferencia bancaria verificada exitosamente. Orden marcada como PAGADA.',
+      warning: syncWarning,
       order
     });
   } catch (error) {

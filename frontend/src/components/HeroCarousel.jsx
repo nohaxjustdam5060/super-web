@@ -221,7 +221,7 @@ export default function HeroCarousel() {
                 </div>
                 <div>
                   <span className="text-white font-bold text-sm block">Envío Express a Todo el Perú</span>
-                  <span className="text-slate-400 text-xs block">Entregas en 24-48 horas garantizadas</span>
+                  
                 </div>
               </div>
 
@@ -231,7 +231,7 @@ export default function HeroCarousel() {
                 </div>
                 <div>
                   <span className="text-white font-bold text-sm block">Garantía Oficial E-Commerce</span>
-                  <span className="text-slate-400 text-xs block">100% productos nuevos y sellados</span>
+                  
                 </div>
               </div>
 
@@ -241,7 +241,7 @@ export default function HeroCarousel() {
                 </div>
                 <div>
                   <span className="text-white font-bold text-sm block">Medios de Pago Seguros</span>
-                  <span className="text-slate-400 text-xs block">Tarjeta, Yape, Plin y transferencia</span>
+                  
                 </div>
               </div>
             </div>
@@ -254,7 +254,7 @@ export default function HeroCarousel() {
                 </div>
                 <div>
                   <span className="text-white font-bold text-sm block">Envío Express a Todo el Perú</span>
-                  <span className="text-slate-400 text-xs block">Entregas en 24-48 horas garantizadas</span>
+                  
                 </div>
               </div>
 
@@ -264,7 +264,7 @@ export default function HeroCarousel() {
                 </div>
                 <div>
                   <span className="text-white font-bold text-sm block">Garantía Oficial E-Commerce</span>
-                  <span className="text-slate-400 text-xs block">100% productos nuevos y sellados</span>
+                  
                 </div>
               </div>
 
@@ -274,7 +274,7 @@ export default function HeroCarousel() {
                 </div>
                 <div>
                   <span className="text-white font-bold text-sm block">Medios de Pago Seguros</span>
-                  <span className="text-slate-400 text-xs block">Tarjeta, Yape, Plin y transferencia</span>
+                  
                 </div>
               </div>
             </div>
@@ -289,7 +289,7 @@ export default function HeroCarousel() {
             </div>
             <div>
               <span className="text-white font-bold text-sm block">Envío Express a Todo el Perú</span>
-              <span className="text-slate-400 text-xs block">Entregas en 24-48 horas garantizadas</span>
+              
             </div>
           </div>
 
@@ -299,7 +299,7 @@ export default function HeroCarousel() {
             </div>
             <div>
               <span className="text-white font-bold text-sm block">Garantía Oficial E-Commerce</span>
-              <span className="text-slate-400 text-xs block">100% productos nuevos y sellados</span>
+              
             </div>
           </div>
 
@@ -309,7 +309,7 @@ export default function HeroCarousel() {
             </div>
             <div>
               <span className="text-white font-bold text-sm block">Medios de Pago Seguros</span>
-              <span className="text-slate-400 text-xs block">Tarjeta, Yape, Plin y transferencia</span>
+              
             </div>
           </div>
         </div>

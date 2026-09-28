@@ -256,7 +256,10 @@ export default function Checkout() {
 
   const subtotal = getSubtotal();
   const shippingCost = selectedShippingMethod ? Number(selectedShippingMethod.cost) : 0.00;
-  const total = Math.max(0, subtotal - discountAmount + shippingCost);
+  const baseTotal = Math.max(0, subtotal - discountAmount + shippingCost);
+  const isGatewayPayment = paymentMethod === 'mercadopago';
+  const gatewaySurcharge = isGatewayPayment ? parseFloat((baseTotal * 0.05).toFixed(2)) : 0.00;
+  const total = parseFloat((baseTotal + gatewaySurcharge).toFixed(2));
 
   if (items.length === 0 && !createdOrder) {
     return (
@@ -541,8 +544,17 @@ export default function Checkout() {
     }
   };
 
+  const [copiedBankKey, setCopiedBankKey] = useState(null);
+  const handleCopyBankInfo = (text, key) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedBankKey(key);
+    setTimeout(() => setCopiedBankKey(null), 2000);
+  };
+
   const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '51978529826';
-  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Hola SUPERLAPTOP, adjunto mi comprobante de transferencia para el pedido #${createdOrder?.order_number || ''}`)}`;
+  const whatsappMessage = `Hola SUPERLAPTOP, adjunto mi constancia de transferencia para el Pedido #${createdOrder?.order_number || ''} por el monto de S/ ${Number(createdOrder?.total || total).toFixed(2)}. Titular: ${createdOrder?.shipping_address?.recipient_name || shippingAddress?.recipient_name || user?.name || ''}`;
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 py-8 space-y-8">
@@ -595,30 +607,156 @@ export default function Checkout() {
           </div>
 
           {/* Bank Accounts Box */}
-          <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 text-left space-y-3 text-xs">
-            <p className="font-black text-slate-900 text-sm flex items-center">
-              <Building2 className="w-4 h-4 mr-2 text-brand-red" /> Datos Bancarios para Transferir:
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-medium">
-              <div className="bg-white p-3 rounded-xl border border-gray-200">
-                <span className="font-black text-brand-blue block">BCP Soles</span>
-                <span className="text-gray-700 block font-mono text-[11px]">Cta: 191-98765432-0-89</span>
-                <span className="text-gray-500 block text-[10px]">CCI: 002-191-0098765432089-54</span>
+          <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 text-left space-y-4 text-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+              <div>
+                <p className="font-black text-slate-900 text-sm flex items-center">
+                  <Building2 className="w-4 h-4 mr-2 text-brand-red" /> Cuentas Bancarias Oficiales (Soles)
+                </p>
+                <p className="text-[11px] text-gray-500 mt-0.5">
+                  Titular: <strong className="text-gray-800 font-bold">CUADRADO TECHNOLOGY & ADVANCE E.I.R.L.</strong> · RUC: <strong className="text-gray-800 font-bold">20606455543</strong>
+                </p>
               </div>
-              <div className="bg-white p-3 rounded-xl border border-gray-200">
-                <span className="font-black text-emerald-700 block">Interbank Soles</span>
-                <span className="text-gray-700 block font-mono text-[11px]">Cta: 200-3001234567</span>
-                <span className="text-gray-500 block text-[10px]">CCI: 003-200-003001234567-88</span>
-              </div>
-              <div className="bg-white p-3 rounded-xl border border-gray-200">
-                <span className="font-black text-blue-800 block">BBVA Soles</span>
-                <span className="text-gray-700 block font-mono text-[11px]">Cta: 0011-0123-0200987654</span>
-                <span className="text-gray-500 block text-[10px]">CCI: 011-123-000200987654-12</span>
+              <div className="bg-red-50 border border-red-200 text-brand-red px-3 py-1.5 rounded-xl font-black text-xs text-right whitespace-nowrap">
+                Monto Exacto: S/ {Number(createdOrder?.total || total).toFixed(2)}
               </div>
             </div>
-            <p className="text-[11px] text-gray-500 font-semibold pt-1">
-              Titular de la cuenta: <strong>SUPERLAPTOP E-COMMERCE S.A.C.</strong> | Monto exacto: <strong className="text-brand-red font-black">S/ {Number(createdOrder?.total || total).toFixed(2)}</strong>
-            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* BCP */}
+              <div className="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-black text-brand-blue text-xs">BCP Soles</span>
+                  <span className="text-[10px] font-bold uppercase bg-blue-50 text-brand-blue px-2 py-0.5 rounded-md">Cuenta Corriente</span>
+                </div>
+                <div className="space-y-1 font-mono text-[11px] text-gray-800">
+                  <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
+                    <span>Cta: 191-8742112-0-60</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyBankInfo('191-8742112-0-60', 'bcp_cta')}
+                      className="text-gray-500 hover:text-brand-red p-1 cursor-pointer"
+                      title="Copiar número de cuenta"
+                    >
+                      {copiedBankKey === 'bcp_cta' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                  <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
+                    <span>CCI: 002219100874211206058</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyBankInfo('00219100874211206058', 'bcp_cci')}
+                      className="text-gray-500 hover:text-brand-red p-1 cursor-pointer"
+                      title="Copiar código interbancario"
+                    >
+                      {copiedBankKey === 'bcp_cci' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Interbank */}
+              <div className="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-black text-emerald-700 text-xs">Interbank Soles</span>
+                  <span className="text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md">Cuenta Corriente</span>
+                </div>
+                <div className="space-y-1 font-mono text-[11px] text-gray-800">
+                  <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
+                    <span>Cta: 200-3003161925</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyBankInfo('200-3003161925', 'ibk_cta')}
+                      className="text-gray-500 hover:text-brand-red p-1 cursor-pointer"
+                      title="Copiar número de cuenta"
+                    >
+                      {copiedBankKey === 'ibk_cta' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                  <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
+                    <span>CCI: 00320000300316192534</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyBankInfo('00320000300316192534', 'ibk_cci')}
+                      className="text-gray-500 hover:text-brand-red p-1 cursor-pointer"
+                      title="Copiar código interbancario"
+                    >
+                      {copiedBankKey === 'ibk_cci' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* BBVA */}
+              <div className="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-black text-blue-800 text-xs">BBVA Soles</span>
+                  <span className="text-[10px] font-bold uppercase bg-blue-50 text-blue-800 px-2 py-0.5 rounded-md">Cuenta Corriente</span>
+                </div>
+                <div className="space-y-1 font-mono text-[11px] text-gray-800">
+                  <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
+                    <span>Cta: 0011-0175-0100075566</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyBankInfo('0011-0175-0100075566', 'bbva_cta')}
+                      className="text-gray-500 hover:text-brand-red p-1 cursor-pointer"
+                      title="Copiar número de cuenta"
+                    >
+                      {copiedBankKey === 'bbva_cta' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                  <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
+                    <span>CCI: 01117500010007556678</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyBankInfo('01117500010007556678', 'bbva_cci')}
+                      className="text-gray-500 hover:text-brand-red p-1 cursor-pointer"
+                      title="Copiar código interbancario"
+                    >
+                      {copiedBankKey === 'bbva_cci' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Scotiabank */}
+              <div className="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-black text-red-700 text-xs">Scotiabank Soles</span>
+                  <span className="text-[10px] font-bold uppercase bg-red-50 text-red-700 px-2 py-0.5 rounded-md">Cuenta Corriente</span>
+                </div>
+                <div className="space-y-1 font-mono text-[11px] text-gray-800">
+                  <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
+                    <span>Cta: 000-2987321</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyBankInfo('000-2987321', 'scotia_cta')}
+                      className="text-gray-500 hover:text-brand-red p-1 cursor-pointer"
+                      title="Copiar número de cuenta"
+                    >
+                      {copiedBankKey === 'scotia_cta' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                  <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
+                    <span>CCI: 00902100000298732173</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyBankInfo('00902100000298732173', 'scotia_cci')}
+                      className="text-gray-500 hover:text-brand-red p-1 cursor-pointer"
+                      title="Copiar código interbancario"
+                    >
+                      {copiedBankKey === 'scotia_cci' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-amber-50/80 border border-amber-200/80 p-3 rounded-xl text-amber-800 text-xs flex items-center justify-between flex-wrap gap-2">
+              <span className="font-medium">
+                ¿Prefieres enviar por correo? Escríbenos a <strong className="font-bold">ventas@cuadrado.pe</strong>
+              </span>
+            </div>
           </div>
 
           <div className="flex flex-col sm:flex-row justify-center items-center gap-3 pt-2">
@@ -626,14 +764,14 @@ export default function Checkout() {
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-sm w-full sm:w-auto"
+              className="bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-sm w-full sm:w-auto cursor-pointer"
             >
               <MessageSquare className="w-4 h-4" />
-              <span>Enviar Comprobante por WhatsApp</span>
+              <span>Enviar Constancia por WhatsApp</span>
             </a>
             <button
               onClick={() => navigate('/profile')}
-              className="bg-brand-dark hover:bg-slate-800 text-white font-bold py-3.5 px-6 rounded-xl text-sm w-full sm:w-auto"
+              className="bg-brand-dark hover:bg-slate-800 text-white font-bold py-3.5 px-6 rounded-xl text-sm w-full sm:w-auto cursor-pointer"
             >
               Ver Mis Pedidos
             </button>
@@ -1544,33 +1682,39 @@ export default function Checkout() {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('mercadopago')}
-                      className={`p-4 rounded-2xl border-2 font-black text-xs text-left flex items-center justify-between transition-all cursor-pointer ${
+                      className={`p-4 rounded-2xl border-2 text-left flex items-center justify-between transition-all cursor-pointer ${
                         paymentMethod === 'mercadopago'
                           ? 'border-brand-red bg-red-50/20 text-brand-red shadow-sm'
                           : 'border-gray-200 text-gray-700 hover:border-brand-red/50 hover:bg-red-50/20'
                       }`}
                     >
-                      <div className="flex items-center space-x-2">
-                        <CreditCard className="w-5 h-5" />
-                        <span>Mercado Pago (Tarjeta, Yape)</span>
+                      <div className="flex items-start space-x-3">
+                        <CreditCard className="w-5 h-5 mt-0.5 text-brand-red shrink-0" />
+                        <div>
+                          <span className="font-black text-xs block text-gray-900">Mercado Pago (Tarjetas de crédito/débito y saldo)</span>
+                          <span className="text-[11px] font-medium text-amber-700 block mt-0.5">Incluye un recargo del 5% por uso de pasarela</span>
+                        </div>
                       </div>
-                      {paymentMethod === 'mercadopago' && <Check className="w-4 h-4" />}
+                      {paymentMethod === 'mercadopago' && <Check className="w-4 h-4 text-brand-red shrink-0 ml-2" />}
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('bank_transfer')}
-                      className={`p-4 rounded-2xl border-2 font-black text-xs text-left flex items-center justify-between transition-all cursor-pointer ${
+                      className={`p-4 rounded-2xl border-2 text-left flex items-center justify-between transition-all cursor-pointer ${
                         paymentMethod === 'bank_transfer'
                           ? 'border-brand-red bg-red-50/20 text-brand-red shadow-sm'
                           : 'border-gray-200 text-gray-700 hover:border-brand-red/50 hover:bg-red-50/20'
                       }`}
                     >
-                      <div className="flex items-center space-x-2">
-                        <Building2 className="w-5 h-5" />
-                        <span>Transferencia Bancaria Directa</span>
+                      <div className="flex items-start space-x-3">
+                        <Building2 className="w-5 h-5 mt-0.5 text-emerald-600 shrink-0" />
+                        <div>
+                          <span className="font-black text-xs block text-gray-900">Transferencia Bancaria</span>
+                          <span className="text-[11px] font-medium text-emerald-600 block mt-0.5">Sin recargo adicional (0%)</span>
+                        </div>
                       </div>
-                      {paymentMethod === 'bank_transfer' && <Check className="w-4 h-4" />}
+                      {paymentMethod === 'bank_transfer' && <Check className="w-4 h-4 text-brand-red shrink-0 ml-2" />}
                     </button>
                   </div>
                 </div>
@@ -1630,28 +1774,38 @@ export default function Checkout() {
                   <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-4">
                     <div className="flex items-center space-x-2 text-brand-red">
                       <Building2 className="w-5 h-5" />
-                      <h4 className="font-black text-sm">Cuentas Bancarias Oficiales de SUPERLAPTOP</h4>
+                      <h4 className="font-black text-sm">Cuentas Bancarias Oficiales</h4>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-xl border border-gray-200 text-[11px] text-gray-600 space-y-0.5">
+                      <p><strong>Titular:</strong> CUADRADO TECHNOLOGY & ADVANCE E.I.R.L.</p>
+                      <p><strong>RUC:</strong> 20606455543</p>
                     </div>
 
                     <p className="text-xs text-gray-600">
-                      Realiza la transferencia por el monto exacto de <strong className="text-brand-red font-black">S/ {total.toFixed(2)}</strong> a cualquiera de nuestras cuentas bancarias:
+                      Realiza la transferencia por el monto exacto de <strong className="text-brand-red font-black">S/ {total.toFixed(2)}</strong> a cualquiera de nuestras cuentas oficiales:
                     </p>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                      <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm space-y-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                      <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-xs space-y-1">
                         <p className="font-black text-brand-blue">BCP Soles</p>
-                        <p className="font-mono text-gray-800 text-[11px]">191-98765432-0-89</p>
-                        <p className="text-[10px] text-gray-400">CCI: 002-191-0098765432089-54</p>
+                        <p className="font-mono text-gray-800 text-[11px]">Cta: 191-8742112-0-60</p>
+                        <p className="text-[10px] text-gray-400 font-mono">CCI: 00219100874211206058</p>
                       </div>
-                      <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm space-y-1">
+                      <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-xs space-y-1">
                         <p className="font-black text-emerald-700">Interbank Soles</p>
-                        <p className="font-mono text-gray-800 text-[11px]">200-3001234567</p>
-                        <p className="text-[10px] text-gray-400">CCI: 003-200-003001234567-88</p>
+                        <p className="font-mono text-gray-800 text-[11px]">Cta: 200-3003161925</p>
+                        <p className="text-[10px] text-gray-400 font-mono">CCI: 00320000300316192534</p>
                       </div>
-                      <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm space-y-1">
+                      <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-xs space-y-1">
                         <p className="font-black text-blue-800">BBVA Soles</p>
-                        <p className="font-mono text-gray-800 text-[11px]">0011-0123-0200987654</p>
-                        <p className="text-[10px] text-gray-400">CCI: 011-123-000200987654-12</p>
+                        <p className="font-mono text-gray-800 text-[11px]">Cta: 0011-0175-0100075566</p>
+                        <p className="text-[10px] text-gray-400 font-mono">CCI: 01117500010007556678</p>
+                      </div>
+                      <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-xs space-y-1">
+                        <p className="font-black text-red-700">Scotiabank Soles</p>
+                        <p className="font-mono text-gray-800 text-[11px]">Cta: 000-2987321</p>
+                        <p className="text-[10px] text-gray-400 font-mono">CCI: 00902100000298732173</p>
                       </div>
                     </div>
 
@@ -1754,6 +1908,12 @@ export default function Checkout() {
                     : 'S/ 15.00'}
                 </span>
               </div>
+              {paymentMethod === 'mercadopago' && gatewaySurcharge > 0 && (
+                <div className="flex justify-between text-amber-800 font-semibold bg-amber-50/90 px-2.5 py-1.5 rounded-xl border border-amber-200/70">
+                  <span>Recargo por pasarela (5%):</span>
+                  <span className="font-bold text-amber-900">+ S/ {gatewaySurcharge.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-base font-black text-gray-900 pt-2 border-t border-gray-200">
                 <span>Monto Total:</span>
                 <span className="text-brand-red">S/ {total.toFixed(2)}</span>

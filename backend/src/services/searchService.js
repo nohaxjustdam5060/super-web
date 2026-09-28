@@ -97,6 +97,7 @@ class SearchService {
 
     if (is_featured === 'true' || is_featured === true) {
       where.is_featured = true;
+      where.stock = { [Op.gt]: 0 };
     }
 
     // ==========================================
