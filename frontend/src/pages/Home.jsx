@@ -83,15 +83,13 @@ export default function Home() {
               to={`/catalog?category_id=${cat.slug}`}
               className="group flex flex-col items-center cursor-pointer w-full max-w-[200px]"
             >
-              {/* Circular Product Image Container */}
-              <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-gradient-to-b from-slate-100 to-gray-200/80 border border-gray-200/80 shadow-sm p-4 flex items-center justify-center overflow-hidden group-hover:scale-105 group-hover:shadow-xl group-hover:border-brand-red/40 transition-all duration-300 ease-out isolate transform-gpu">
+              {/* Circular Product Image Container (Fixed circle with inner zoom) */}
+              <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-full border border-gray-200/80 shadow-sm overflow-hidden group-hover:shadow-xl group-hover:border-brand-red/40 transition-all duration-300 ease-out isolate bg-gray-100 flex items-center justify-center">
                 <img
                   src={cat.image}
                   alt={cat.name}
-                  className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-300 ease-out transform-gpu will-change-transform"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 ease-out"
                 />
-                {/* Subtle Inner Ring Glow */}
-                <div className="absolute inset-0 rounded-full ring-1 ring-inset ring-black/5 pointer-events-none" />
               </div>
 
               {/* Title & Badge Underneath */}

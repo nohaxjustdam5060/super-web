@@ -5,6 +5,7 @@ import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
 import CheckoutButton from '../components/CheckoutButton';
 import PaymentBadges from '../components/PaymentBadges';
+import { WHATSAPP_NUMBER, STORE_NAME } from '../utils/whatsappMessage';
 import axiosClient from '../api/axiosClient';
 
 // Helper: Anti-fraud filter for fake or obvious sequential documents
@@ -552,8 +553,8 @@ export default function Checkout() {
     setTimeout(() => setCopiedBankKey(null), 2000);
   };
 
-  const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '51978529826';
-  const whatsappMessage = `Hola SUPERLAPTOP, adjunto mi constancia de transferencia para el Pedido #${createdOrder?.order_number || ''} por el monto de S/ ${Number(createdOrder?.total || total).toFixed(2)}. Titular: ${createdOrder?.shipping_address?.recipient_name || shippingAddress?.recipient_name || user?.name || ''}`;
+  const whatsappNumber = WHATSAPP_NUMBER;
+  const whatsappMessage = `Hola ${STORE_NAME}, adjunto mi constancia de transferencia para el Pedido #${createdOrder?.order_number || ''} por el monto de S/ ${Number(createdOrder?.total || total).toFixed(2)}. Titular: ${createdOrder?.shipping_address?.recipient_name || shippingAddress?.recipient_name || user?.name || ''}`;
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
@@ -976,7 +977,7 @@ export default function Checkout() {
                           <div>
                             <span className="text-[11px] font-bold text-emerald-800 block">Horarios de Atención:</span>
                             <span className="font-black text-gray-900">Lunes a Sábado: 9:30 AM – 7:30 PM</span>
-                            <span className="text-[10px] text-gray-500 block">Domingos y feriados no hay atención</span>
+                            
                           </div>
                         </div>
                       </div>

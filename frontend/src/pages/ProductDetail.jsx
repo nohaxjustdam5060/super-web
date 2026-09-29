@@ -256,33 +256,41 @@ export default function ProductDetail() {
 
           {/* Synchronized Thumbnails */}
           {imagesList.length > 1 && (
-            <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-none">
-              {imagesList.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentImageIndex(idx)}
-                  className={`w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-md p-1.5 sm:p-2 border-2 transition-all flex-shrink-0 relative cursor-pointer ${
-                    currentImageIndex === idx
-                      ? 'border-brand-red ring-2 ring-brand-red/30 scale-105 shadow-md'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="w-full h-full flex items-center justify-center overflow-hidden rounded">
-                    <ProductImage
-                      src={img.image_url}
-                      alt={`Miniatura ${idx + 1}`}
-                      className="w-full h-full object-contain"
-                      size="xs"
-                      showText={false}
-                    />
-                  </div>
-                  {img.is_primary && (
-                    <span className="absolute top-1 left-1 bg-brand-red text-white text-[8px] font-black px-1 rounded-sm shadow" title="Imagen Principal">
-                      ★
-                    </span>
-                  )}
-                </button>
-              ))}
+            <div className="flex items-center space-x-3 overflow-x-auto pb-2 pt-1 px-1 scrollbar-none">
+              {imagesList.map((img, idx) => {
+                const isActive = currentImageIndex === idx;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setCurrentImageIndex(idx)}
+                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex items-center justify-center p-1 bg-white transition-all cursor-pointer relative flex-shrink-0 ${
+                      isActive
+                        ? 'border border-transparent ring-2 ring-red-600 shadow-sm scale-102 opacity-100 z-10'
+                        : 'border border-slate-200 hover:border-slate-300 opacity-70 hover:opacity-100'
+                    }`}
+                    title={`Ver imagen ${idx + 1}`}
+                  >
+                    <div className="w-full h-full flex items-center justify-center overflow-hidden rounded-md">
+                      <ProductImage
+                        src={img.image_url}
+                        alt={`Miniatura ${idx + 1}`}
+                        className="w-full h-full object-contain"
+                        size="xs"
+                        showText={false}
+                      />
+                    </div>
+                    {img.is_primary && (
+                      <span
+                        className="absolute top-1 left-1 w-3.5 h-3.5 bg-red-600 text-white rounded-full flex items-center justify-center p-0.5 text-[9px] z-10 shadow-xs leading-none font-bold pointer-events-none"
+                        title="Imagen Principal"
+                      >
+                        ★
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
@@ -355,10 +363,34 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Product Summary */}
-            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed pt-1">
-              {product.description || 'Producto tecnológico de alto rendimiento garantizado por SUPERLAPTOP. Cuenta con garantía directa de fábrica y despacho rápido a todo el país.'}
-            </p>
+            {/* Compact Highlighted Specs Mini-Cards */}
+            {highlightedSpecs.length > 0 && (
+              <div className="pt-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+                  {highlightedSpecs.map((sp, idx) => {
+                    const IconComp = sp.icon;
+                    return (
+                      <div
+                        key={idx}
+                        className="bg-slate-50 border border-slate-200/90 rounded-lg p-2 sm:p-2.5 flex items-center space-x-2 min-w-0 shadow-2xs hover:border-brand-red/30 transition-colors"
+                      >
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-brand-red/10 text-brand-red flex items-center justify-center flex-shrink-0">
+                          <IconComp className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider block truncate leading-none mb-0.5">
+                            {sp.key}
+                          </span>
+                          <span className="text-[11px] sm:text-xs font-extrabold text-gray-900 block truncate leading-tight">
+                            {sp.val}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Action Controls & Stock Validation */}
@@ -498,15 +530,7 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          {/* Full Product Description Box */}
-          <div className="space-y-2 pt-4 border-t border-gray-100">
-            <h4 className="text-xs font-black text-gray-400 uppercase tracking-wider">
-              Descripción Completa del Fabricante
-            </h4>
-            <div className="bg-gray-50 p-4 sm:p-5 rounded-lg border border-gray-100 text-xs sm:text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-              {product.description || 'Este producto cuenta con todas las especificaciones y características oficiales homologadas por el fabricante. Para consultas técnicas avanzadas o cotizaciones corporativas, puedes comunicarte directamente con nuestro equipo de atención.'}
-            </div>
-          </div>
+          
         </div>
       </div>
 

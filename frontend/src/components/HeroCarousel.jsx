@@ -209,108 +209,85 @@ export default function HeroCarousel() {
       </div>
 
       {/* Full-Width Informative Value Proposition Bar (Edge-to-Edge) */}
-      <div className="w-full bg-slate-900 border-t border-b border-slate-800 py-3 px-4 overflow-hidden">
+      <div className="w-full bg-slate-900 border-t border-b border-slate-800 py-1.5 sm:py-2 px-4 overflow-hidden flex items-center min-h-[36px] sm:min-h-[50px]">
         {/* Mobile View: Continuous Infinite Marquee Loop (< md) */}
-        <div className="md:hidden overflow-hidden w-full">
-          <div className="flex w-max animate-marquee hover:[animation-play-state:paused] active:[animation-play-state:paused] cursor-pointer">
+        <div className="md:hidden overflow-hidden w-full flex items-center">
+          <div className="flex w-max animate-marquee hover:[animation-play-state:paused] active:[animation-play-state:paused] cursor-pointer items-center">
             {/* Track Set 1 */}
-            <div className="flex items-center space-x-8 pr-8">
-              <div className="flex items-center gap-3.5 shrink-0">
-                <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
-                  <Truck className="w-5 h-5 text-brand-red" strokeWidth={2} />
+            <div className="flex items-center space-x-6 pr-6">
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
+                  <Truck className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
                 </div>
-                <div>
-                  <span className="text-white font-bold text-sm block">Envío Express a Todo el Perú</span>
-                  
-                </div>
+                <span className="text-white font-bold text-xs whitespace-nowrap">Envío Express a Todo el Perú</span>
               </div>
 
-              <div className="flex items-center gap-3.5 shrink-0">
-                <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
-                  <ShieldCheck className="w-5 h-5 text-brand-red" strokeWidth={2} />
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
                 </div>
-                <div>
-                  <span className="text-white font-bold text-sm block">Garantía Oficial E-Commerce</span>
-                  
-                </div>
+                <span className="text-white font-bold text-xs whitespace-nowrap">Garantía Oficial E-Commerce</span>
               </div>
 
-              <div className="flex items-center gap-3.5 shrink-0">
-                <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
-                  <CreditCard className="w-5 h-5 text-brand-red" strokeWidth={2} />
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
+                  <CreditCard className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
                 </div>
-                <div>
-                  <span className="text-white font-bold text-sm block">Medios de Pago Seguros</span>
-                  
-                </div>
+                <span className="text-white font-bold text-xs whitespace-nowrap">Medios de Pago Seguros</span>
               </div>
             </div>
 
             {/* Track Set 2 (Identical Duplicate for Seamless Infinite Loop) */}
-            <div className="flex items-center space-x-8 pr-8">
-              <div className="flex items-center gap-3.5 shrink-0">
-                <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
-                  <Truck className="w-5 h-5 text-brand-red" strokeWidth={2} />
+            <div className="flex items-center space-x-6 pr-6">
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
+                  <Truck className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
                 </div>
-                <div>
-                  <span className="text-white font-bold text-sm block">Envío Express a Todo el Perú</span>
-                  
-                </div>
+                <span className="text-white font-bold text-xs whitespace-nowrap">Envío Express a Todo el Perú</span>
               </div>
 
-              <div className="flex items-center gap-3.5 shrink-0">
-                <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
-                  <ShieldCheck className="w-5 h-5 text-brand-red" strokeWidth={2} />
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
                 </div>
-                <div>
-                  <span className="text-white font-bold text-sm block">Garantía Oficial E-Commerce</span>
-                  
-                </div>
+                <span className="text-white font-bold text-xs whitespace-nowrap">Garantía Oficial E-Commerce</span>
               </div>
 
-              <div className="flex items-center gap-3.5 shrink-0">
-                <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
-                  <CreditCard className="w-5 h-5 text-brand-red" strokeWidth={2} />
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
+                  <CreditCard className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
                 </div>
-                <div>
-                  <span className="text-white font-bold text-sm block">Medios de Pago Seguros</span>
-                  
-                </div>
+                <span className="text-white font-bold text-xs whitespace-nowrap">Medios de Pago Seguros</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Desktop View: Centered Static 3-Column Grid (md:) */}
-        <div className="hidden md:grid md:grid-cols-3 gap-6 max-w-[1440px] mx-auto py-1">
-          <div className="flex items-center justify-start gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
-              <Truck className="w-5 h-5 text-brand-red" strokeWidth={2} />
+        {/* Desktop View: Centered Horizontal Row (md:) */}
+        <div className="hidden md:flex items-center justify-center gap-6 lg:gap-12 max-w-[1440px] mx-auto w-full">
+          <div className="flex items-center gap-2.5">
+            <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
+              <Truck className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
             </div>
-            <div>
-              <span className="text-white font-bold text-sm block">Envío Express a Todo el Perú</span>
-              
-            </div>
+            <span className="text-white font-bold text-xs sm:text-xs md:text-sm whitespace-nowrap">Envío Express a Todo el Perú</span>
           </div>
 
-          <div className="flex items-center justify-start gap-3.5 border-l border-slate-800/80 pl-6">
-            <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-5 h-5 text-brand-red" strokeWidth={2} />
+          <div className="w-px h-4 bg-slate-800 shrink-0" />
+
+          <div className="flex items-center gap-2.5">
+            <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
             </div>
-            <div>
-              <span className="text-white font-bold text-sm block">Garantía Oficial E-Commerce</span>
-              
-            </div>
+            <span className="text-white font-bold text-xs sm:text-xs md:text-sm whitespace-nowrap">Garantía Oficial E-Commerce</span>
           </div>
 
-          <div className="flex items-center justify-start gap-3.5 border-l border-slate-800/80 pl-6">
-            <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
-              <CreditCard className="w-5 h-5 text-brand-red" strokeWidth={2} />
+          <div className="w-px h-4 bg-slate-800 shrink-0" />
+
+          <div className="flex items-center gap-2.5">
+            <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
+              <CreditCard className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
             </div>
-            <div>
-              <span className="text-white font-bold text-sm block">Medios de Pago Seguros</span>
-              
-            </div>
+            <span className="text-white font-bold text-xs sm:text-xs md:text-sm whitespace-nowrap">Medios de Pago Seguros</span>
           </div>
         </div>
       </div>

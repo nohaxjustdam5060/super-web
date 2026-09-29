@@ -152,7 +152,7 @@ function generateOrderConfirmationHTML(order) {
         <!-- Footer -->
         <div style="background-color: #f1f5f9; padding: 20px 30px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0;">
           <p style="margin: 0 0 5px 0;">SUPERLAPTOP Store • Hardware & Tecnologías de Alto Rendimiento</p>
-          <p style="margin: 0;">Jr. Velarde 172, Lima • Atencion: Lunes a Sábado 9:00 a 19:00</p>
+          <p style="margin: 0;">Jr. Velarde 172, Lima • Teléfono: +51 967 554 065 • Atención: Lunes a Sábado 9:00 a 19:00</p>
         </div>
       </div>
     </body>
@@ -286,7 +286,7 @@ function generateClaimConfirmationHTML(claim) {
         <!-- Footer -->
         <div style="background-color: #f1f5f9; padding: 16px 30px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #e2e8f0;">
           <p style="margin: 0 0 4px 0;">SUPERLAPTOP Store • Atención de Reclamaciones</p>
-          <p style="margin: 0;">Email: ventas@superlaptop.pe • Teléfono: +51 933 347 488</p>
+          <p style="margin: 0;">Email: ventas@superlaptop.pe • Teléfono: +51 967 554 065</p>
         </div>
       </div>
     </body>

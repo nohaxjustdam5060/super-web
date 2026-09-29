@@ -173,7 +173,8 @@ exports.processBankTransferPayment = async (req, res, next) => {
     // Send Bank Transfer Instruction Email
     try {
       const whatsappMsg = encodeURIComponent(`Hola SUPERLAPTOP, adjunto mi comprobante de transferencia para el Pedido #${order.order_number} por el monto de S/ ${Number(order.total).toFixed(2)}.`);
-      const whatsappUrl = `https://wa.me/51978529826?text=${whatsappMsg}`;
+      const whatsappNumber = process.env.WHATSAPP_NUMBER || '51967554065';
+      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMsg}`;
 
       await emailService.sendEmail({
         to: req.user.email,

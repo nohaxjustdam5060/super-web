@@ -393,33 +393,8 @@ const OrderDetailsModal = memo(function OrderDetailsModal({ selectedOrder, loadi
         </div>
 
         {/* Modal Actions Footer */}
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-4 border-t border-gray-200">
-          {isInvoiceIssued && localOrder.invoice_pdf_url ? (
-            <a
-              href={localOrder.invoice_pdf_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2 transition-all active:scale-95 shadow-md cursor-pointer"
-            >
-              <FileText className="w-4 h-4" />
-              <span>Descargar / Imprimir Comprobante (PDF)</span>
-              <ExternalLink className="w-3.5 h-3.5 ml-1 opacity-80" />
-            </a>
-          ) : isInvoiceIssued ? (
-            <div className="w-full sm:w-auto text-xs text-emerald-700 font-bold flex items-center space-x-1.5 py-1">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-              <span>Comprobante registrado: {seriesNum}</span>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={handlePendingPrint}
-              className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2 transition-all active:scale-95 border border-gray-300"
-            >
-              <Printer className="w-4 h-4 text-gray-400" />
-              <span>Comprobante Pendiente de Emisión</span>
-            </button>
-          )}
+        <div className="flex flex-col sm:flex-row justify-end items-center gap-3 pt-4 border-t border-gray-200">
+          
 
           <button
             type="button"

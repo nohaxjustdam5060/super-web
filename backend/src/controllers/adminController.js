@@ -94,12 +94,82 @@ exports.getAdminOrders = async (req, res, next) => {
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
     const limit = Math.max(1, Math.min(100, parseInt(req.query.limit, 10) || 10));
     const offset = (page - 1) * limit;
-    const { status, shippingFilter } = req.query;
+    const { status, shippingFilter, paymentMethod, datePreset, startDate, endDate } = req.query;
 
     const whereClause = {};
 
     if (status && status !== 'all') {
       whereClause.status = status;
+    }
+
+    // Payment method filter
+    if (paymentMethod && paymentMethod !== 'all') {
+      if (paymentMethod === 'bank_transfer') {
+        whereClause.payment_method = 'bank_transfer';
+      } else if (paymentMethod === 'mercadopago') {
+        whereClause.payment_method = {
+          [Op.or]: ['mercadopago', { [Op.eq]: null }, { [Op.ne]: 'bank_transfer' }]
+        };
+      } else {
+        whereClause.payment_method = paymentMethod;
+      }
+    }
+
+    // Date filtering with America/Lima (UTC-5) timezone handling
+    const getLimaDateString = (daysOffset = 0) => {
+      const now = new Date();
+      const limaFormatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Lima',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+      const [year, month, day] = limaFormatter.format(now).split('-').map(Number);
+      const targetDate = new Date(Date.UTC(year, month - 1, day + daysOffset));
+      const tYear = targetDate.getUTCFullYear();
+      const tMonth = String(targetDate.getUTCMonth() + 1).padStart(2, '0');
+      const tDay = String(targetDate.getUTCDate()).padStart(2, '0');
+      return `${tYear}-${tMonth}-${tDay}`;
+    };
+
+    let filterStartUtc = null;
+    let filterEndUtc = null;
+
+    if (datePreset === 'today') {
+      const todayLima = getLimaDateString(0);
+      filterStartUtc = new Date(`${todayLima}T00:00:00.000-05:00`);
+      filterEndUtc = new Date(`${todayLima}T23:59:59.999-05:00`);
+    } else if (datePreset === 'last_7_days') {
+      const todayLima = getLimaDateString(0);
+      const past7Lima = getLimaDateString(-6);
+      filterStartUtc = new Date(`${past7Lima}T00:00:00.000-05:00`);
+      filterEndUtc = new Date(`${todayLima}T23:59:59.999-05:00`);
+    } else if (datePreset === 'this_month') {
+      const todayLima = getLimaDateString(0);
+      const [year, month] = todayLima.split('-');
+      filterStartUtc = new Date(`${year}-${month}-01T00:00:00.000-05:00`);
+      filterEndUtc = new Date(`${todayLima}T23:59:59.999-05:00`);
+    } else if (startDate || endDate) {
+      if (startDate) {
+        filterStartUtc = new Date(`${startDate}T00:00:00.000-05:00`);
+      }
+      if (endDate) {
+        filterEndUtc = new Date(`${endDate}T23:59:59.999-05:00`);
+      }
+    }
+
+    if (filterStartUtc && filterEndUtc) {
+      whereClause.createdAt = {
+        [Op.between]: [filterStartUtc, filterEndUtc]
+      };
+    } else if (filterStartUtc) {
+      whereClause.createdAt = {
+        [Op.gte]: filterStartUtc
+      };
+    } else if (filterEndUtc) {
+      whereClause.createdAt = {
+        [Op.lte]: filterEndUtc
+      };
     }
 
     if (shippingFilter && shippingFilter !== 'all') {

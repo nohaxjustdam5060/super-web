@@ -67,6 +67,35 @@
   animation: marquee 16s linear infinite;
 }
 
+/* Mega Menu Smooth Transition Animations */
+@keyframes megaMenuImageFade {
+  0% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-menu-image {
+  animation: megaMenuImageFade 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes megaMenuContentFade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-menu-content {
+  animation: megaMenuContentFade 0.22s ease-out both;
+}
+
 /* Dual Range Slider Custom Thumb Styling */
 .range-slider-thumb::-webkit-slider-thumb {
   -webkit-appearance: none;

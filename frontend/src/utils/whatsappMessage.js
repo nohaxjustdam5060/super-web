@@ -1,4 +1,6 @@
-export const WHATSAPP_NUMBER = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_WHATSAPP_NUMBER) || '51978529826';
+export const WHATSAPP_NUMBER = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_WHATSAPP_NUMBER) || '51967554065';
+export const STORE_PHONE_DISPLAY = '+51 967 554 065';
+export const STORE_PHONE_TEL = 'tel:+51967554065';
 export const STORE_NAME = 'SUPERLAPTOP';
 
 /**

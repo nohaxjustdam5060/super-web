@@ -5,25 +5,131 @@ import {
   ChevronDown, ChevronRight, Laptop, Gamepad2, Briefcase, Smile, Feather, RefreshCw,
   Monitor, Tv, Box, HardDrive, Database, Layers, Zap, Settings, Smartphone, Tablet,
   Watch, Keyboard, Square, Radio, Mic, BatteryCharging, Wifi, Sliders, Printer,
-  Projector, Sparkles, Flame, Loader2
+  Projector, Sparkles, Flame, Loader2, TabletSmartphone, BrainCircuit, Minimize2,
+  CircuitBoard, MemoryStick, Server, SlidersHorizontal, Backpack, Volume2
 } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
-import { WHATSAPP_NUMBER, STORE_NAME } from '../utils/whatsappMessage';
+import { WHATSAPP_NUMBER, STORE_NAME, STORE_PHONE_DISPLAY } from '../utils/whatsappMessage';
 import axiosClient from '../api/axiosClient';
 import ProductImage from './ProductImage';
 
-// Map icon names from DB to Lucide Icon components
-const ICON_MAP = {
+// Direct semantic mapping for categories & subcategories
+const CATEGORY_ICON_MAP = {
+  // A. Laptops (6)
+  'convertibles': TabletSmartphone,
+  '2 en 1 / convertibles': TabletSmartphone,
+  'laptops-consumo': Laptop,
+  'laptops de consumo': Laptop,
+  'laptops-empresariales': Briefcase,
+  'laptops empresariales': Briefcase,
+  'laptops-gaming': Gamepad2,
+  'laptops gaming': Gamepad2,
+  'laptops-ia': BrainCircuit,
+  'laptops para ia': BrainCircuit,
+  'thinbooks': Minimize2,
+  'thinbooks & ultrabooks': Minimize2,
+
+  // B. Computadoras y Componentes (11)
+  'all-in-one': Tv,
+  'all in one': Tv,
+  'almacenamiento': HardDrive,
+  'componentes-oem': Settings,
+  'componentes oem': Settings,
+  'fuentes-de-poder': Zap,
+  'fuentes de poder': Zap,
+  'memorias-ram': MemoryStick,
+  'memorias ram': MemoryStick,
+  'mini-pcs': Box,
+  'mini pcs': Box,
+  'monitores': Monitor,
+  'pcs-escritorio': Server,
+  'pcs de escritorio': Server,
+  'placas-madre': CircuitBoard,
+  'placas madre': CircuitBoard,
+  'procesadores': Cpu,
+  'tarjetas-de-video': Layers,
+  'tarjetas de video': Layers,
+
+  // C. Periféricos y Accesorios (8)
+  'accesorios-varios': SlidersHorizontal,
+  'accesorios varios': SlidersHorizontal,
+  'audifonos': Headphones,
+  'audífonos': Headphones,
+  'cargadores': BatteryCharging,
+  'cargadores & powerbanks': BatteryCharging,
+  'mochilas': Backpack,
+  'mochilas y fundas': Backpack,
+  'mouse-y-teclados': Keyboard,
+  'mouse y teclados': Keyboard,
+  'mousepads': Square,
+  'parlantes-y-microfonos': Volume2,
+  'parlantes y micrófonos': Volume2,
+  'redes': Wifi,
+  'redes & conectividad': Wifi,
+
+  // D. Móviles y Wearables (3)
+  'celulares': Smartphone,
+  'smartwatches': Watch,
+  'tablets': Tablet,
+
+  // E. Oficina y Software (3)
+  'impresoras': Printer,
+  'impresoras & multifuncionales': Printer,
+  'proyectores': Projector,
+  'software-antivirus': ShieldCheck,
+  'software & antivirus': ShieldCheck,
+
+  // Parent categories
+  'laptops': Laptop,
+  'computadoras-y-componentes': Cpu,
+  'moviles-y-wearables': Smartphone,
+  'perifericos-y-accesorios': Headphones,
+  'oficina-y-software': Printer
+};
+
+// Fallback lookup by icon_name string if category slug not in map
+const FALLBACK_ICON_NAME_MAP = {
   Laptop, Gamepad2, Briefcase, Smile, Feather, RefreshCw, Cpu, Monitor, Tv, Box,
   HardDrive, Database, Layers, Zap, Settings, Smartphone, Tablet, Watch, Headphones,
   Keyboard, Square, Radio, Mic, BatteryCharging, ShoppingBag, Wifi, Sliders, Printer,
-  Projector, ShieldCheck
+  Projector, ShieldCheck, TabletSmartphone, BrainCircuit, Minimize2, CircuitBoard,
+  MemoryStick, Server, SlidersHorizontal, Backpack, Volume2
 };
 
-function DynamicIcon({ name, className = "w-4 h-4" }) {
-  const IconComponent = ICON_MAP[name] || ChevronRight;
+function DynamicIcon({ item, name, className = "w-4 h-4" }) {
+  let IconComponent = ChevronRight;
+
+  if (item) {
+    const slugKey = (item.slug || '').toLowerCase();
+    const nameKey = (item.name || '').toLowerCase();
+    const iconName = item.icon_name || '';
+
+    IconComponent =
+      CATEGORY_ICON_MAP[slugKey] ||
+      CATEGORY_ICON_MAP[nameKey] ||
+      FALLBACK_ICON_NAME_MAP[iconName] ||
+      ChevronRight;
+  } else if (name) {
+    IconComponent = FALLBACK_ICON_NAME_MAP[name] || ChevronRight;
+  }
+
   return <IconComponent className={className} />;
+}
+
+// Representative category images located in /public/images/
+const CATEGORY_IMAGE_MAP = {
+  'laptops': '/images/compressed-laptop-gaming.webp',
+  'computadoras-y-componentes': '/images/compressed-pc-gaming.webp',
+  'perifericos-y-accesorios': '/images/audifonos.png',
+  'oficina-y-software': '/images/impresora.png',
+  'moviles-y-wearables': '/images/tablet.png'
+};
+
+function getCategoryImage(category) {
+  if (!category) return null;
+  const slugKey = (category.slug || '').toLowerCase();
+  return CATEGORY_IMAGE_MAP[slugKey] || null;
 }
 
 export default function Navbar() {
@@ -204,7 +310,7 @@ export default function Navbar() {
               rel="noopener noreferrer"
               className="cursor-pointer transition-colors hover:text-brand-red flex items-center"
             >
-              Atención: +51 933 347 488
+              Atención: {STORE_PHONE_DISPLAY}
             </a>
             {user?.role === 'admin' || user?.role === 'super_admin' ? (
               <Link to="/admin" className="text-slate-100 font-bold hover:text-brand-red-accent hover:underline">
@@ -416,7 +522,7 @@ export default function Navbar() {
                         : 'text-gray-300 hover:text-white border-transparent hover:border-brand-red/60'
                     }`}
                   >
-                    <DynamicIcon name={parentCat.icon_name} className="w-4 h-4 mr-1.5 text-brand-red-accent flex-shrink-0" />
+                    <DynamicIcon item={parentCat} className="w-4 h-4 mr-1.5 text-brand-red-accent flex-shrink-0" />
                     <span className="whitespace-nowrap">{parentCat.name}</span>
                     {hasSubcategories && <ChevronDown className={`w-3.5 h-3.5 ml-1 text-gray-400 transition-transform ${isActive ? 'rotate-180 text-white' : ''}`} />}
                   </button>
@@ -452,63 +558,83 @@ export default function Navbar() {
           {currentCategory && currentCategory.subcategories && currentCategory.subcategories.length > 0 && (
             <div
               ref={menuContentRef}
-              key={currentCategory.id}
-              className="max-w-[1440px] mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-4 gap-6 animate-in fade-in duration-200"
+              className={`max-w-[1440px] mx-auto px-6 py-4 sm:py-5 grid grid-cols-1 lg:grid-cols-4 gap-6 ${
+                currentCategory.subcategories.length <= 3 ? 'items-center' : 'items-start'
+              }`}
             >
-              {/* Left Parent Category Featured Card */}
-              <div className="bg-gradient-to-br from-brand-dark to-slate-800 text-white rounded-lg p-5 flex flex-col justify-between space-y-3 shadow-lg border border-slate-700">
-                <div className="space-y-2.5">
-                  <div className="flex items-center space-x-2">
-                    <span className="p-2 bg-brand-red text-white rounded-md shadow-md">
-                      <DynamicIcon name={currentCategory.icon_name} className="w-5 h-5" />
+              {/* Left Parent Category Showcase (Open White Background with Floating Image) */}
+              <div className="flex flex-col items-center lg:items-start justify-between gap-3 p-1 lg:pr-6 lg:border-r lg:border-slate-200/70 group/left h-fit w-full">
+                {/* Category Featured Image Floating on White with Smooth Fade Animation */}
+                {getCategoryImage(currentCategory) && (
+                  <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center flex-shrink-0 mx-auto lg:mx-0 relative overflow-hidden">
+                    <img
+                      key={currentCategory.slug}
+                      src={getCategoryImage(currentCategory)}
+                      alt={currentCategory.name}
+                      className="max-h-full max-w-full object-contain drop-shadow-sm group-hover/left:scale-105 transition-transform duration-300 select-none animate-menu-image"
+                      loading="eager"
+                    />
+                  </div>
+                )}
+
+                <div
+                  key={`desc-${currentCategory.slug}`}
+                  className="space-y-1.5 text-center lg:text-left w-full animate-menu-content"
+                >
+                  <div className="flex items-center justify-center lg:justify-start space-x-1.5">
+                    <span className="p-1 bg-red-50 text-red-600 rounded-md">
+                      <DynamicIcon item={currentCategory} className="w-3.5 h-3.5" />
                     </span>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-brand-red-accent bg-brand-red/10 px-2 py-0.5 rounded-md border border-brand-red/20">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-red-600">
                       Categoría Principal
                     </span>
                   </div>
-                  <h3 className="text-lg font-black leading-snug">{currentCategory.name}</h3>
-                  <p className="text-xs text-gray-300 leading-relaxed line-clamp-2">
-                    {currentCategory.description || 'Componentes informáticos seleccionados con la mejor garantía oficial en Perú.'}
-                  </p>
-                </div>
 
-                <Link
-                  to={`/catalog?category_id=${currentCategory.slug}`}
-                  onClick={() => setActiveParentSlug(null)}
-                  className="bg-brand-red hover:bg-brand-red-hover text-white text-xs font-extrabold px-3.5 py-2.5 rounded-md flex items-center justify-between shadow transition-all active:scale-95 group/link mt-2"
-                >
-                  <span>Ver todo en {currentCategory.name}</span>
-                  <ChevronRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
-                </Link>
+                  <h3 className="text-lg font-bold text-slate-900 leading-tight">
+                    {currentCategory.name}
+                  </h3>
+
+                  <p className="text-xs text-slate-500 leading-snug line-clamp-2">
+                    {currentCategory.description || 'Explora nuestra selección oficial con la mejor garantía en Perú.'}
+                  </p>
+
+                  <Link
+                    to={`/catalog?category_id=${currentCategory.slug}`}
+                    onClick={() => setActiveParentSlug(null)}
+                    className="bg-brand-red hover:bg-brand-red-hover text-white text-xs font-extrabold px-3.5 py-2.5 rounded-xl flex items-center justify-center lg:justify-between shadow-sm transition-all active:scale-95 group/link mt-2.5 w-full"
+                  >
+                    <span>Ver todo en {currentCategory.name}</span>
+                    <ChevronRight className="w-4 h-4 ml-1 group-hover/link:translate-x-1 transition-transform" />
+                  </Link>
+                </div>
               </div>
 
-              {/* Right Subcategories Grid (Spans 3 Columns with Adaptive Layout) */}
+              {/* Right Subcategories Grid (Spans 3 Columns with Adaptive Layout & Smooth Content Fade) */}
               <div
-                className={`lg:col-span-3 grid gap-3 items-start ${
-                  currentCategory.subcategories.length <= 4
-                    ? 'grid-cols-2'
-                    : 'grid-cols-2 sm:grid-cols-3'
+                key={`subs-${currentCategory.slug}`}
+                className={`lg:col-span-3 grid animate-menu-content ${
+                  currentCategory.subcategories.length <= 3
+                    ? 'grid-cols-1 sm:grid-cols-3 gap-3'
+                    : 'grid-cols-2 lg:grid-cols-3 gap-2.5 items-start'
                 }`}
               >
-                {currentCategory.subcategories.map((sub) => (
-                  <button
-                    key={sub.id}
-                    onClick={() => handleSubcategoryClick(sub.slug)}
-                    className="flex items-center space-x-3 p-3 rounded-md bg-gray-50 hover:bg-white border border-gray-100 hover:border-brand-red/40 hover:shadow-md transition-all text-left group/item cursor-pointer"
-                  >
-                    <span className="p-2.5 bg-white text-gray-700 rounded-md group-hover/item:bg-brand-red group-hover/item:text-white transition-colors shadow-sm flex-shrink-0 border border-gray-200/60">
-                      <DynamicIcon name={sub.icon_name} className="w-4 h-4" />
-                    </span>
-                    <div className="overflow-hidden">
-                      <span className="font-extrabold text-xs text-gray-900 group-hover/item:text-brand-red transition-colors block truncate">
+                {currentCategory.subcategories.map((sub) => {
+                  return (
+                    <button
+                      key={sub.id}
+                      onClick={() => handleSubcategoryClick(sub.slug)}
+                      className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-red-500/50 hover:bg-slate-50 transition-all cursor-pointer group bg-white shadow-xs text-left"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700 group-hover:bg-red-50 group-hover:text-red-600 transition-colors shrink-0">
+                        <DynamicIcon item={sub} className="w-4 h-4" />
+                      </div>
+                      <span className="text-sm font-semibold text-slate-800 group-hover:text-red-600 transition-colors truncate">
                         {sub.name}
                       </span>
-                      <span className="text-[10px] text-gray-400 font-semibold block mt-0.5 group-hover/item:text-gray-600">
-                        Explorar componentes →
-                      </span>
-                    </div>
-                  </button>
-                ))}
+                      <ChevronRight className="w-4 h-4 ml-auto text-slate-300 group-hover:text-red-500 group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -566,7 +692,7 @@ export default function Navbar() {
                     className="w-full p-3 bg-slate-800/80 flex items-center justify-between text-xs font-bold text-white active:bg-slate-800"
                   >
                     <span className="flex items-center">
-                      <DynamicIcon name={parentCat.icon_name} className="w-4 h-4 mr-2 text-brand-red-accent" />
+                      <DynamicIcon item={parentCat} className="w-4 h-4 mr-2 text-brand-red-accent" />
                       {parentCat.name}
                     </span>
                     {hasSubcategories && (
@@ -586,10 +712,15 @@ export default function Navbar() {
                         <button
                           key={sub.id}
                           onClick={() => handleSubcategoryClick(sub.slug)}
-                          className="w-full text-left text-xs font-semibold text-slate-300 py-2 px-2 hover:bg-slate-800 rounded-lg flex items-center transition-colors"
+                          className="w-full text-left text-xs font-semibold text-slate-300 py-2.5 px-3 hover:bg-slate-800/90 rounded-lg flex items-center justify-between transition-colors group"
                         >
-                          <DynamicIcon name={sub.icon_name} className="w-3.5 h-3.5 mr-2 text-slate-400" />
-                          {sub.name}
+                          <span className="flex items-center gap-2.5 min-w-0">
+                            <span className="p-1.5 rounded-md bg-slate-800 text-slate-400 group-hover:text-brand-red-accent group-hover:bg-slate-700 transition-colors shrink-0">
+                              <DynamicIcon item={sub} className="w-3.5 h-3.5" />
+                            </span>
+                            <span className="truncate">{sub.name}</span>
+                          </span>
+                          <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-300 shrink-0 ml-2" />
                         </button>
                       ))}
                     </div>

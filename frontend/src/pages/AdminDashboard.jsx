@@ -5,16 +5,46 @@ import {
   LayoutDashboard, ShoppingBag, Users, AlertTriangle, DollarSign, Package, 
   ShieldCheck, CheckCircle2, Clock, FileText, Building2, CreditCard, 
   ExternalLink, Filter, Truck, Eye, X, Printer, User, MapPin, Calendar,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, RotateCcw
 } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import OrderDetailsModal from '../components/OrderDetailsModal';
+
+// Formatter helper for Lima (UTC-5 / America/Lima)
+export const formatLimaDateTime = (dateString) => {
+  if (!dateString) return { date: '—', time: '—' };
+  const d = new Date(dateString);
+  if (isNaN(d.getTime())) return { date: '—', time: '—' };
+
+  const dateFormatter = new Intl.DateTimeFormat('es-PE', {
+    timeZone: 'America/Lima',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+
+  const timeFormatter = new Intl.DateTimeFormat('es-PE', {
+    timeZone: 'America/Lima',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+
+  return {
+    date: dateFormatter.format(d),
+    time: timeFormatter.format(d)
+  };
+};
 
 export default function AdminDashboard() {
   const queryClient = useQueryClient();
   const tableRef = useRef(null);
   const [verifyingId, setVerifyingId] = useState(null);
   const [shippingFilter, setShippingFilter] = useState('all');
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
+  const [datePreset, setDatePreset] = useState('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -31,10 +61,18 @@ export default function AdminDashboard() {
   });
 
   const { data: ordersData, isLoading: ordersLoading } = useQuery({
-    queryKey: ['adminOrders', page, limit, shippingFilter],
+    queryKey: ['adminOrders', page, limit, shippingFilter, paymentMethodFilter, datePreset, startDate, endDate],
     queryFn: async () => {
       const res = await axiosClient.get('/admin/orders', {
-        params: { page, limit, shippingFilter }
+        params: { 
+          page, 
+          limit, 
+          shippingFilter,
+          paymentMethod: paymentMethodFilter,
+          datePreset,
+          startDate: datePreset === 'custom' ? startDate : undefined,
+          endDate: datePreset === 'custom' ? endDate : undefined
+        }
       });
       return res.data;
     },
@@ -55,6 +93,42 @@ export default function AdminDashboard() {
     setShippingFilter(e.target.value);
     setPage(1);
   };
+
+  const handlePaymentMethodFilterChange = (e) => {
+    setPaymentMethodFilter(e.target.value);
+    setPage(1);
+  };
+
+  const handleDatePresetChange = (e) => {
+    const val = e.target.value;
+    setDatePreset(val);
+    if (val !== 'custom') {
+      setStartDate('');
+      setEndDate('');
+    }
+    setPage(1);
+  };
+
+  const handleStartDateChange = (e) => {
+    setStartDate(e.target.value);
+    setPage(1);
+  };
+
+  const handleEndDateChange = (e) => {
+    setEndDate(e.target.value);
+    setPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setShippingFilter('all');
+    setPaymentMethodFilter('all');
+    setDatePreset('all');
+    setStartDate('');
+    setEndDate('');
+    setPage(1);
+  };
+
+  const hasActiveFilters = shippingFilter !== 'all' || paymentMethodFilter !== 'all' || datePreset !== 'all' || Boolean(startDate) || Boolean(endDate);
 
   const handleLimitChange = (e) => {
     setLimit(Number(e.target.value));
@@ -198,31 +272,6 @@ export default function AdminDashboard() {
     );
   };
 
-  // Filter orders by selected shipping method
-  const filteredOrders = orders.filter((ord) => {
-    if (shippingFilter === 'all') return true;
-
-    const sm = (ord.shipping_method || '').toLowerCase();
-    const dept = (ord.shipping_address?.department || '').toLowerCase();
-
-    const isPickup = sm.includes('recojo') || sm.includes('pickup') || sm.includes('tienda');
-    const isProvincia = sm.includes('provincia') || sm.includes('agencia') || (dept && !dept.includes('lima') && !dept.includes('callao'));
-
-    if (shippingFilter === 'pickup') {
-      return isPickup;
-    }
-
-    if (shippingFilter === 'provincia_express') {
-      return isProvincia && !isPickup;
-    }
-
-    if (shippingFilter === 'lima_callao') {
-      return !isPickup && !isProvincia;
-    }
-
-    return true;
-  });
-
   return (
     <div className="max-w-[1440px] mx-auto px-4 py-8 space-y-8">
       {/* Header Bar */}
@@ -279,7 +328,7 @@ export default function AdminDashboard() {
 
       {/* Orders Management Table */}
       <div ref={tableRef} className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-gray-100 pb-3">
+        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 border-b border-gray-100 pb-4">
           <div>
             <h3 className="font-extrabold text-gray-900 text-lg flex items-center">
               <ShoppingBag className="w-5 h-5 mr-2 text-brand-red" /> Gestión de Pedidos & Verificación de Pagos
@@ -287,13 +336,15 @@ export default function AdminDashboard() {
             <p className="text-xs text-gray-500">Revisa órdenes recibidas, datos de envío, comprobantes y valida transferencias bancarias</p>
           </div>
           
-          <div className="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-end">
-            <div className="flex items-center space-x-2">
-              <Filter className="w-4 h-4 text-gray-400" />
+          <div className="flex flex-wrap items-center gap-2.5 w-full xl:w-auto justify-start xl:justify-end">
+            {/* Shipping Filter */}
+            <div className="flex items-center space-x-1.5 bg-gray-50 border border-gray-300 rounded-xl px-2.5 py-1.5 focus-within:ring-2 focus-within:ring-brand-blue">
+              <Truck className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
               <select
                 value={shippingFilter}
                 onChange={handleShippingFilterChange}
-                className="bg-gray-50 border border-gray-300 text-gray-800 text-xs font-bold rounded-xl p-2 focus:ring-2 focus:ring-brand-blue outline-none cursor-pointer"
+                className="bg-transparent text-gray-800 text-xs font-bold focus:outline-none cursor-pointer"
+                title="Filtrar por tipo de envío"
               >
                 <option value="all">Todos los envíos</option>
                 <option value="pickup">Recojo en Tienda</option>
@@ -301,6 +352,72 @@ export default function AdminDashboard() {
                 <option value="provincia_express">Envío a Provincia/express</option>
               </select>
             </div>
+
+            {/* Payment Method Filter */}
+            <div className="flex items-center space-x-1.5 bg-gray-50 border border-gray-300 rounded-xl px-2.5 py-1.5 focus-within:ring-2 focus-within:ring-brand-blue">
+              <CreditCard className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+              <select
+                value={paymentMethodFilter}
+                onChange={handlePaymentMethodFilterChange}
+                className="bg-transparent text-gray-800 text-xs font-bold focus:outline-none cursor-pointer"
+                title="Filtrar por método de pago"
+              >
+                <option value="all">Todos los pagos</option>
+                <option value="mercadopago">Mercado Pago</option>
+                <option value="bank_transfer">Transferencia Bancaria</option>
+              </select>
+            </div>
+
+            {/* Date Preset Filter */}
+            <div className="flex items-center space-x-1.5 bg-gray-50 border border-gray-300 rounded-xl px-2.5 py-1.5 focus-within:ring-2 focus-within:ring-brand-blue">
+              <Calendar className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+              <select
+                value={datePreset}
+                onChange={handleDatePresetChange}
+                className="bg-transparent text-gray-800 text-xs font-bold focus:outline-none cursor-pointer"
+                title="Filtrar por fecha"
+              >
+                <option value="all">Todas las fechas</option>
+                <option value="today">Hoy (Lima)</option>
+                <option value="last_7_days">Últimos 7 días</option>
+                <option value="this_month">Este mes</option>
+                <option value="custom">Personalizado...</option>
+              </select>
+            </div>
+
+            {/* Custom Date Inputs */}
+            {datePreset === 'custom' && (
+              <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-300 rounded-xl p-1 text-xs">
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={handleStartDateChange}
+                  className="bg-white border border-gray-200 text-gray-800 text-xs font-semibold rounded-lg px-2 py-1 focus:ring-1 focus:ring-brand-blue outline-none"
+                  title="Fecha de inicio (Desde)"
+                />
+                <span className="text-gray-400 font-bold text-xs">-</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={handleEndDateChange}
+                  className="bg-white border border-gray-200 text-gray-800 text-xs font-semibold rounded-lg px-2 py-1 focus:ring-1 focus:ring-brand-blue outline-none"
+                  title="Fecha de fin (Hasta)"
+                />
+              </div>
+            )}
+
+            {/* Reset Filters Button */}
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="inline-flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold px-2.5 py-1.5 rounded-xl border border-red-200 transition-colors cursor-pointer active:scale-95"
+                title="Limpiar todos los filtros"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Limpiar</span>
+              </button>
+            )}
             
             <span className="text-xs font-extrabold text-brand-blue bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 whitespace-nowrap">
               Total: {totalOrdersCount} órdenes
@@ -313,6 +430,7 @@ export default function AdminDashboard() {
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200 font-black text-gray-400 uppercase tracking-wider text-[11px]">
                 <th className="p-3 whitespace-nowrap">N° Orden</th>
+                <th className="p-3 whitespace-nowrap">Fecha y Hora</th>
                 <th className="p-3 whitespace-nowrap">Cliente</th>
                 <th className="p-3 whitespace-nowrap">Envío / Dirección</th>
                 <th className="p-3 whitespace-nowrap">Comprobante</th>
@@ -325,7 +443,7 @@ export default function AdminDashboard() {
             <tbody className="divide-y divide-gray-100 font-semibold text-gray-800">
               {ordersLoading && orders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-gray-500 font-medium">
+                  <td colSpan={9} className="p-8 text-center text-gray-500 font-medium">
                     <div className="flex items-center justify-center space-x-2">
                       <Clock className="w-4 h-4 animate-spin text-brand-blue" />
                       <span>Cargando órdenes de la tienda...</span>
@@ -334,8 +452,8 @@ export default function AdminDashboard() {
                 </tr>
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-6 text-center text-gray-400 font-semibold">
-                    No se registran órdenes creadas por el momento.
+                  <td colSpan={9} className="p-6 text-center text-gray-400 font-semibold">
+                    No se registran órdenes creadas con los filtros seleccionados.
                   </td>
                 </tr>
               ) : (
@@ -345,11 +463,24 @@ export default function AdminDashboard() {
                   const isBankTransfer = ord.payment_method === 'bank_transfer';
                   const isReview = ord.status === 'payment_review';
                   const isPaid = ord.status === 'paid';
+                  const { date: limaDate, time: limaTime } = formatLimaDateTime(ord.createdAt);
 
                   return (
                     <tr key={ord.id} className="hover:bg-gray-50 transition-colors">
                       <td className="p-3 font-mono font-bold text-gray-900 whitespace-nowrap">
                         #{ord.order_number}
+                      </td>
+                      <td className="p-3 whitespace-nowrap">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-1.5 font-bold text-gray-900 text-xs">
+                            <Calendar className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                            <span>{limaDate}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[11px] font-mono text-gray-500 font-semibold">
+                            <Clock className="w-3 h-3 text-brand-blue flex-shrink-0" />
+                            <span>{limaTime}</span>
+                          </div>
+                        </div>
                       </td>
                       <td className="p-3 whitespace-nowrap">
                         <p className="font-bold text-gray-900">{addr.recipient_name || ord.user?.name || 'Cliente'}</p>

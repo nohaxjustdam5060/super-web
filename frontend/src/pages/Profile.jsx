@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Package, LogOut, KeyRound, Lock, CheckCircle2, AlertCircle, ShoppingBag, Truck, CreditCard } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
+import { WHATSAPP_NUMBER, STORE_NAME } from '../utils/whatsappMessage';
 import axiosClient from '../api/axiosClient';
 
 export default function Profile() {
@@ -315,7 +316,7 @@ export default function Profile() {
                     )}
                   </div>
                   <a
-                    href={`https://wa.me/51978529826?text=${encodeURIComponent(`Hola SUPERLAPTOP, tengo una consulta sobre mi orden #${ord.order_number}`)}`}
+                    href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hola ${STORE_NAME}, tengo una consulta sobre mi orden #${ord.order_number}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center text-brand-blue hover:text-brand-red font-bold transition-colors self-start sm:self-auto"
