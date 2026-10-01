@@ -16,12 +16,12 @@ class PaymentService {
         id: item.sku || item.product_id || item.id,
         title: item.product_name,
         quantity: Number(item.quantity) || 1,
-        unit_price: Number(item.unit_price) || 0,
+        unit_price: parseFloat((Number(item.unit_price) || 0).toFixed(2)),
         currency_id: 'PEN'
       }));
 
       // Include shipping cost if applicable
-      const shippingCost = Number(order.shipping_cost) || 0;
+      const shippingCost = parseFloat((Number(order.shipping_cost) || 0).toFixed(2));
       if (shippingCost > 0) {
         items.push({
           id: 'SHIPPING',
@@ -35,7 +35,7 @@ class PaymentService {
       // Include gateway surcharge (5%) if applicable
       const subtotal = Number(order.subtotal) || 0;
       const discount = Number(order.discount_amount) || 0;
-      const baseAmount = Math.max(0, subtotal - discount + shippingCost);
+      const baseAmount = Math.max(0, parseFloat((subtotal - discount + shippingCost).toFixed(2)));
       const isMercadoPago = order.payment_method === 'mercadopago' || !order.payment_method;
       const surcharge = isMercadoPago ? parseFloat((baseAmount * 0.05).toFixed(2)) : 0;
       if (surcharge > 0) {
@@ -48,24 +48,28 @@ class PaymentService {
         });
       }
 
-      const recipientName = order.shipping_address?.recipient_name || order.user?.name || 'Cliente';
-      const recipientEmail = order.user?.email || 'cliente@example.com';
+      const itemsTotal = items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
+      const calculatedTotal = parseFloat(itemsTotal.toFixed(2));
 
-      const isHttpsFrontend = frontendUrl.startsWith('https://');
-      {/*
-          success: `${frontendUrl}/checkout/success?order_id=${order.id}`,
-          failure: `${frontendUrl}/checkout/failure?order_id=${order.id}`,
-          pending: `${frontendUrl}/checkout/pending?order_id=${order.id}`
-          */}
+      // Determine environment (Sandbox/Dev vs Production)
+      const isProduction = process.env.NODE_ENV === 'production';
+
+      // In Sandbox/Dev, omit payer object to avoid self-purchase / invalid account locks
+      let payer = undefined;
+      if (isProduction) {
+        const recipientName = order.shipping_address?.recipient_name || order.user?.name || 'Cliente';
+        const recipientEmail = order.user?.email || 'cliente@example.com';
+        payer = {
+          name: recipientName,
+          email: recipientEmail
+        };
+      }
+
       const preferenceBody = {
         items,
         external_reference: String(order.id),
-        payer: {
-          name: recipientName,
-          email: recipientEmail
-        },
+        ...(payer ? { payer } : {}),
         back_urls: {
-          
           success: `${frontendUrl}/checkout/success?order_id=${order.id}`,
           failure: `${frontendUrl}/checkout/failure?order_id=${order.id}`,
           pending: `${frontendUrl}/checkout/pending?order_id=${order.id}`
@@ -77,14 +81,16 @@ class PaymentService {
       console.log('👉 [LOG PASO 1 - MERCPAGO CREATE PREFERENCE PAYLOAD]:', {
         order_id: order.id,
         order_number: order.order_number,
-        total: order.total,
+        order_total: order.total,
+        items_calculated_total: calculatedTotal,
         items_count: items.length,
+        has_payer: Boolean(payer),
+        environment: isProduction ? 'production' : 'sandbox/development',
         notification_url: preferenceBody.notification_url
       });
 
       const response = await preferenceClient.create({ body: preferenceBody });
 
-      const isProduction = process.env.NODE_ENV === 'production';
       const resolvedInitPoint = isProduction
         ? (response.init_point || response.sandbox_init_point)
         : (response.sandbox_init_point || response.init_point);
