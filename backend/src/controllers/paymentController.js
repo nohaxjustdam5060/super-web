@@ -9,23 +9,28 @@ const logger = require('../config/logger');
 
 const cuadradoSyncService = require('../services/cuadradoSyncService');
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Shared helper function to update order status, store payment record, and trigger Resend email & stock decrement.
  * Ensures idempotency via row-locking transaction.
+ * Supports order lookup by UUID (id) OR order_number (SUP-XXXX).
  */
-async function processSuccessfulOrder(orderId, paymentData) {
+async function processSuccessfulOrder(orderIdOrNumber, paymentData) {
   let shouldTriggerActions = false;
   let targetOrder = null;
   let isAlreadyProcessed = false;
 
   await sequelize.transaction(async (t) => {
-    const order = await Order.findByPk(orderId, {
+    const isUuid = UUID_REGEX.test(orderIdOrNumber);
+    const order = await Order.findOne({
+      where: isUuid ? { id: orderIdOrNumber } : { order_number: orderIdOrNumber },
       lock: t.LOCK.UPDATE,
       transaction: t
     });
 
     if (!order) {
-      throw new Error(`Orden #${orderId} no encontrada en la base de datos.`);
+      throw new Error(`Orden '${orderIdOrNumber}' no encontrada en la base de datos.`);
     }
 
     // Idempotency check inside row-locked transaction: prevent duplicate processing
@@ -235,7 +240,7 @@ exports.createPreference = async (req, res, next) => {
 /**
  * Synchronous Payment Verification Endpoint (POST /api/payments/verify-and-fulfill)
  * Fetches real payment status from Mercado Pago via Payment.get({ id })
- * If approved, performs idempotent order update, triggers NubeFact invoice & email confirmation, and returns order status.
+ * If approved, performs idempotent order update, triggers Resend email confirmation, and returns order status.
  */
 exports.verifyAndFulfill = async (req, res, next) => {
   try {
@@ -253,7 +258,7 @@ exports.verifyAndFulfill = async (req, res, next) => {
     logger.info(`[PaymentController.verifyAndFulfill] Verificando síncronamente pago ${targetPaymentId} para orden ${targetOrderId || 'N/A'}`);
 
     // Fetch real payment status directly from Mercado Pago API using Payment.get()
-    const paymentData = await paymentService.getPaymentStatus(targetPaymentId);
+    const paymentData = await paymentService.getPaymentStatusDiagnostic(targetPaymentId);
 
     if (!paymentData) {
       return res.status(404).json({
@@ -286,7 +291,9 @@ exports.verifyAndFulfill = async (req, res, next) => {
     // Execute idempotent order fulfillment
     const result = await processSuccessfulOrder(finalOrderId, paymentData);
 
-    const fullOrder = await Order.findByPk(finalOrderId, {
+    const isUuid = UUID_REGEX.test(finalOrderId);
+    const fullOrder = await Order.findOne({
+      where: isUuid ? { id: finalOrderId } : { order_number: finalOrderId },
       include: [
         { model: OrderItem, as: 'items' },
         { model: User, as: 'user' }
@@ -319,95 +326,168 @@ exports.verifyAndFulfill = async (req, res, next) => {
 
 /**
  * Handle Mercado Pago Webhook / IPN Notifications
- * Responds 200 OK immediately and processes real payment status via Payment.get()
- * Uses row-locking and Managed Transactions to prevent race conditions.
+ * Responds 200 OK immediately and processes merchant_orders or payments asynchronously (Task 1, 2, 3, 6).
  */
 exports.handleWebhook = async (req, res, next) => {
-  // Respond 200 OK immediately to Mercado Pago to avoid retries
+  // Respond 200 OK immediately to Mercado Pago to avoid retries (Task 6)
   console.log('🔔 [WEBHOOK RECIBIDO]', new Date().toISOString());
   res.status(200).send('OK');
 
-  try {
-    const body = req.body || {};
-    const query = req.query || {};
+  // Asynchronous diagnostic execution without blocking response
+  (async () => {
+    try {
+      const body = req.body || {};
+      const query = req.query || {};
+      const headers = req.headers || {};
 
-    logger.info('[PaymentController] Webhook payload:', { body, query, headers: req.headers });
+      // Task 1: Webhook payload logging with full stringified JSON, query, and headers
+      const xRequestId = headers['x-request-id'] || headers['X-Request-Id'] || 'N/A';
+      const xSignature = headers['x-signature'] || headers['X-Signature'] || 'N/A';
 
-    const topic = query.topic || query.type || body.type || body.action || '';
-    const paymentId = body.data?.id || query['data.id'] || query.id || body.id;
-
-    // Filter out merchant_order events or events without a valid payment ID
-    if (topic === 'merchant_order' || topic.includes('merchant_order')) {
-      logger.info(`[PaymentController] Evento 'merchant_order' (${paymentId}) omitido intencionalmente.`);
-      return;
-    }
-
-    if (!paymentId) {
-      logger.info('[PaymentController] Webhook recibido sin payment ID, ignorando.');
-      return;
-    }
-
-    // Validate Webhook Signature if MP_WEBHOOK_SECRET is configured
-    const webhookSecret = process.env.MP_WEBHOOK_SECRET;
-    const xSignature = req.headers['x-signature'];
-    const xRequestId = req.headers['x-request-id'];
-
-    if (webhookSecret && xSignature) {
-      try {
-        const parts = xSignature.split(',');
-        let ts = '';
-        let hash = '';
-        parts.forEach((part) => {
-          const [key, value] = part.split('=');
-          if (key?.trim() === 'ts') ts = value?.trim() || '';
-          if (key?.trim() === 'v1') hash = value?.trim() || '';
-        });
-
-        // Construir el manifiesto de manera dinámica omitiendo request-id si no existe
-        let manifest = `id:${paymentId};`;
-        if (xRequestId) {
-          manifest += `request-id:${xRequestId};`;
+      logger.info(`[MP webhook] NOTIFICACIÓN RECIBIDA:\n` + JSON.stringify({
+        body,
+        query,
+        headers: {
+          'x-request-id': xRequestId,
+          'x-signature': xSignature
         }
-        manifest += `ts:${ts};`;
+      }, null, 2));
 
-        // Calcular la firma usando la clave secreta directamente como string UTF-8
-        const calculatedHash = crypto.createHmac('sha256', webhookSecret).update(manifest).digest('hex');
+      const topic = String(query.topic || query.type || body.type || body.action || '').toLowerCase();
+      const resource = String(body.resource || '').toLowerCase();
 
-        if (calculatedHash !== hash) {
-          logger.warn(`[PaymentController] Webhook signature mismatch! Calculated: ${calculatedHash}, Received: ${hash}`);
-          
-          if (process.env.NODE_ENV === 'production') {
-            logger.error('❌ [PaymentController] Rechazando webhook en producción debido a firma inválida.');
-            return; // Abortar ejecución del webhook en producción
+      // Check if event is merchant_order (Task 2)
+      const isMerchantOrder = topic.includes('merchant_order') || resource.includes('merchant_orders');
+
+      if (isMerchantOrder) {
+        let merchantOrderId = body.data?.id || query['data.id'] || query.id || body.id;
+        if (!merchantOrderId && resource) {
+          const parts = resource.split('/');
+          merchantOrderId = parts[parts.length - 1];
+        }
+
+        if (!merchantOrderId) {
+          logger.warn('[MP merchant_order] Evento merchant_order recibido sin ID de orden mercantil.');
+          return;
+        }
+
+        logger.info(`[MP merchant_order] Procesando evento merchant_order #${merchantOrderId}`);
+        const merchantOrderData = await paymentService.getMerchantOrder(merchantOrderId);
+
+        // If merchant order contains payments, process each payment (Task 2 & 3)
+        const payments = merchantOrderData.payments || [];
+        if (payments.length > 0) {
+          for (const p of payments) {
+            const pId = p.id || p;
+            try {
+              const paymentData = await paymentService.getPaymentStatusDiagnostic(pId);
+              if (paymentData && paymentData.external_reference) {
+                await processSuccessfulOrder(paymentData.external_reference, paymentData);
+              }
+            } catch (pErr) {
+              logger.error(`[MP merchant_order] Error procesando pago ${pId} asociado a merchant_order ${merchantOrderId}:`, pErr.message);
+            }
           }
-        } else {
-          logger.info('✅ [PaymentController] Webhook signature verified successfully.');
         }
-      } catch (sigErr) {
-        logger.error('[PaymentController] Error verifying webhook signature:', sigErr);
-        if (process.env.NODE_ENV === 'production') {
-          return; // Abortar ejecución del webhook en producción en caso de error
+        return;
+      }
+
+      // Check if event is payment (Task 3)
+      const paymentId = body.data?.id || query['data.id'] || query.id || body.id;
+
+      if (!paymentId) {
+        logger.info('[MP webhook] Webhook recibido sin payment ID ni merchant_order ID válido, ignorando.');
+        return;
+      }
+
+      // Validate Webhook Signature if MP_WEBHOOK_SECRET is configured
+      const webhookSecret = process.env.MP_WEBHOOK_SECRET;
+      if (webhookSecret && xSignature !== 'N/A') {
+        try {
+          const parts = xSignature.split(',');
+          let ts = '';
+          let hash = '';
+          parts.forEach((part) => {
+            const [key, value] = part.split('=');
+            if (key?.trim() === 'ts') ts = value?.trim() || '';
+            if (key?.trim() === 'v1') hash = value?.trim() || '';
+          });
+
+          let manifest = `id:${paymentId};`;
+          if (xRequestId !== 'N/A') {
+            manifest += `request-id:${xRequestId};`;
+          }
+          manifest += `ts:${ts};`;
+
+          const calculatedHash = crypto.createHmac('sha256', webhookSecret).update(manifest).digest('hex');
+
+          if (calculatedHash !== hash) {
+            logger.warn(`[MP webhook] Webhook signature mismatch! Calculated: ${calculatedHash}, Received: ${hash}`);
+            if (process.env.NODE_ENV === 'production') {
+              logger.error('❌ [MP webhook] Rechazando webhook en producción debido a firma inválida.');
+              return;
+            }
+          } else {
+            logger.info('✅ [MP webhook] Webhook signature verified successfully.');
+          }
+        } catch (sigErr) {
+          logger.error('[MP webhook] Error verificando firma de webhook:', sigErr);
+          if (process.env.NODE_ENV === 'production') {
+            return;
+          }
         }
       }
+
+      // Task 3: Process payment event diagnostic
+      let paymentData;
+      try {
+        paymentData = await paymentService.getPaymentStatusDiagnostic(paymentId);
+      } catch (mpErr) {
+        logger.warn(`[MP payment] No se pudo obtener el pago ${paymentId} de Mercado Pago:`, mpErr.message || mpErr);
+        return;
+      }
+
+      if (!paymentData || !paymentData.external_reference) {
+        logger.warn(`[MP payment] Webhook payment ${paymentId} no tiene external_reference, ignorando.`);
+        return;
+      }
+
+      const orderIdOrNumber = paymentData.external_reference;
+      await processSuccessfulOrder(orderIdOrNumber, paymentData);
+    } catch (error) {
+      logger.error('❌ [PaymentController.handleWebhook Error]:', error);
+    }
+  })();
+};
+
+/**
+ * Diagnostic Search Endpoint (GET /api/payments/search-debug?order_number=...) (Task 5)
+ */
+exports.searchDebug = async (req, res, next) => {
+  try {
+    const { order_number, external_reference } = req.query;
+    const targetRef = order_number || external_reference;
+
+    if (!targetRef) {
+      return res.status(400).json({
+        success: false,
+        message: 'Por favor especifica el parámetro ?order_number=SUP-XXXX o ?external_reference=...'
+      });
     }
 
-    // Fetch real payment status directly from Mercado Pago API using Payment.get()
-    let paymentData;
-    try {
-      paymentData = await paymentService.getPaymentStatus(paymentId);
-    } catch (mpErr) {
-      logger.warn(`[PaymentController] No se pudo obtener el pago ${paymentId} de Mercado Pago (ID no corresponde a un pago válido):`, mpErr.message || mpErr);
-      return;
-    }
+    logger.info(`[MP search] Endpoint searchDebug llamado para order_number: ${targetRef}`);
+    const searchData = await paymentService.searchPaymentsByExternalReference(targetRef);
 
-    if (!paymentData || !paymentData.external_reference) {
-      logger.warn(`[PaymentController] Webhook payment ${paymentId} no tiene external_reference, ignorando.`);
-      return;
-    }
-
-    const orderId = paymentData.external_reference;
-    await processSuccessfulOrder(orderId, paymentData);
+    return res.json({
+      success: true,
+      order_number: targetRef,
+      ...searchData
+    });
   } catch (error) {
-    logger.error('❌ [PaymentController.handleWebhook Error]:', error);
+    logger.error('❌ [PaymentController.searchDebug Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Error al buscar pagos en Mercado Pago.'
+    });
   }
 };

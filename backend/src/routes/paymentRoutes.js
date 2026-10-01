@@ -26,4 +26,7 @@ router.post('/verify-and-fulfill', paymentController.verifyAndFulfill);
 // Webhook para recibir notificaciones / IPN de Mercado Pago (Público, sin JWT)
 router.post('/webhook', paymentController.handleWebhook);
 
+// Endpoint protegido de diagnóstico para buscar pagos por order_number / external_reference (Task 5)
+router.get('/search-debug', authMiddleware, paymentController.searchDebug);
+
 module.exports = router;
