@@ -516,15 +516,14 @@ export default function Navbar() {
                 >
                   <button
                     onClick={() => handleSubcategoryClick(parentCat.slug)}
-                    className={`px-3 py-2.5 text-xs font-bold flex items-center transition-colors border-b-2 cursor-pointer ${
+                    className={`px-3.5 py-2.5 text-xs font-bold flex items-center gap-1.5 transition-colors border-b-2 cursor-pointer ${
                       isActive
                         ? 'text-white border-brand-red'
                         : 'text-gray-300 hover:text-white border-transparent hover:border-brand-red/60'
                     }`}
                   >
-                    <DynamicIcon item={parentCat} className="w-4 h-4 mr-1.5 text-brand-red-accent flex-shrink-0" />
                     <span className="whitespace-nowrap">{parentCat.name}</span>
-                    {hasSubcategories && <ChevronDown className={`w-3.5 h-3.5 ml-1 text-gray-400 transition-transform ${isActive ? 'rotate-180 text-white' : ''}`} />}
+                    {hasSubcategories && <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${isActive ? 'rotate-180 text-white' : ''}`} />}
                   </button>
                 </div>
               );

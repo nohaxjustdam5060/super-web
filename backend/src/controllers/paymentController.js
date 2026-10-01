@@ -61,6 +61,9 @@ async function processSuccessfulOrder(orderId, paymentData) {
 
     order.mp_payment_id = String(paymentData.id);
     order.status = newOrderStatus;
+    if (paymentData.payment_type_id || paymentData.raw?.payment_type_id) {
+      order.payment_method_detail = paymentData.payment_type_id || paymentData.raw?.payment_type_id;
+    }
     await order.save({ transaction: t });
 
     // Create or update Payment record in DB

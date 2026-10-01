@@ -118,6 +118,7 @@ class PaymentService {
         external_reference: response.external_reference,
         transaction_amount: response.transaction_amount,
         payment_method_id: response.payment_method_id,
+        payment_type_id: response.payment_type_id || response.payment_type || null,
         card_last_four: response.card?.last_four_digits || null,
         raw: response
       };

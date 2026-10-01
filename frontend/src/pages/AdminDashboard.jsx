@@ -362,9 +362,11 @@ export default function AdminDashboard() {
                 className="bg-transparent text-gray-800 text-xs font-bold focus:outline-none cursor-pointer"
                 title="Filtrar por método de pago"
               >
-                <option value="all">Todos los pagos</option>
-                <option value="mercadopago">Mercado Pago</option>
-                <option value="bank_transfer">Transferencia Bancaria</option>
+                <option value="all">Todos los métodos</option>
+                <option value="bank_transfer">Transferencia Directa / Bancaria</option>
+                <option value="mercadopago">Mercado Pago (Todos)</option>
+                <option value="credit_card">Mercado Pago: Tarjeta de Crédito</option>
+                <option value="debit_card">Mercado Pago: Tarjeta de Débito</option>
               </select>
             </div>
 
@@ -511,14 +513,39 @@ export default function AdminDashboard() {
                         </div>
                       </td>
                       <td className="p-3 whitespace-nowrap">
-                        <span className={`inline-flex items-center text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${
-                          isBankTransfer
-                            ? 'bg-amber-50 text-amber-800 border-amber-300'
-                            : 'bg-blue-50 text-blue-800 border-blue-300'
-                        }`}>
-                          {isBankTransfer ? <Building2 className="w-3 h-3 mr-1" /> : <CreditCard className="w-3 h-3 mr-1" />}
-                          {isBankTransfer ? 'Transferencia' : 'Mercado Pago'}
-                        </span>
+                        {(() => {
+                          if (isBankTransfer) {
+                            return (
+                              <span className="inline-flex items-center text-[10px] font-extrabold px-2.5 py-1 rounded-full border bg-amber-50 text-amber-800 border-amber-300">
+                                <Building2 className="w-3 h-3 mr-1 flex-shrink-0" />
+                                <span>Transferencia Bancaria</span>
+                              </span>
+                            );
+                          }
+                          const detail = (ord.payment_method_detail || '').toLowerCase();
+                          if (detail === 'credit_card') {
+                            return (
+                              <span className="inline-flex items-center text-[10px] font-extrabold px-2.5 py-1 rounded-full border bg-indigo-50 text-indigo-800 border-indigo-300" title="Mercado Pago - Tarjeta de Crédito">
+                                <CreditCard className="w-3 h-3 mr-1 flex-shrink-0 text-indigo-600" />
+                                <span>T. Crédito</span>
+                              </span>
+                            );
+                          }
+                          if (detail === 'debit_card') {
+                            return (
+                              <span className="inline-flex items-center text-[10px] font-extrabold px-2.5 py-1 rounded-full border bg-sky-50 text-sky-800 border-sky-300" title="Mercado Pago - Tarjeta de Débito">
+                                <CreditCard className="w-3 h-3 mr-1 flex-shrink-0 text-sky-600" />
+                                <span>T. Débito</span>
+                              </span>
+                            );
+                          }
+                          return (
+                            <span className="inline-flex items-center text-[10px] font-extrabold px-2.5 py-1 rounded-full border bg-blue-50 text-blue-800 border-blue-300">
+                              <CreditCard className="w-3 h-3 mr-1 flex-shrink-0" />
+                              <span>Mercado Pago</span>
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="p-3 font-black text-brand-red whitespace-nowrap text-sm">
                         S/ {Number(ord.total).toFixed(2)}

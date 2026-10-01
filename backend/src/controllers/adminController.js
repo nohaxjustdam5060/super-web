@@ -110,6 +110,16 @@ exports.getAdminOrders = async (req, res, next) => {
         whereClause.payment_method = {
           [Op.or]: ['mercadopago', { [Op.eq]: null }, { [Op.ne]: 'bank_transfer' }]
         };
+      } else if (paymentMethod === 'credit_card') {
+        whereClause.payment_method = {
+          [Op.or]: ['mercadopago', { [Op.ne]: 'bank_transfer' }]
+        };
+        whereClause.payment_method_detail = 'credit_card';
+      } else if (paymentMethod === 'debit_card') {
+        whereClause.payment_method = {
+          [Op.or]: ['mercadopago', { [Op.ne]: 'bank_transfer' }]
+        };
+        whereClause.payment_method_detail = 'debit_card';
       } else {
         whereClause.payment_method = paymentMethod;
       }
@@ -204,7 +214,7 @@ exports.getAdminOrders = async (req, res, next) => {
       attributes: [
         'id', 'order_number', 'user_id', 'status', 'subtotal',
         'discount_amount', 'shipping_cost', 'total', 'shipping_address',
-        'shipping_method', 'invoice_info', 'payment_method', 'coupon_code',
+        'shipping_method', 'invoice_info', 'payment_method', 'payment_method_detail', 'coupon_code',
         'notes', 'invoice_status', 'invoice_error_message', 'invoice_response_code',
         'invoice_series', 'invoice_number', 'invoice_pdf_url', 'createdAt'
       ],

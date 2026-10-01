@@ -53,6 +53,10 @@ const Order = sequelize.define('Order', {
     type: DataTypes.STRING(50),
     defaultValue: 'mercadopago'
   },
+  payment_method_detail: {
+    type: DataTypes.STRING(50),
+    allowNull: true
+  },
   tracking_number: {
     type: DataTypes.STRING(100),
     allowNull: true

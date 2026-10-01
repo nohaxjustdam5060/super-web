@@ -278,12 +278,16 @@ const OrderDetailsModal = memo(function OrderDetailsModal({ selectedOrder, loadi
             ) : (localOrder.items || []).length === 0 ? (
               <p className="text-xs text-gray-400 text-center py-2 font-medium">No hay items registrados en el detalle de esta orden.</p>
             ) : (
-              (localOrder.items || []).map((item) => {
+              (localOrder.items || []).map((item, idx) => {
                 const prodImg = item.product?.images?.find((i) => i.is_primary)?.image_url || item.product?.images?.[0]?.image_url || item.product?.image_url || null;
                 const unitPrice = Number(item.unit_price) || 0;
                 const itemSubtotal = unitPrice * item.quantity;
+                const skuCode = item.sku || item.product?.sku || '';
+                const skuKey = `sku-${item.id || item.product_id || idx}`;
+                const isCopied = copiedKey === skuKey;
+
                 return (
-                  <div key={item.id || item.product_id} className="pt-2 first:pt-0 flex items-center justify-between text-xs">
+                  <div key={item.id || item.product_id || idx} className="pt-2 first:pt-0 flex items-center justify-between text-xs">
                     <div className="flex items-center space-x-3">
                       <div className="w-12 h-12 rounded-xl border border-gray-200 bg-white flex-shrink-0 flex items-center justify-center overflow-hidden">
                         <ProductImage
@@ -296,7 +300,31 @@ const OrderDetailsModal = memo(function OrderDetailsModal({ selectedOrder, loadi
                       </div>
                       <div>
                         <p className="font-bold text-gray-900 line-clamp-1">{item.product_name || item.product?.name}</p>
-                        <p className="text-[10px] text-gray-400 font-mono">SKU: {item.sku || item.product?.sku || 'N/A'}</p>
+                        <div className="flex items-center gap-1.5 my-0.5">
+                          <span className="text-[10px] text-gray-500 font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200 inline-flex items-center">
+                            SKU: <strong className="text-gray-900 font-bold ml-1 select-all">{skuCode || 'N/A'}</strong>
+                          </span>
+                          {skuCode && skuCode !== 'N/A' && (
+                            <button
+                              type="button"
+                              onClick={() => copyToClipboard(skuCode, skuKey)}
+                              className="px-1.5 py-0.5 text-[10px] font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border border-gray-300 transition-all active:scale-95 inline-flex items-center gap-1 cursor-pointer"
+                              title="Copiar SKU al portapapeles"
+                            >
+                              {isCopied ? (
+                                <>
+                                  <Check className="w-2.5 h-2.5 text-emerald-600 flex-shrink-0" />
+                                  <span className="text-emerald-700 font-bold text-[9px]">¡Copiado!</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-2.5 h-2.5 text-gray-500 flex-shrink-0" />
+                                  <span className="text-[9px]">Copiar</span>
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </div>
                         <p className="text-[11px] text-gray-600 font-semibold">S/ {unitPrice.toFixed(2)} × {item.quantity} {item.quantity === 1 ? 'unidad' : 'unidades'}</p>
                       </div>
                     </div>
@@ -386,7 +414,16 @@ const OrderDetailsModal = memo(function OrderDetailsModal({ selectedOrder, loadi
           </div>
 
           <div className="pt-2 text-[11px] text-gray-500 space-y-1 border-t border-slate-200 mt-2">
-            <p><strong>Forma de Pago:</strong> {localOrder.payment_method === 'bank_transfer' ? 'Transferencia Bancaria Directa' : 'Mercado Pago'}</p>
+            <p>
+              <strong>Forma de Pago:</strong>{' '}
+              {localOrder.payment_method === 'bank_transfer'
+                ? 'Transferencia Bancaria Directa'
+                : localOrder.payment_method_detail === 'credit_card'
+                ? 'Mercado Pago (Tarjeta de Crédito)'
+                : localOrder.payment_method_detail === 'debit_card'
+                ? 'Mercado Pago (Tarjeta de Débito)'
+                : 'Mercado Pago'}
+            </p>
             {localOrder.mp_payment_id && <p><strong>ID Pago Mercado Pago:</strong> <span className="font-mono text-gray-800 font-bold">{localOrder.mp_payment_id}</span></p>}
             {localOrder.preference_id && <p><strong>ID Preferencia MP:</strong> <span className="font-mono text-gray-400 text-[10px]">{localOrder.preference_id}</span></p>}
           </div>
