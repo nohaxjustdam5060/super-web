@@ -66,9 +66,9 @@ class PaymentService {
         },
         back_urls: {
           
-          success: 'https://www.youtube.com',
-          failure: 'https://www.youtube.com',
-          pending: 'https://www.youtube.com'
+          success: `${frontendUrl}/checkout/success?order_id=${order.id}`,
+          failure: `${frontendUrl}/checkout/failure?order_id=${order.id}`,
+          pending: `${frontendUrl}/checkout/pending?order_id=${order.id}`
         },
         notification_url: `${backendUrl}/api/payments/webhook`,
         statement_descriptor: 'SUPERLAPTOP'
