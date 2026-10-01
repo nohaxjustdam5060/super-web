@@ -84,15 +84,22 @@ class PaymentService {
 
       const response = await preferenceClient.create({ body: preferenceBody });
 
+      const isProduction = process.env.NODE_ENV === 'production';
+      const resolvedInitPoint = isProduction
+        ? (response.init_point || response.sandbox_init_point)
+        : (response.sandbox_init_point || response.init_point);
+
       console.log('✅ [LOG PASO 2 - PREFERENCE CREADA EXITOSAMENTE]:', {
         id: response.id,
+        environment: isProduction ? 'production' : 'sandbox/development',
+        resolved_init_point: resolvedInitPoint,
         init_point: response.init_point,
         sandbox_init_point: response.sandbox_init_point
       });
 
       return {
         id: response.id,
-        init_point: response.init_point || response.sandbox_init_point,
+        init_point: resolvedInitPoint,
         sandbox_init_point: response.sandbox_init_point,
         external_reference: response.external_reference
       };
