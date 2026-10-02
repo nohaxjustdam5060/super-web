@@ -324,13 +324,12 @@ export default function Navbar() {
       {/* Main Header */}
       <div className="max-w-[1440px] mx-auto px-3 sm:px-4 py-1.5 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-4 bg-brand-dark min-h-[56px] sm:min-h-[64px]">
         {/* Brand Logo */}
-        <Link to="/" className="flex items-center space-x-1.5 sm:space-x-2 group flex-shrink-0">
-          <div className="bg-brand-red text-white px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md font-black tracking-widest text-sm sm:text-xl shadow-md group-hover:scale-105 transition-transform">
-            SUPER
-          </div>
-          <span className="text-sm sm:text-xl font-black tracking-tight text-white">
-            LAPTOP<span className="text-brand-red">.</span>
-          </span>
+        <Link to="/" className="flex items-center group flex-shrink-0" title="SUPERLAPTOP">
+          <img
+            src="/images/LOGOSUP.png"
+            alt="SuperLaptop"
+            className="h-8 sm:h-10 w-auto object-contain group-hover:scale-105 transition-transform"
+          />
         </Link>
 
         {/* Search Bar Desktop (Cohesive Unified Input with Live Search Autocomplete Dropdown) */}

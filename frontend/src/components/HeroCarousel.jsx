@@ -1,49 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, ArrowRight, Flame, ShieldCheck, Truck, CreditCard, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ShieldCheck, Truck, CreditCard } from 'lucide-react';
 
 const SLIDES = [
   {
     id: 1,
-    badge: 'Nuevos Lanzamientos 2026',
-    badgeIcon: Flame,
-    title: 'POTENCIA TU RIG AL',
-    highlightTitle: 'SIGUIENTE NIVEL.',
-    description: 'Consigue las últimas tarjetas gráficas RTX 4080/4090, procesadores AMD Ryzen 3D V-Cache y SSDs NVMe Gen 5 con garantía oficial en Perú.',
-    primaryBtnText: 'Explorar Catálogo',
-    primaryBtnLink: '/catalog',
-    secondaryBtnText: 'Ver Ofertas Top',
-    secondaryBtnLink: '/catalog?is_featured=true',
-    image: 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=1200&auto=format&fit=crop',
-    gradient: 'from-slate-950 via-slate-900 to-brand-dark'
+    image: '/images/BANER1.jpg',
+    alt: 'SuperLaptop Banner 1',
+    link: '/catalog'
   },
   {
     id: 2,
-    badge: 'Tecnología Pro 2026',
-    badgeIcon: Sparkles,
-    title: 'LAPTOPS GAMER & WORKSTATIONS',
-    highlightTitle: 'DE ALTO RENDIMIENTO.',
-    description: 'Equipos empresariales Intel Core i9 y AMD Ryzen 9 diseñados para gaming competitivo, renderizado 3D y diseño avanzado.',
-    primaryBtnText: 'Laptops Empresariales',
-    primaryBtnLink: '/catalog?category_id=laptops-empresariales',
-    secondaryBtnText: 'Laptops Gamer',
-    secondaryBtnLink: '/catalog?category_id=laptops-gaming',
-    image: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=1200&auto=format&fit=crop',
-    gradient: 'from-blue-950 via-slate-900 to-slate-950'
+    image: '/images/baner2.jpg',
+    alt: 'SuperLaptop Banner 2',
+    link: '/catalog?category_id=laptops-gaming'
   },
   {
     id: 3,
-    badge: 'Garantía Oficial en Perú',
-    badgeIcon: ShieldCheck,
-    title: 'COMPONENTES & PERIFÉRICOS',
-    highlightTitle: 'DE ÚLTIMA GENERACIÓN.',
-    description: 'Memorias RAM DDR5 de alta velocidad, refrigeración líquida de precisión y audífonos gamer con envío express asegurado.',
-    primaryBtnText: 'Ver Periféricos',
-    primaryBtnLink: '/catalog?category_id=audifonos',
-    secondaryBtnText: 'Ver Catálogo',
-    secondaryBtnLink: '/catalog',
-    image: 'https://images.unsplash.com/photo-1547082299-de196ea013d6?w=1200&auto=format&fit=crop',
-    gradient: 'from-purple-950 via-slate-900 to-slate-950'
+    image: '/images/baner-3.jpg',
+    alt: 'SuperLaptop Banner 3',
+    link: '/catalog?is_featured=true'
   }
 ];
 
@@ -51,7 +27,7 @@ export default function HeroCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Image Preloading Effect (Pre-decodes slide images into memory cache on mount)
+  // Pre-decode banner images into memory cache on mount
   useEffect(() => {
     SLIDES.forEach((slide) => {
       const img = new Image();
@@ -67,26 +43,25 @@ export default function HeroCarousel() {
     setCurrentIndex((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
   }, []);
 
-  // Autoplay Effect (Changes slide every 3.5 seconds unless hovered, resets on manual interaction)
+  // Autoplay Effect (Every 4.5 seconds unless hovered)
   useEffect(() => {
     if (isPaused) return;
     const timer = setInterval(() => {
       nextSlide();
-    }, 3500);
+    }, 4500);
     return () => clearInterval(timer);
   }, [isPaused, nextSlide, currentIndex]);
 
   return (
     <div className="w-full relative overflow-hidden bg-slate-950 text-white select-none">
-      {/* Carousel Outer Slider Box with Responsive Heights */}
+      {/* Clean Full-Width Advertising Banner Slider Box */}
       <div
-        className="w-full relative h-[260px] sm:h-[360px] md:h-[500px] lg:h-[560px] xl:h-[600px]"
+        className="w-full relative h-[160px] xs:h-[200px] sm:h-[280px] md:h-[380px] lg:h-[460px] xl:h-[520px] 2xl:h-[580px] overflow-hidden bg-slate-950"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
         {SLIDES.map((slide, index) => {
           const isActive = index === currentIndex;
-          const BadgeIcon = slide.badgeIcon;
 
           return (
             <div
@@ -98,79 +73,19 @@ export default function HeroCarousel() {
                   : 'opacity-0 z-0 pointer-events-none'
               }`}
             >
-              {/* Background Image with Dark Overlay Gradient & Hardware-Accelerated Zoom */}
-              <div className="absolute inset-0 w-full h-full overflow-hidden">
+              <Link
+                to={slide.link}
+                className="block w-full h-full relative cursor-pointer"
+                title={slide.alt}
+              >
                 <img
                   src={slide.image}
-                  alt={slide.title}
-                  loading="eager"
+                  alt={slide.alt}
+                  loading={index === 0 ? 'eager' : 'lazy'}
                   decoding="async"
-                  style={{ willChange: 'transform, opacity' }}
-                  className={`w-full h-full object-cover object-center transition-all duration-1000 ease-out ${
-                    isActive ? 'opacity-40 scale-105' : 'opacity-0 scale-100'
-                  }`}
+                  className="w-full h-full object-cover object-center"
                 />
-                <div className={`absolute inset-0 bg-gradient-to-r ${slide.gradient} opacity-85`} />
-                <div className="absolute inset-0 bg-slate-950/50" />
-              </div>
-
-              {/* Slide Text & Content Grid (Centered Content inside max-w-[1440px]) */}
-              <div className="relative z-20 h-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 items-center w-full py-3 sm:py-6 lg:py-8">
-                  {/* Left Column: Headline & Action Buttons */}
-                  <div className="lg:col-span-8 space-y-2 sm:space-y-4 lg:space-y-6">
-                    <span className="inline-flex items-center space-x-1.5 sm:space-x-2 bg-brand-red/20 text-brand-red-accent border border-brand-red/40 text-[10px] sm:text-xs font-black px-2.5 py-0.5 sm:px-3.5 sm:py-1.5 rounded-md uppercase tracking-wider shadow-sm">
-                      <BadgeIcon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isActive ? 'animate-bounce' : ''}`} />
-                      <span>{slide.badge}</span>
-                    </span>
-
-                    <h1 className="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-black tracking-tight leading-tight sm:leading-none font-heading break-words">
-                      {slide.title}{' '}
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-red-accent via-amber-400 to-amber-300">
-                        {slide.highlightTitle}
-                      </span>
-                    </h1>
-
-                    <p className="hidden sm:block text-gray-300 text-xs sm:text-base lg:text-lg max-w-2xl leading-relaxed">
-                      {slide.description}
-                    </p>
-
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 pt-1 sm:pt-2">
-                      <Link
-                        to={slide.primaryBtnLink}
-                        className="bg-brand-red hover:bg-brand-red-hover text-white font-extrabold px-3.5 sm:px-8 py-1.5 sm:py-3.5 rounded-md shadow-lg hover:shadow-brand-red/40 transition-all flex items-center space-x-1.5 sm:space-x-2 text-xs sm:text-base active:scale-95 cursor-pointer"
-                      >
-                        <span>{slide.primaryBtnText}</span>
-                        <ArrowRight className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
-                      </Link>
-
-                      <Link
-                        to={slide.secondaryBtnLink}
-                        className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold px-3 sm:px-6 py-1.5 sm:py-3.5 rounded-md transition-colors text-xs sm:text-base cursor-pointer"
-                      >
-                        {slide.secondaryBtnText}
-                      </Link>
-                    </div>
-                  </div>
-
-                  {/* Right Column: Featured Image Graphic (Visible on desktop) */}
-                  <div className="hidden lg:flex lg:col-span-4 justify-center items-center">
-                    <div className="relative group">
-                      <div className="absolute inset-0 bg-brand-red/15 rounded-lg opacity-80 group-hover:bg-brand-red/25 transition-colors" />
-                      <img
-                        src={slide.image}
-                        alt={slide.title}
-                        loading="eager"
-                        decoding="async"
-                        style={{ willChange: 'transform, opacity' }}
-                        className={`relative z-10 max-h-[300px] lg:max-h-[360px] w-auto max-w-full object-contain rounded-lg border border-white/10 shadow-2xl transform transition-transform duration-700 ease-out ${
-                          isActive ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
-                        }`}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
+              </Link>
             </div>
           );
         })}
@@ -179,7 +94,7 @@ export default function HeroCarousel() {
         <button
           onClick={prevSlide}
           aria-label="Diapositiva Anterior"
-          className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-7 h-7 sm:w-11 sm:h-11 rounded-md bg-slate-900/60 hover:bg-brand-red text-white border border-white/10 flex items-center justify-center backdrop-blur-md shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer"
+          className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-slate-900/60 hover:bg-brand-red text-white border border-white/15 flex items-center justify-center backdrop-blur-md shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer"
         >
           <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
         </button>
@@ -188,7 +103,7 @@ export default function HeroCarousel() {
         <button
           onClick={nextSlide}
           aria-label="Siguiente Diapositiva"
-          className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-7 h-7 sm:w-11 sm:h-11 rounded-md bg-slate-900/60 hover:bg-brand-red text-white border border-white/10 flex items-center justify-center backdrop-blur-md shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer"
+          className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-slate-900/60 hover:bg-brand-red text-white border border-white/15 flex items-center justify-center backdrop-blur-md shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer"
         >
           <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
         </button>
@@ -200,8 +115,8 @@ export default function HeroCarousel() {
               key={idx}
               onClick={() => setCurrentIndex(idx)}
               aria-label={`Ir a diapositiva ${idx + 1}`}
-              className={`h-1.5 sm:h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-                idx === currentIndex ? 'w-5 sm:w-8 bg-brand-red shadow-lg' : 'w-1.5 sm:w-2.5 bg-white/40 hover:bg-white/70'
+              className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                idx === currentIndex ? 'w-5 sm:w-8 bg-brand-red shadow-lg' : 'w-1.5 sm:w-2 bg-white/50 hover:bg-white/80'
               }`}
             />
           ))}
