@@ -146,6 +146,16 @@ export default function Navbar() {
   const [showLiveSearch, setShowLiveSearch] = useState(false);
   const searchContainerRef = useRef(null);
 
+  // Mobile Top Announcement Rotator State
+  const [announcementIndex, setAnnouncementIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setAnnouncementIndex((prev) => (prev + 1) % 2);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
+
   const navigate = useNavigate();
   const navRef = useRef(null);
 
@@ -290,30 +300,52 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 bg-brand-dark border-b border-white/10 shadow-md transition-all" ref={navRef}>
-      {/* Top Announcement Bar */}
-      <div className="bg-brand-dark text-white text-[10px] sm:text-xs py-1.5 px-2.5 sm:px-4">
-        <div className="max-w-[1440px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-1 sm:gap-2">
-          <div className="flex items-center space-x-2 sm:space-x-6 min-w-0">
-            <span className="flex items-center text-gray-300 font-medium truncate">
+      {/* Top Announcement Bar (Compact Single-line height h-7 sm:h-8 across all screens) */}
+      <div className="bg-brand-dark text-white text-[10px] sm:text-xs h-7 sm:h-8 px-3 sm:px-4 flex items-center border-b border-white/5">
+        <div className="max-w-[1440px] mx-auto w-full flex flex-row justify-between items-center h-full gap-2">
+          {/* Mobile Single-line Auto-Rotating Benefit (< sm) */}
+          <div className="sm:hidden flex items-center justify-center min-w-0 flex-1 overflow-hidden h-full">
+            <div
+              key={announcementIndex}
+              className="flex items-center text-gray-300 font-medium truncate animate-fade-in text-[10px]"
+            >
+              {announcementIndex === 0 ? (
+                <Truck className="w-3.5 h-3.5 mr-1.5 text-brand-red flex-shrink-0" />
+              ) : (
+                <ShieldCheck className="w-3.5 h-3.5 mr-1.5 text-brand-red flex-shrink-0" />
+              )}
+              <span className="truncate">
+                {announcementIndex === 0
+                  ? 'Envío Express a Todo el Perú (24-48h)'
+                  : 'Garantía Oficial 100% E-Commerce'}
+              </span>
+            </div>
+          </div>
+
+          {/* Desktop Static Benefits (sm+) */}
+          <div className="hidden sm:flex items-center space-x-6 min-w-0">
+            <span className="flex items-center text-gray-300 font-medium whitespace-nowrap">
               <Truck className="w-3.5 h-3.5 mr-1.5 text-brand-red flex-shrink-0" />
               <span>Envío Express a Todo el Perú (24-48h)</span>
             </span>
-            <span className="hidden sm:flex items-center text-gray-300 font-medium">
+            <span className="flex items-center text-gray-300 font-medium whitespace-nowrap">
               <ShieldCheck className="w-3.5 h-3.5 mr-1.5 text-brand-red flex-shrink-0" />
-              Garantía Oficial 100% E-Commerce
+              <span>Garantía Oficial 100% E-Commerce</span>
             </span>
           </div>
-          <div className="flex items-center space-x-3 text-gray-300 text-[10px] sm:text-xs">
+
+          {/* Right Info: WhatsApp & Admin (Visible only on sm+ / desktop / tablet) */}
+          <div className="hidden sm:flex items-center space-x-2.5 sm:space-x-3 text-gray-300 text-[10px] sm:text-xs flex-shrink-0">
             <a
               href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hola, tengo una consulta sobre un producto en ${STORE_NAME}`)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="cursor-pointer transition-colors hover:text-brand-red flex items-center"
+              className="cursor-pointer transition-colors hover:text-brand-red flex items-center whitespace-nowrap"
             >
               Atención: {STORE_PHONE_DISPLAY}
             </a>
             {user?.role === 'admin' || user?.role === 'super_admin' ? (
-              <Link to="/admin" className="text-slate-100 font-bold hover:text-brand-red-accent hover:underline">
+              <Link to="/admin" className="text-slate-100 font-bold hover:text-brand-red-accent hover:underline whitespace-nowrap">
                 [ Panel Admin ]
               </Link>
             ) : null}
@@ -322,21 +354,23 @@ export default function Navbar() {
       </div>
 
       {/* Main Header */}
-      <div className="max-w-[1440px] mx-auto px-3 sm:px-4 py-1.5 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-4 bg-brand-dark min-h-[56px] sm:min-h-[64px]">
-        {/* Brand Logo */}
-        <Link to="/" className="flex items-center group flex-shrink-0" title="SUPERLAPTOP">
-          <img
-            src="/images/LOGOSUP.png"
-            alt="SuperLaptop"
-            className="h-8 sm:h-10 w-auto object-contain group-hover:scale-105 transition-transform"
-          />
-        </Link>
+      <div className="max-w-[1440px] mx-auto px-4 py-1 sm:py-1.5 flex items-center justify-between gap-2 sm:gap-4 bg-brand-dark min-h-[60px] md:min-h-[72px]">
+        {/* Brand Logo (Aligned left with 'Todo el Catálogo' on Desktop, Centered on Mobile) */}
+        <div className="flex-1 md:flex-initial flex items-center justify-center md:justify-start">
+          <Link to="/" className="flex items-center justify-center md:justify-start group flex-shrink-0" title="SUPERLAPTOP">
+            <img
+              src="/images/LOGOSUP.png"
+              alt="SuperLaptop"
+              className="h-10 md:h-12 lg:h-14 w-auto max-w-[190px] sm:max-w-[220px] md:max-w-[260px] object-contain md:object-left group-hover:scale-105 transition-transform"
+            />
+          </Link>
+        </div>
 
         {/* Search Bar Desktop (Cohesive Unified Input with Live Search Autocomplete Dropdown) */}
         <form
           ref={searchContainerRef}
           onSubmit={handleSearchSubmit}
-          className="group hidden md:flex flex-1 max-w-2xl relative mx-2 items-center outline-none focus:outline-none"
+          className="group hidden md:flex flex-1 max-w-2xl relative mx-2 lg:mx-4 items-center outline-none focus:outline-none"
         >
           <input
             type="text"

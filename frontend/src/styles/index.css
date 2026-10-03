@@ -96,6 +96,22 @@
   animation: megaMenuContentFade 0.22s ease-out both;
 }
 
+/* Announcement Bar Fade In Animation for Mobile */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out both;
+}
+
 /* Dual Range Slider Custom Thumb Styling */
 .range-slider-thumb::-webkit-slider-thumb {
   -webkit-appearance: none;

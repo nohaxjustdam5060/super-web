@@ -50,14 +50,13 @@ export default function Footer() {
       <div className="max-w-[1440px] mx-auto px-4 py-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
         {/* Col 1: Brand Info */}
         <div>
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="bg-brand-red text-white px-2 py-1 rounded-md font-black tracking-widest text-lg">
-              SUPER
-            </div>
-            <span className="text-lg font-extrabold text-white">
-              LAPTOP<span className="text-brand-red">.</span>
-            </span>
-          </div>
+          <Link to="/" className="inline-block mb-4 group" title="SUPERLAPTOP">
+            <img
+              src="/images/LOGOSUP.png"
+              alt="SuperLaptop"
+              className="h-10 md:h-12 w-auto object-contain group-hover:scale-105 transition-transform"
+            />
+          </Link>
           <p className="text-sm text-gray-400 leading-relaxed mb-4">
             Tu tienda de confianza en hardware y componentes de alto rendimiento. Las mejores marcas del mundo al mejor precio.
           </p>
