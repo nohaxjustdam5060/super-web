@@ -4,8 +4,8 @@ import { LogIn, Mail, Lock } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 
 export default function Login() {
-  const [email, setEmail] = useState('cliente@supertech.com');
-  const [password, setPassword] = useState('cliente123456');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const login = useAuthStore((state) => state.login);
   const loading = useAuthStore((state) => state.loading);
@@ -90,11 +90,6 @@ export default function Login() {
           </button>
         </form>
 
-        <div className="bg-gray-50 p-4 rounded-xl text-xs space-y-1 border border-gray-200">
-          <p className="font-bold text-gray-700">Cuentas Demo para Prueba Rapida:</p>
-          <p><span className="text-brand-blue font-semibold">Cliente:</span> cliente@supertech.com / cliente123456</p>
-          <p><span className="text-brand-red font-semibold">Admin:</span> admin@supertech.com / admin123456</p>
-        </div>
 
         <div className="text-center text-xs text-gray-500 pt-2 border-t border-gray-100">
           ¿No tienes una cuenta aún?{' '}
