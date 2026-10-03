@@ -13,6 +13,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { WHATSAPP_NUMBER, STORE_NAME, STORE_PHONE_DISPLAY } from '../utils/whatsappMessage';
 import axiosClient from '../api/axiosClient';
 import ProductImage from './ProductImage';
+import SearchAutocomplete from './SearchAutocomplete';
 
 // Direct semantic mapping for categories & subcategories
 const CATEGORY_ICON_MAP = {
@@ -133,18 +134,11 @@ function getCategoryImage(category) {
 }
 
 export default function Navbar() {
-  const [searchQuery, setSearchQuery] = useState('');
   const [categories, setCategories] = useState([]);
   const [hasOffers, setHasOffers] = useState(false);
   const [activeParentSlug, setActiveParentSlug] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedMobileCategory, setExpandedMobileCategory] = useState(null);
-
-  // Live Search States & Ref
-  const [liveSearchResults, setLiveSearchResults] = useState([]);
-  const [loadingLiveSearch, setLoadingLiveSearch] = useState(false);
-  const [showLiveSearch, setShowLiveSearch] = useState(false);
-  const searchContainerRef = useRef(null);
 
   // Mobile Top Announcement Rotator State
   const [announcementIndex, setAnnouncementIndex] = useState(0);
@@ -176,90 +170,6 @@ export default function Navbar() {
       })
       .catch((err) => console.error('[Navbar] Error loading categories:', err));
   }, []);
-
-  // Live Search Debounce & AbortController Effect (280ms)
-  useEffect(() => {
-    const trimmed = searchQuery.trim();
-    if (trimmed.length < 2) {
-      setLiveSearchResults([]);
-      setShowLiveSearch(false);
-      setLoadingLiveSearch(false);
-      return;
-    }
-
-    setLoadingLiveSearch(true);
-    setShowLiveSearch(true);
-
-    const controller = new AbortController();
-
-    const timer = setTimeout(() => {
-      axiosClient
-        .get(`/products?search=${encodeURIComponent(trimmed)}&limit=6`, {
-          signal: controller.signal
-        })
-        .then((res) => {
-          if (res.data.success) {
-            setLiveSearchResults(res.data.products || []);
-          } else {
-            setLiveSearchResults([]);
-          }
-        })
-        .catch((err) => {
-          // Silently ignore aborted / canceled requests to avoid console noise or stale state updates
-          if (err.name === 'CanceledError' || err.name === 'AbortError' || err.code === 'ERR_CANCELED') {
-            return;
-          }
-          console.error('[LiveSearch] Error fetching results:', err);
-          setLiveSearchResults([]);
-        })
-        .finally(() => {
-          if (!controller.signal.aborted) {
-            setLoadingLiveSearch(false);
-          }
-        });
-    }, 280);
-
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [searchQuery]);
-
-  // Click Outside & Escape key listener to close Live Search dropdown
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
-        setShowLiveSearch(false);
-      }
-    };
-
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        setShowLiveSearch(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
-
-  const handleSearchSubmit = (e) => {
-    if (e && e.preventDefault) e.preventDefault();
-    if (searchQuery.trim()) {
-      setShowLiveSearch(false);
-      navigate(`/catalog?search=${encodeURIComponent(searchQuery.trim())}`);
-      setMobileMenuOpen(false);
-    }
-  };
-
-  const handleSelectProduct = (productSlug) => {
-    setShowLiveSearch(false);
-    navigate(`/product/${productSlug}`);
-  };
 
   const handleSubcategoryClick = (slug) => {
     setActiveParentSlug(null);
@@ -367,110 +277,7 @@ export default function Navbar() {
         </div>
 
         {/* Search Bar Desktop (Cohesive Unified Input with Live Search Autocomplete Dropdown) */}
-        <form
-          ref={searchContainerRef}
-          onSubmit={handleSearchSubmit}
-          className="group hidden md:flex flex-1 max-w-2xl relative mx-2 lg:mx-4 items-center outline-none focus:outline-none"
-        >
-          <input
-            type="text"
-            placeholder="Buscar laptops, procesadores, tarjetas gráficas, monitores..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => {
-              if (searchQuery.trim().length >= 2) setShowLiveSearch(true);
-            }}
-            className="w-full bg-slate-800/60 border border-slate-700/60 focus:border-brand-red focus:bg-slate-800/90 rounded-md py-2 pl-4 pr-11 text-sm font-medium text-white placeholder:text-slate-400 outline-none focus:outline-none focus-visible:outline-none ring-0 ring-offset-0 focus:ring-0 shadow-inner transition-colors duration-200"
-          />
-          <button
-            type="submit"
-            className="absolute right-2 text-slate-400 group-focus-within:text-brand-red hover:text-white p-1.5 rounded-md transition-colors duration-200 flex items-center justify-center cursor-pointer outline-none focus:outline-none focus-visible:outline-none ring-0 ring-offset-0"
-            title="Buscar"
-            aria-label="Buscar"
-          >
-            <Search className="w-5 h-5 transition-colors duration-200" />
-          </button>
-
-          {/* Live Search Predictively Suggested Dropdown Menu */}
-          {showLiveSearch && searchQuery.trim().length >= 2 && (
-            <div className="absolute top-full left-0 w-full mt-2 bg-slate-900 border border-slate-700/80 rounded-lg shadow-2xl z-50 overflow-hidden max-h-[420px] overflow-y-auto font-sans">
-              {loadingLiveSearch ? (
-                <div className="p-4 flex items-center justify-center space-x-2.5 text-gray-300">
-                  <Loader2 className="w-5 h-5 animate-spin text-brand-red-accent" />
-                  <span className="text-xs font-semibold">Buscando productos ...</span>
-                </div>
-              ) : liveSearchResults.length > 0 ? (
-                <div className="divide-y divide-slate-800">
-                  {liveSearchResults.map((prod) => {
-                    const img = prod.images?.find((i) => i.is_primary)?.image_url || prod.images?.[0]?.image_url || prod.image_url || null;
-                    const isOffer = Boolean(prod.offer_price && Number(prod.offer_price) < Number(prod.price));
-                    const currentPrice = Number(isOffer ? prod.offer_price : prod.price);
-                    const formattedPrice = `S/ ${currentPrice.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-                    return (
-                      <button
-                        key={prod.id}
-                        type="button"
-                        onClick={() => handleSelectProduct(prod.slug || prod.id)}
-                        className="w-full text-left p-3 hover:bg-slate-800/80 transition-colors flex items-center space-x-3.5 group cursor-pointer"
-                      >
-                        <div className="w-11 h-11 bg-white rounded-md p-1 flex-shrink-0 flex items-center justify-center border border-slate-700/60 overflow-hidden">
-                          <ProductImage
-                            src={img}
-                            alt={prod.name}
-                            className="w-full h-full object-contain group-hover:scale-105 transition-transform"
-                            size="xs"
-                            showText={false}
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-xs font-extrabold text-white group-hover:text-brand-red-accent transition-colors truncate">
-                            {prod.name}
-                          </h4>
-                          <div className="flex items-center space-x-2 mt-0.5">
-                            <span className="text-[10px] text-gray-400 font-medium truncate">
-                              {prod.brand?.name || prod.category?.name || 'SUPERLAPTOP'}
-                            </span>
-                            {prod.sku && (
-                              <span className="text-[9px] text-gray-500 font-mono">
-                                SKU: {prod.sku}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          <span className="text-xs font-black text-brand-red-accent block">
-                            {formattedPrice}
-                          </span>
-                          {isOffer && (
-                            <span className="text-[10px] text-gray-400 line-through block">
-                              S/ {Number(prod.price).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-
-                  {/* Footer: View all results in Catalog */}
-                  <button
-                    type="button"
-                    onClick={handleSearchSubmit}
-                    className="w-full bg-slate-950 hover:bg-slate-800 text-brand-red-accent hover:text-white p-3 text-xs font-extrabold flex items-center justify-center space-x-1.5 transition-colors border-t border-slate-800 cursor-pointer"
-                  >
-                    <span>Ver todos los resultados para "{searchQuery}"</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <div className="p-6 text-center text-gray-400 space-y-1">
-                  <p className="text-xs font-bold text-gray-200">No se encontraron productos para "{searchQuery}"</p>
-                  <p className="text-[11px] text-gray-400">Prueba con términos como "Laptop", "RTX", "Ryzen" o "Monitor"</p>
-                </div>
-              )}
-            </div>
-          )}
-        </form>
+        <SearchAutocomplete variant="desktop" />
 
         {/* Header Right Actions (Profile, Cart & Hamburger on Mobile/Tablet) */}
         <div className="flex items-center space-x-1.5 sm:space-x-2.5 flex-nowrap justify-end flex-shrink-0">
@@ -676,19 +483,12 @@ export default function Navbar() {
       {/* Mobile Drawer Navigation (Accordion Style) */}
       {mobileMenuOpen && (
         <div className="bg-brand-dark border-b border-slate-800 p-4 space-y-4 shadow-2xl max-h-[85vh] overflow-y-auto border-t border-slate-800 text-white">
-          {/* Search Mobile */}
-          <form onSubmit={handleSearchSubmit} className="group flex md:hidden outline-none focus:outline-none">
-            <input
-              type="text"
-              placeholder="Buscar en la tienda..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-800/60 border border-slate-700/60 focus:border-brand-red focus:bg-slate-800/90 rounded-l-xl py-2.5 px-3 text-xs text-white placeholder:text-slate-400 outline-none focus:outline-none focus-visible:outline-none ring-0 ring-offset-0 transition-colors duration-200"
-            />
-            <button type="submit" className="bg-brand-red text-white px-4 rounded-r-xl font-bold text-xs flex items-center outline-none focus:outline-none focus-visible:outline-none ring-0 ring-offset-0">
-              <Search className="w-3.5 h-3.5 mr-1" /> Buscar
-            </button>
-          </form>
+          {/* Search Mobile (Predictive Live Search with Autocomplete Dropdown) */}
+          <SearchAutocomplete
+            variant="mobile"
+            placeholder="Buscar en la tienda..."
+            onCloseMobileMenu={() => setMobileMenuOpen(false)}
+          />
 
           {/* Mobile Direct Links */}
           <div className="flex gap-2">
