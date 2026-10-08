@@ -226,8 +226,8 @@ function generateClaimConfirmationHTML(claim) {
               Datos del Proveedor
             </h4>
             <table style="width: 100%; font-size: 12px; color: #334155; line-height: 1.6;">
-              <tr><td style="width: 35%; font-weight: bold;">Razón Social:</td><td>SUPERLAPTOP E.I.R.L.</td></tr>
-              <tr><td style="font-weight: bold;">RUC:</td><td>20608594210</td></tr>
+              <tr><td style="width: 35%; font-weight: bold;">Razón Social:</td><td>SUPERLAPTOP S.A.C</td></tr>
+              <tr><td style="font-weight: bold;">RUC:</td><td>20609242575</td></tr>
               <tr><td style="font-weight: bold;">Domicilio Fiscal:</td><td>Jr.Velarde 172, Lima, Perú</td></tr>
             </table>
           </div>

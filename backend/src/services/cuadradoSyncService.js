@@ -10,8 +10,17 @@ function slugifyString(text) {
 }
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
-const { Product, ProductImage, Category, Brand } = require('../models');
+const { Product, ProductImage, Category, Brand, SystemSetting } = require('../models');
 const logger = require('../config/logger');
+
+function applyMarkupAndCeil(rawPrice, markupPercent) {
+  if (rawPrice === null || rawPrice === undefined || isNaN(rawPrice) || Number(rawPrice) <= 0) return null;
+  const numPrice = Number(rawPrice);
+  const factor = 1 + (Number(markupPercent) || 0) / 100;
+  const priceWithMarkup = numPrice * factor;
+  // Math.ceil rounds UP to the nearest integer, guaranteed to end in .00
+  return parseFloat(Math.ceil(priceWithMarkup).toFixed(2));
+}
 
 const CUADRADO_API_URL = process.env.CUADRADO_API_URL || 'https://app.cuadrado.pe/cuadrado/api';
 const CUADRADO_API_TOKEN = process.env.CUADRADO_API_TOKEN || '';
@@ -19,6 +28,23 @@ const CUADRADO_SYNC_PAGE_LIMIT = parseInt(process.env.CUADRADO_SYNC_PAGE_LIMIT, 
 const CUADRADO_SYNC_TIMEOUT_MS = parseInt(process.env.CUADRADO_SYNC_TIMEOUT_MS, 10) || 15000;
 
 class CuadradoSyncService {
+  /**
+   * Reads configured retail markup percentage from SystemSetting or fallback to ENV / 3%
+   */
+  async getMarkupPercent() {
+    try {
+      const setting = await SystemSetting.findOne({ where: { key: 'cuadrado_markup_percent' } });
+      if (setting && setting.value !== undefined && setting.value !== null && setting.value !== '') {
+        const parsed = parseFloat(setting.value);
+        if (!isNaN(parsed) && parsed >= 0) return parsed;
+      }
+    } catch (err) {
+      logger.warn(`[CuadradoSync] Error leyendo SystemSetting cuadrado_markup_percent: ${err.message}`);
+    }
+    const envVal = parseFloat(process.env.CUADRADO_PRICE_MARKUP_PERCENT);
+    return !isNaN(envVal) && envVal >= 0 ? envVal : 3;
+  }
+
   /**
    * Helper to fetch a single page from Cuadrado API with timeout and retries
    */
@@ -450,6 +476,9 @@ class CuadradoSyncService {
     logger.info('🚀 [CuadradoSync] Iniciando proceso de sincronización con API oficial de Cuadrado...');
 
     try {
+      const markupPercent = await this.getMarkupPercent();
+      logger.info(`[CuadradoSync] Margen comercial configurado: ${markupPercent}% (Redondeo hacia arriba Math.ceil a .00)`);
+
       const items = await this.fetchCatalogData();
       if (!items || items.length === 0) {
         logger.warn('[CuadradoSync] Catálogo recibido está vacío. Abortando sync.');
@@ -494,24 +523,28 @@ class CuadradoSyncService {
 
         const externalId = item.id ? String(item.id).trim() : null;
 
-        // Pricing calculation
+        // Pricing calculation from raw Cuadrado wholesale data
         const basePrice = Number(item.base_price !== undefined && item.base_price !== null ? item.base_price : (item.precio !== undefined ? item.precio : 0)) || 0;
         const salePrice = Number(item.sale_price) || null;
         const webPrice = Number(item.web_price) || null;
 
-        let price = basePrice > 0 ? basePrice : (salePrice || webPrice || 0);
-        let offerPrice = null;
+        let rawPrice = basePrice > 0 ? basePrice : (salePrice || webPrice || 0);
+        let rawOfferPrice = null;
 
-        if (webPrice && webPrice > 0 && webPrice < price) {
-          offerPrice = webPrice;
-        } else if (salePrice && salePrice > 0 && salePrice < price) {
-          offerPrice = salePrice;
+        if (webPrice && webPrice > 0 && webPrice < rawPrice) {
+          rawOfferPrice = webPrice;
+        } else if (salePrice && salePrice > 0 && salePrice < rawPrice) {
+          rawOfferPrice = salePrice;
         }
 
-        if (price === 0 && offerPrice) {
-          price = offerPrice;
-          offerPrice = null;
+        if (rawPrice === 0 && rawOfferPrice) {
+          rawPrice = rawOfferPrice;
+          rawOfferPrice = null;
         }
+
+        // Apply retail markup percentage and round strictly UP to integer (.00)
+        const price = applyMarkupAndCeil(rawPrice, markupPercent) || 0;
+        const offerPrice = rawOfferPrice ? applyMarkupAndCeil(rawOfferPrice, markupPercent) : null;
 
         // Stock and active status
         const stock = Number(item.stock_quantity !== undefined && item.stock_quantity !== null ? item.stock_quantity : (item.stock !== undefined ? item.stock : 0)) || 0;

@@ -612,10 +612,10 @@ export default function Checkout() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
               <div>
                 <p className="font-black text-slate-900 text-sm flex items-center">
-                  <Building2 className="w-4 h-4 mr-2 text-brand-red" /> Cuentas Bancarias Oficiales (Soles)
+                  <Building2 className="w-4 h-4 mr-2 text-brand-red" /> Cuentas Bancarias Oficiales
                 </p>
                 <p className="text-[11px] text-gray-500 mt-0.5">
-                  Titular: <strong className="text-gray-800 font-bold">CUADRADO TECHNOLOGY & ADVANCE E.I.R.L.</strong> · RUC: <strong className="text-gray-800 font-bold">20606455543</strong>
+                  Titular: <strong className="text-gray-800 font-bold">SUPERLAPTOP S.A.C</strong> · RUC: <strong className="text-gray-800 font-bold">20609242575</strong>
                 </p>
               </div>
               <div className="bg-red-50 border border-red-200 text-brand-red px-3 py-1.5 rounded-xl font-black text-xs text-right whitespace-nowrap">
@@ -624,7 +624,7 @@ export default function Checkout() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* BCP */}
+              {/* BCP Soles */}
               <div className="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="font-black text-brand-blue text-xs">BCP Soles</span>
@@ -632,10 +632,10 @@ export default function Checkout() {
                 </div>
                 <div className="space-y-1 font-mono text-[11px] text-gray-800">
                   <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
-                    <span>Cta: 191-8742112-0-60</span>
+                    <span>Cta: 191-9899662-0-83</span>
                     <button
                       type="button"
-                      onClick={() => handleCopyBankInfo('191-8742112-0-60', 'bcp_cta')}
+                      onClick={() => handleCopyBankInfo('191-9899662-0-83', 'bcp_cta')}
                       className="text-gray-500 hover:text-brand-red p-1 cursor-pointer"
                       title="Copiar número de cuenta"
                     >
@@ -643,10 +643,10 @@ export default function Checkout() {
                     </button>
                   </div>
                   <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
-                    <span>CCI: 002219100874211206058</span>
+                    <span>CCI: 00219100989966208351</span>
                     <button
                       type="button"
-                      onClick={() => handleCopyBankInfo('00219100874211206058', 'bcp_cci')}
+                      onClick={() => handleCopyBankInfo('00219100989966208351', 'bcp_cci')}
                       className="text-gray-500 hover:text-brand-red p-1 cursor-pointer"
                       title="Copiar código interbancario"
                     >
@@ -656,39 +656,7 @@ export default function Checkout() {
                 </div>
               </div>
 
-              {/* Interbank */}
-              <div className="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="font-black text-emerald-700 text-xs">Interbank Soles</span>
-                  <span className="text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md">Cuenta Corriente</span>
-                </div>
-                <div className="space-y-1 font-mono text-[11px] text-gray-800">
-                  <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
-                    <span>Cta: 200-3003161925</span>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyBankInfo('200-3003161925', 'ibk_cta')}
-                      className="text-gray-500 hover:text-brand-red p-1 cursor-pointer"
-                      title="Copiar número de cuenta"
-                    >
-                      {copiedBankKey === 'ibk_cta' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                    </button>
-                  </div>
-                  <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
-                    <span>CCI: 00320000300316192534</span>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyBankInfo('00320000300316192534', 'ibk_cci')}
-                      className="text-gray-500 hover:text-brand-red p-1 cursor-pointer"
-                      title="Copiar código interbancario"
-                    >
-                      {copiedBankKey === 'ibk_cci' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* BBVA */}
+              {/* BBVA Soles */}
               <div className="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="font-black text-blue-800 text-xs">BBVA Soles</span>
@@ -696,10 +664,10 @@ export default function Checkout() {
                 </div>
                 <div className="space-y-1 font-mono text-[11px] text-gray-800">
                   <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
-                    <span>Cta: 0011-0175-0100075566</span>
+                    <span>Cta: 0011-0175-0100082392</span>
                     <button
                       type="button"
-                      onClick={() => handleCopyBankInfo('0011-0175-0100075566', 'bbva_cta')}
+                      onClick={() => handleCopyBankInfo('0011-0175-0100082392', 'bbva_cta')}
                       className="text-gray-500 hover:text-brand-red p-1 cursor-pointer"
                       title="Copiar número de cuenta"
                     >
@@ -707,10 +675,10 @@ export default function Checkout() {
                     </button>
                   </div>
                   <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
-                    <span>CCI: 01117500010007556678</span>
+                    <span>CCI: 01117500010008239270</span>
                     <button
                       type="button"
-                      onClick={() => handleCopyBankInfo('01117500010007556678', 'bbva_cci')}
+                      onClick={() => handleCopyBankInfo('01117500010008239270', 'bbva_cci')}
                       className="text-gray-500 hover:text-brand-red p-1 cursor-pointer"
                       title="Copiar código interbancario"
                     >
@@ -720,33 +688,65 @@ export default function Checkout() {
                 </div>
               </div>
 
-              {/* Scotiabank */}
+              {/* Interbank Soles */}
               <div className="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="font-black text-red-700 text-xs">Scotiabank Soles</span>
-                  <span className="text-[10px] font-bold uppercase bg-red-50 text-red-700 px-2 py-0.5 rounded-md">Cuenta Corriente</span>
+                  <span className="font-black text-emerald-700 text-xs">Interbank Soles</span>
+                  <span className="text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md">Cuenta Corriente</span>
                 </div>
                 <div className="space-y-1 font-mono text-[11px] text-gray-800">
                   <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
-                    <span>Cta: 000-2987321</span>
+                    <span>Cta: 200-3004056157</span>
                     <button
                       type="button"
-                      onClick={() => handleCopyBankInfo('000-2987321', 'scotia_cta')}
+                      onClick={() => handleCopyBankInfo('200-3004056157', 'ibk_cta')}
                       className="text-gray-500 hover:text-brand-red p-1 cursor-pointer"
                       title="Copiar número de cuenta"
                     >
-                      {copiedBankKey === 'scotia_cta' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedBankKey === 'ibk_cta' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                   <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
-                    <span>CCI: 00902100000298732173</span>
+                    <span>CCI: 003-200-003004056157-30</span>
                     <button
                       type="button"
-                      onClick={() => handleCopyBankInfo('00902100000298732173', 'scotia_cci')}
+                      onClick={() => handleCopyBankInfo('003-200-003004056157-30', 'ibk_cci')}
                       className="text-gray-500 hover:text-brand-red p-1 cursor-pointer"
                       title="Copiar código interbancario"
                     >
-                      {copiedBankKey === 'scotia_cci' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedBankKey === 'ibk_cci' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* BCP Dólares */}
+              <div className="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-black text-brand-blue text-xs">BCP Dólares</span>
+                  <span className="text-[10px] font-bold uppercase bg-blue-50 text-brand-blue px-2 py-0.5 rounded-md">Cuenta USD</span>
+                </div>
+                <div className="space-y-1 font-mono text-[11px] text-gray-800">
+                  <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
+                    <span>Cta: 1919944889131</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyBankInfo('1919944889131', 'bcp_usd_cta')}
+                      className="text-gray-500 hover:text-brand-red p-1 cursor-pointer"
+                      title="Copiar número de cuenta"
+                    >
+                      {copiedBankKey === 'bcp_usd_cta' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                  <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
+                    <span>CCI: 00219100994488913159</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyBankInfo('00219100994488913159', 'bcp_usd_cci')}
+                      className="text-gray-500 hover:text-brand-red p-1 cursor-pointer"
+                      title="Copiar código interbancario"
+                    >
+                      {copiedBankKey === 'bcp_usd_cci' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                 </div>
@@ -785,55 +785,55 @@ export default function Checkout() {
           <div className="lg:col-span-2 space-y-6">
             {step === 1 ? (
               /* STEP 1: SHIPPING METHOD (TOP) & CONDITIONAL ADDRESS FORM */
-              <form onSubmit={handleProceedToPaymentStep} className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm space-y-6">
-                <div className="border-b border-gray-100 pb-3">
-                  <h3 className="text-xl font-black text-gray-900 flex items-center">
-                    <Truck className="w-5 h-5 mr-2 text-brand-red" /> 1. Método de Entrega y Datos de Despacho
+              <form onSubmit={handleProceedToPaymentStep} className="bg-white p-4 sm:p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+                <div className="border-b border-gray-100 pb-2.5">
+                  <h3 className="text-lg sm:text-xl font-black text-gray-900 flex items-center">
+                    <Truck className="w-5 h-5 mr-2 text-brand-red shrink-0" /> 1. Método de Entrega y Datos de Despacho
                   </h3>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 mt-0.5">
                     Selecciona cómo deseas recibir tu compra antes de completar tus datos.
                   </p>
                 </div>
 
                 {/* 1.1 SHIPPING METHOD SELECTION (PLACED AT THE TOP) */}
-                <div className="space-y-3">
-                  <label className="block text-xs font-black uppercase tracking-wider text-brand-red">
+                <div className="space-y-2">
+                  <label className="block text-[11px] font-black uppercase tracking-wider text-brand-red">
                     Selecciona el Método de Entrega *
                   </label>
 
                   {loadingShippingMethods ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                       {[1, 2, 3].map((n) => (
                         <div
                           key={n}
-                          className="p-4 rounded-2xl border-2 border-slate-200/70 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 animate-pulse flex flex-col justify-between h-[155px]"
+                          className="p-3 sm:p-3.5 rounded-xl border-2 border-slate-200/70 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 animate-pulse flex flex-col justify-between h-[130px]"
                         >
-                          <div className="space-y-3">
+                          <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                              <div className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700" />
-                              <div className="w-16 h-5 rounded-full bg-slate-200 dark:bg-slate-700" />
+                              <div className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700" />
+                              <div className="w-14 h-4 rounded-full bg-slate-200 dark:bg-slate-700" />
                             </div>
 
-                            <div className="flex items-center space-x-2 pt-1">
-                              <div className="w-5 h-5 rounded-md bg-slate-200 dark:bg-slate-700 shrink-0" />
-                              <div className="h-4 w-3/4 rounded bg-slate-200 dark:bg-slate-700" />
+                            <div className="flex items-center space-x-1.5 pt-0.5">
+                              <div className="w-4 h-4 rounded-md bg-slate-200 dark:bg-slate-700 shrink-0" />
+                              <div className="h-3.5 w-3/4 rounded bg-slate-200 dark:bg-slate-700" />
                             </div>
 
-                            <div className="space-y-1.5">
-                              <div className="h-3 w-full rounded bg-slate-200 dark:bg-slate-700" />
-                              <div className="h-3 w-2/3 rounded bg-slate-200 dark:bg-slate-700" />
+                            <div className="space-y-1">
+                              <div className="h-2.5 w-full rounded bg-slate-200 dark:bg-slate-700" />
+                              <div className="h-2.5 w-2/3 rounded bg-slate-200 dark:bg-slate-700" />
                             </div>
                           </div>
 
-                          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 mt-2 flex items-center space-x-1.5">
+                          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 mt-1.5 flex items-center space-x-1">
                             <div className="w-3 h-3 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
-                            <div className="h-2.5 w-1/2 rounded bg-slate-200 dark:bg-slate-700" />
+                            <div className="h-2 w-1/2 rounded bg-slate-200 dark:bg-slate-700" />
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                       {shippingMethods.map((method) => {
                         const isSelected = selectedShippingMethod?.id === method.id;
                         const methodIsPickup = method.code === 'pickup' || Number(method.cost) === 0 || method.name?.toLowerCase().includes('recojo');
@@ -842,23 +842,23 @@ export default function Checkout() {
                           <div
                             key={method.id}
                             onClick={() => setSelectedShippingMethod(method)}
-                            className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                            className={`p-3 sm:p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
                               isSelected
-                                ? 'border-brand-red bg-red-50/20 shadow-md ring-1 ring-brand-red/30'
+                                ? 'border-brand-red bg-red-50/20 shadow-sm ring-1 ring-brand-red/30'
                                 : 'border-gray-200 hover:border-gray-300 bg-white'
                             }`}
                           >
-                            <div className="space-y-2">
+                            <div className="space-y-1.5">
                               <div className="flex items-center justify-between">
-                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-brand-red bg-brand-red' : 'border-gray-300'}`}>
-                                  {isSelected && <Check className="w-3 h-3 text-white stroke-[3]" />}
+                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-brand-red bg-brand-red' : 'border-gray-300'}`}>
+                                  {isSelected && <Check className="w-2.5 h-2.5 text-white stroke-[3]" />}
                                 </div>
-                                <span className={`font-black text-xs px-2 py-0.5 rounded-full ${methodIsPickup ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-50 text-blue-800'}`}>
+                                <span className={`font-black text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full ${methodIsPickup ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-50 text-blue-800'}`}>
                                   {methodIsPickup ? '¡Gratis!' : `S/ ${Number(method.cost).toFixed(2)}`}
                                 </span>
                               </div>
 
-                              <p className="font-extrabold text-gray-900 text-sm flex items-center pt-1">
+                              <p className="font-extrabold text-gray-900 text-xs sm:text-sm flex items-center pt-0.5">
                                 {renderShippingMethodIcon(method, isSelected)}
                                 <span>{method.name}</span>
                               </p>
@@ -868,8 +868,8 @@ export default function Checkout() {
                               </p>
                             </div>
 
-                            <div className="pt-3 border-t border-gray-100 mt-2 text-[10px] text-gray-400 font-bold flex items-center">
-                              <Clock className="w-3 h-3 mr-1 text-gray-400" strokeWidth={2} />
+                            <div className="pt-2 border-t border-gray-100 mt-1.5 text-[10px] text-gray-400 font-bold flex items-center">
+                              <Clock className="w-3 h-3 mr-1 text-gray-400 shrink-0" strokeWidth={2} />
                               <span>{method.estimated_delivery}</span>
                             </div>
                           </div>
@@ -881,124 +881,113 @@ export default function Checkout() {
 
                 {/* 1.2 CONDITIONAL FIELDS BASED ON METHOD */}
                 {loadingShippingMethods ? (
-                  <div className="space-y-6 pt-2">
+                  <div className="space-y-4 pt-1">
                     {/* Store Physical Info Card Skeleton */}
-                    <div className="bg-emerald-50/40 dark:bg-slate-800/40 border-2 border-emerald-100/60 dark:border-slate-800 rounded-2xl p-5 space-y-3 animate-pulse">
-                      <div className="flex items-center space-x-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-700 shrink-0" />
-                        <div className="space-y-1.5 flex-1">
-                          <div className="h-4 w-60 rounded bg-slate-200 dark:bg-slate-700" />
-                          <div className="h-3 w-40 rounded bg-slate-200 dark:bg-slate-700" />
+                    <div className="bg-emerald-50/40 dark:bg-slate-800/40 border border-emerald-100/60 dark:border-slate-800 rounded-xl p-3.5 space-y-2.5 animate-pulse">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-700 shrink-0" />
+                        <div className="space-y-1 flex-1">
+                          <div className="h-3.5 w-48 rounded bg-slate-200 dark:bg-slate-700" />
+                          <div className="h-2.5 w-32 rounded bg-slate-200 dark:bg-slate-700" />
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                        <div className="bg-white/80 dark:bg-slate-800/80 p-3 rounded-xl border border-emerald-100/70 dark:border-slate-700/70 flex items-start space-x-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
-                          <div className="space-y-2 flex-1 pt-0.5">
-                            <div className="h-2.5 w-16 rounded bg-slate-200 dark:bg-slate-700" />
-                            <div className="h-3.5 w-36 rounded bg-slate-200 dark:bg-slate-700" />
-                            <div className="h-2.5 w-48 rounded bg-slate-200 dark:bg-slate-700" />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
+                        <div className="bg-white/80 dark:bg-slate-800/80 p-2.5 rounded-lg border border-emerald-100/70 dark:border-slate-700/70 flex items-start space-x-2.5">
+                          <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
+                          <div className="space-y-1.5 flex-1 pt-0.5">
+                            <div className="h-2 w-14 rounded bg-slate-200 dark:bg-slate-700" />
+                            <div className="h-3 w-28 rounded bg-slate-200 dark:bg-slate-700" />
                           </div>
                         </div>
 
-                        <div className="bg-white/80 dark:bg-slate-800/80 p-3 rounded-xl border border-emerald-100/70 dark:border-slate-700/70 flex items-start space-x-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
-                          <div className="space-y-2 flex-1 pt-0.5">
-                            <div className="h-2.5 w-24 rounded bg-slate-200 dark:bg-slate-700" />
-                            <div className="h-3.5 w-44 rounded bg-slate-200 dark:bg-slate-700" />
-                            <div className="h-2.5 w-40 rounded bg-slate-200 dark:bg-slate-700" />
+                        <div className="bg-white/80 dark:bg-slate-800/80 p-2.5 rounded-lg border border-emerald-100/70 dark:border-slate-700/70 flex items-start space-x-2.5">
+                          <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
+                          <div className="space-y-1.5 flex-1 pt-0.5">
+                            <div className="h-2 w-18 rounded bg-slate-200 dark:bg-slate-700" />
+                            <div className="h-3 w-32 rounded bg-slate-200 dark:bg-slate-700" />
                           </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-emerald-100/30 dark:bg-slate-800/60 p-2.5 rounded-xl border border-emerald-200/50 dark:border-slate-700/60 flex items-start space-x-2.5">
-                        <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
-                        <div className="space-y-1.5 flex-1 pt-1.5">
-                          <div className="h-2.5 w-full rounded bg-slate-200 dark:bg-slate-700" />
-                          <div className="h-2.5 w-4/5 rounded bg-slate-200 dark:bg-slate-700" />
                         </div>
                       </div>
                     </div>
 
                     {/* Store Pickup Form Fields Skeleton */}
-                    <div className="space-y-4">
-                      <div className="h-4 w-64 rounded bg-slate-200 dark:bg-slate-700" />
+                    <div className="space-y-3">
+                      <div className="h-3.5 w-52 rounded bg-slate-200 dark:bg-slate-700" />
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <div className="h-3 w-48 rounded bg-slate-200 dark:bg-slate-700" />
-                          <div className="h-12 w-full rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 animate-pulse" />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+                        <div className="space-y-1">
+                          <div className="h-2.5 w-36 rounded bg-slate-200 dark:bg-slate-700" />
+                          <div className="h-10 w-full rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 animate-pulse" />
                         </div>
 
-                        <div className="space-y-1.5">
-                          <div className="h-3 w-56 rounded bg-slate-200 dark:bg-slate-700" />
-                          <div className="h-12 w-full rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 animate-pulse" />
+                        <div className="space-y-1">
+                          <div className="h-2.5 w-40 rounded bg-slate-200 dark:bg-slate-700" />
+                          <div className="h-10 w-full rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 animate-pulse" />
                         </div>
                       </div>
 
-                      <div className="space-y-1.5">
-                        <div className="h-3 w-40 rounded bg-slate-200 dark:bg-slate-700" />
-                        <div className="h-12 w-full rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 animate-pulse" />
+                      <div className="space-y-1">
+                        <div className="h-2.5 w-32 rounded bg-slate-200 dark:bg-slate-700" />
+                        <div className="h-10 w-full rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 animate-pulse" />
                       </div>
                     </div>
                   </div>
                 ) : isPickup ? (
                   /* CASE A: STORE PICKUP */
-                  <div className="space-y-6 pt-2">
+                  <div className="space-y-3.5 pt-1">
                     {/* Store Physical Info Card */}
-                    <div className="bg-emerald-50/70 border-2 border-emerald-200/80 rounded-2xl p-5 space-y-3 shadow-sm">
+                    <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-3.5 space-y-2.5 shadow-xs">
                       <div className="flex items-center space-x-2 text-emerald-900 font-black text-sm">
-                        <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700">
-                          <Store className="w-5 h-5" />
+                        <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0">
+                          <Store className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="text-sm font-black text-emerald-900 leading-tight">Punto Oficial de Retiro en Tienda Física</p>
+                          <p className="text-xs sm:text-sm font-black text-emerald-900 leading-tight">Punto Oficial de Retiro en Tienda Física</p>
                           <p className="text-[11px] text-emerald-700 font-medium">SUPERLAPTOP — Centro de Lima</p>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs text-emerald-950 font-medium">
-                        <div className="bg-white/80 p-3 rounded-xl border border-emerald-100 flex items-start space-x-3">
-                          <div className="bg-slate-100 dark:bg-slate-800 rounded-full p-2 shrink-0">
-                            <MapPin className="w-4 h-4 text-emerald-700 dark:text-emerald-400" strokeWidth={2} />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-emerald-950 font-medium">
+                        <div className="bg-white/90 p-2.5 rounded-lg border border-emerald-100 flex items-start space-x-2.5">
+                          <div className="bg-slate-100 dark:bg-slate-800 rounded-full p-1.5 shrink-0">
+                            <MapPin className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" strokeWidth={2} />
                           </div>
                           <div>
-                            <span className="text-[11px] font-bold text-emerald-800 block">Dirección:</span>
-                            <span className="font-black text-gray-900">Jr. Velarde 172, Lima</span>
-                            <span className="text-[10px] text-gray-500 block">(Ref: Altura Wilson y Av. Bolivia, Cercado de Lima)</span>
+                            <span className="text-[10.5px] font-bold text-emerald-800 block">Dirección:</span>
+                            <span className="font-black text-gray-900 text-xs">Jr. Velarde 172, Lima</span>
+                            <span className="text-[10px] text-gray-500 block">(Ref: Altura Wilson y Av. Bolivia, Cercado)</span>
                           </div>
                         </div>
 
-                        <div className="bg-white/80 p-3 rounded-xl border border-emerald-100 flex items-start space-x-3">
-                          <div className="bg-slate-100 dark:bg-slate-800 rounded-full p-2 shrink-0">
-                            <Clock className="w-4 h-4 text-emerald-700 dark:text-emerald-400" strokeWidth={2} />
+                        <div className="bg-white/90 p-2.5 rounded-lg border border-emerald-100 flex items-start space-x-2.5">
+                          <div className="bg-slate-100 dark:bg-slate-800 rounded-full p-1.5 shrink-0">
+                            <Clock className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" strokeWidth={2} />
                           </div>
                           <div>
-                            <span className="text-[11px] font-bold text-emerald-800 block">Horarios de Atención:</span>
-                            <span className="font-black text-gray-900">Lunes a Sábado: 9:30 AM – 7:30 PM</span>
-                            
+                            <span className="text-[10.5px] font-bold text-emerald-800 block">Horarios de Atención:</span>
+                            <span className="font-black text-gray-900 text-xs">Lun a Sáb: 9:30 AM – 7:30 PM</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="text-[11px] text-emerald-800 bg-emerald-100/50 p-2.5 rounded-xl border border-emerald-200/60 leading-relaxed font-semibold flex items-start space-x-2.5">
-                        <div className="bg-slate-100 dark:bg-slate-800 rounded-full p-2 shrink-0">
-                          <AlertCircle className="w-4 h-4 text-emerald-700 dark:text-emerald-400" strokeWidth={2} />
+                      <div className="text-[11px] text-emerald-800 bg-emerald-100/50 p-2 rounded-lg border border-emerald-200/60 leading-relaxed font-semibold flex items-start space-x-2">
+                        <div className="bg-slate-100 dark:bg-slate-800 rounded-full p-1 shrink-0 mt-0.5">
+                          <AlertCircle className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" strokeWidth={2} />
                         </div>
-                        <p className="pt-0.5">
-                          <strong>Requisitos de retiro:</strong> Para retirar tu pedido en tienda, la persona indicada debe presentar su documento de identidad físico (DNI o Carné de Extranjería) y el código de pedido.
+                        <p>
+                          <strong>Requisitos de retiro:</strong> Presentar DNI/CE físico y el código de pedido para retirar en tienda.
                         </p>
                       </div>
                     </div>
 
                     {/* Store Pickup Form Fields */}
-                    <div className="space-y-4">
-                      <h4 className="font-black text-gray-900 text-sm flex items-center">
-                        <ShieldCheck className="w-4 h-4 mr-1.5 text-brand-red" /> Datos de la Persona que Recoge en Tienda
+                    <div className="space-y-3">
+                      <h4 className="font-black text-gray-900 text-xs sm:text-sm flex items-center">
+                        <ShieldCheck className="w-4 h-4 mr-1.5 text-brand-red shrink-0" /> Datos de la Persona que Recoge en Tienda
                       </h4>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                         <div>
                           <label className="block text-xs font-bold text-gray-700 mb-1">Nombre y Apellidos de quien recoge *</label>
                           <input
@@ -1011,14 +1000,14 @@ export default function Checkout() {
                               setShippingAddress({ ...shippingAddress, recipient_name: e.target.value });
                               clearError('recipient_name');
                             }}
-                            className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                            className={`w-full bg-white rounded-xl px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
                               errors.recipient_name
                                 ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                                 : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                             }`}
                           />
                           {errors.recipient_name && (
-                            <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                            <p className="text-xs text-red-600 font-medium mt-1 flex items-center">
                               <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
                               <span>{errors.recipient_name}</span>
                             </p>
@@ -1027,7 +1016,7 @@ export default function Checkout() {
 
                         <div>
                           <label className="block text-xs font-bold text-gray-700 mb-1">
-                            DNI o Carné de Extranjería de quien recoge *
+                            DNI o Carné de Extranjería *
                           </label>
                           <input
                             id="recipient_document"
@@ -1040,19 +1029,19 @@ export default function Checkout() {
                               setShippingAddress({ ...shippingAddress, recipient_document: e.target.value.trim() });
                               clearError('recipient_document');
                             }}
-                            className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                            className={`w-full bg-white rounded-xl px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
                               errors.recipient_document
                                 ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                                 : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                             }`}
                           />
                           {errors.recipient_document ? (
-                            <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                            <p className="text-xs text-red-600 font-medium mt-1 flex items-center">
                               <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
                               <span>{errors.recipient_document}</span>
                             </p>
                           ) : (
-                            <span className="text-[10px] text-gray-400 mt-1 block">
+                            <span className="text-[10px] text-gray-400 mt-0.5 block">
                               Se autocompletará en tu Boleta de Venta en el Paso 2.
                             </span>
                           )}
@@ -1074,20 +1063,20 @@ export default function Checkout() {
                             setShippingAddress({ ...shippingAddress, phone: e.target.value.replace(/[^\d+ ]/g, '') });
                             clearError('phone');
                           }}
-                          className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                          className={`w-full bg-white rounded-xl px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
                             errors.phone
                               ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                               : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                           }`}
                         />
                         {errors.phone ? (
-                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                          <p className="text-xs text-red-600 font-medium mt-1 flex items-center">
                             <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
                             <span>{errors.phone}</span>
                           </p>
                         ) : (
-                          <span className="text-[10px] text-gray-400 mt-1 block">
-                            Te notificaremos por WhatsApp o llamada cuando tus productos estén listos para el recojo.
+                          <span className="text-[10px] text-gray-400 mt-0.5 block">
+                            Te notificaremos cuando tus productos estén listos para recojo.
                           </span>
                         )}
                       </div>
@@ -1095,12 +1084,12 @@ export default function Checkout() {
                   </div>
                 ) : (
                   /* CASE B: HOME / PROVINCE DELIVERY */
-                  <div className="space-y-4 pt-2">
-                    <h4 className="font-black text-gray-900 text-sm flex items-center">
-                      <Truck className="w-4 h-4 mr-1.5 text-brand-red" /> Datos de Envío y Destinatario
+                  <div className="space-y-3 pt-1">
+                    <h4 className="font-black text-gray-900 text-xs sm:text-sm flex items-center">
+                      <Truck className="w-4 h-4 mr-1.5 text-brand-red shrink-0" /> Datos de Envío y Destinatario
                     </h4>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1">Nombre de quien recibe *</label>
                         <input
@@ -1113,14 +1102,14 @@ export default function Checkout() {
                             setShippingAddress({ ...shippingAddress, recipient_name: e.target.value });
                             clearError('recipient_name');
                           }}
-                          className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                          className={`w-full bg-white rounded-xl px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
                             errors.recipient_name
                               ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                               : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                           }`}
                         />
                         {errors.recipient_name && (
-                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                          <p className="text-xs text-red-600 font-medium mt-1 flex items-center">
                             <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
                             <span>{errors.recipient_name}</span>
                           </p>
@@ -1141,14 +1130,14 @@ export default function Checkout() {
                             setShippingAddress({ ...shippingAddress, phone: e.target.value.replace(/[^\d+ ]/g, '') });
                             clearError('phone');
                           }}
-                          className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                          className={`w-full bg-white rounded-xl px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
                             errors.phone
                               ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                               : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                           }`}
                         />
                         {errors.phone && (
-                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                          <p className="text-xs text-red-600 font-medium mt-1 flex items-center">
                             <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
                             <span>{errors.phone}</span>
                           </p>
@@ -1156,10 +1145,10 @@ export default function Checkout() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1">
-                          DNI o Carné de Extranjería de quien recibe (Opcional)
+                          DNI o Carné de Extranjería (Opcional)
                         </label>
                         <input
                           id="recipient_document"
@@ -1172,19 +1161,19 @@ export default function Checkout() {
                             setShippingAddress({ ...shippingAddress, recipient_document: e.target.value.trim() });
                             clearError('recipient_document');
                           }}
-                          className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                          className={`w-full bg-white rounded-xl px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
                             errors.recipient_document
                               ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                               : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                           }`}
                         />
                         {errors.recipient_document ? (
-                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                          <p className="text-xs text-red-600 font-medium mt-1 flex items-center">
                             <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
                             <span>{errors.recipient_document}</span>
                           </p>
                         ) : (
-                          <span className="text-[10px] text-gray-400 mt-1 block">
+                          <span className="text-[10px] text-gray-400 mt-0.5 block">
                             Requerido para envíos por agencia y autocompletado de Boleta.
                           </span>
                         )}
@@ -1201,14 +1190,14 @@ export default function Checkout() {
                             setShippingAddress({ ...shippingAddress, address_line1: e.target.value });
                             clearError('address_line1');
                           }}
-                          className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                          className={`w-full bg-white rounded-xl px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
                             errors.address_line1
                               ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                               : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                           }`}
                         />
                         {errors.address_line1 && (
-                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                          <p className="text-xs text-red-600 font-medium mt-1 flex items-center">
                             <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
                             <span>{errors.address_line1}</span>
                           </p>
@@ -1217,7 +1206,7 @@ export default function Checkout() {
                     </div>
 
                     {/* Peruvian Political Division: Departamento, Provincia, Distrito */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1">Departamento *</label>
                         <input
@@ -1230,14 +1219,14 @@ export default function Checkout() {
                             setShippingAddress({ ...shippingAddress, department: e.target.value });
                             clearError('department');
                           }}
-                          className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                          className={`w-full bg-white rounded-xl px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
                             errors.department
                               ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                               : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                           }`}
                         />
                         {errors.department && (
-                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                          <p className="text-xs text-red-600 font-medium mt-1 flex items-center">
                             <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
                             <span>{errors.department}</span>
                           </p>
@@ -1255,14 +1244,14 @@ export default function Checkout() {
                             setShippingAddress({ ...shippingAddress, province: e.target.value });
                             clearError('province');
                           }}
-                          className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                          className={`w-full bg-white rounded-xl px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
                             errors.province
                               ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                               : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                           }`}
                         />
                         {errors.province && (
-                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                          <p className="text-xs text-red-600 font-medium mt-1 flex items-center">
                             <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
                             <span>{errors.province}</span>
                           </p>
@@ -1280,14 +1269,14 @@ export default function Checkout() {
                             setShippingAddress({ ...shippingAddress, district: e.target.value });
                             clearError('district');
                           }}
-                          className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                          className={`w-full bg-white rounded-xl px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
                             errors.district
                               ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                               : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                           }`}
                         />
                         {errors.district && (
-                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                          <p className="text-xs text-red-600 font-medium mt-1 flex items-center">
                             <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
                             <span>{errors.district}</span>
                           </p>
@@ -1295,7 +1284,7 @@ export default function Checkout() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1">Dpto / Interior (Opcional)</label>
                         <input
@@ -1305,7 +1294,7 @@ export default function Checkout() {
                           placeholder="Dpto / Interior (Opcional)"
                           value={shippingAddress.apartment_notes}
                           onChange={(e) => setShippingAddress({ ...shippingAddress, apartment_notes: e.target.value })}
-                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
+                          className="w-full bg-white border border-gray-300 rounded-xl px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
                         />
                       </div>
                       <div>
@@ -1317,12 +1306,12 @@ export default function Checkout() {
                           placeholder="Referencia de ubicación"
                           value={shippingAddress.reference}
                           onChange={(e) => setShippingAddress({ ...shippingAddress, reference: e.target.value })}
-                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
+                          className="w-full bg-white border border-gray-300 rounded-xl px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 caret-brand-red"
                         />
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-2 pt-1">
+                    <div className="flex items-center space-x-2 pt-0.5">
                       <input
                         type="checkbox"
                         id="save_info"
@@ -1340,10 +1329,10 @@ export default function Checkout() {
                 <button
                   type="submit"
                   disabled={loading || loadingShippingMethods}
-                  className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-md transition-transform active:scale-95 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   <span>Continuar al Paso 2: Comprobante & Pago</span>
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </form>
             ) : (
@@ -1779,8 +1768,8 @@ export default function Checkout() {
                     </div>
 
                     <div className="bg-white p-3 rounded-xl border border-gray-200 text-[11px] text-gray-600 space-y-0.5">
-                      <p><strong>Titular:</strong> CUADRADO TECHNOLOGY & ADVANCE E.I.R.L.</p>
-                      <p><strong>RUC:</strong> 20606455543</p>
+                      <p><strong>Titular:</strong> SUPERLAPTOP S.A.C</p>
+                      <p><strong>RUC:</strong> 20609242575</p>
                     </div>
 
                     <p className="text-xs text-gray-600">
@@ -1790,23 +1779,23 @@ export default function Checkout() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
                       <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-xs space-y-1">
                         <p className="font-black text-brand-blue">BCP Soles</p>
-                        <p className="font-mono text-gray-800 text-[11px]">Cta: 191-8742112-0-60</p>
-                        <p className="text-[10px] text-gray-400 font-mono">CCI: 00219100874211206058</p>
-                      </div>
-                      <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-xs space-y-1">
-                        <p className="font-black text-emerald-700">Interbank Soles</p>
-                        <p className="font-mono text-gray-800 text-[11px]">Cta: 200-3003161925</p>
-                        <p className="text-[10px] text-gray-400 font-mono">CCI: 00320000300316192534</p>
+                        <p className="font-mono text-gray-800 text-[11px]">Cta: 191-9899662-0-83</p>
+                        <p className="text-[10px] text-gray-400 font-mono">CCI: 00219100989966208351</p>
                       </div>
                       <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-xs space-y-1">
                         <p className="font-black text-blue-800">BBVA Soles</p>
-                        <p className="font-mono text-gray-800 text-[11px]">Cta: 0011-0175-0100075566</p>
-                        <p className="text-[10px] text-gray-400 font-mono">CCI: 01117500010007556678</p>
+                        <p className="font-mono text-gray-800 text-[11px]">Cta: 0011-0175-0100082392</p>
+                        <p className="text-[10px] text-gray-400 font-mono">CCI: 01117500010008239270</p>
                       </div>
                       <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-xs space-y-1">
-                        <p className="font-black text-red-700">Scotiabank Soles</p>
-                        <p className="font-mono text-gray-800 text-[11px]">Cta: 000-2987321</p>
-                        <p className="text-[10px] text-gray-400 font-mono">CCI: 00902100000298732173</p>
+                        <p className="font-black text-emerald-700">Interbank Soles</p>
+                        <p className="font-mono text-gray-800 text-[11px]">Cta: 200-3004056157</p>
+                        <p className="text-[10px] text-gray-400 font-mono">CCI: 003-200-003004056157-30</p>
+                      </div>
+                      <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-xs space-y-1">
+                        <p className="font-black text-brand-blue">BCP Dólares</p>
+                        <p className="font-mono text-gray-800 text-[11px]">Cta: 1919944889131</p>
+                        <p className="text-[10px] text-gray-400 font-mono">CCI: 00219100994488913159</p>
                       </div>
                     </div>
 

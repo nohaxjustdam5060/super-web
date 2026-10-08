@@ -1,11 +1,11 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { 
   LayoutDashboard, ShoppingBag, Users, AlertTriangle, DollarSign, Package, 
   ShieldCheck, CheckCircle2, Clock, FileText, Building2, CreditCard, 
   ExternalLink, Filter, Truck, Eye, X, Printer, User, MapPin, Calendar,
-  ChevronLeft, ChevronRight, RotateCcw
+  ChevronLeft, ChevronRight, RotateCcw, Percent, Save, RefreshCw
 } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import OrderDetailsModal from '../components/OrderDetailsModal';
@@ -49,6 +49,50 @@ export default function AdminDashboard() {
   const [limit, setLimit] = useState(10);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+
+  // Cuadrado Markup Setting State & Query
+  const [markupInput, setMarkupInput] = useState('');
+  const [savingMarkup, setSavingMarkup] = useState(false);
+  const [markupSuccessMsg, setMarkupSuccessMsg] = useState('');
+
+  const { data: markupData, isLoading: markupLoading } = useQuery({
+    queryKey: ['adminMarkup'],
+    queryFn: async () => {
+      const res = await axiosClient.get('/admin/settings/markup');
+      return res.data;
+    },
+    staleTime: 60000
+  });
+
+  useEffect(() => {
+    if (markupData?.markupPercent !== undefined) {
+      setMarkupInput(String(markupData.markupPercent));
+    }
+  }, [markupData]);
+
+  const handleSaveMarkup = async (e) => {
+    e.preventDefault();
+    const val = parseFloat(markupInput);
+    if (isNaN(val) || val < 0 || val > 1000) {
+      alert('Por favor introduce un porcentaje válido entre 0 y 1000.');
+      return;
+    }
+
+    setSavingMarkup(true);
+    setMarkupSuccessMsg('');
+    try {
+      const res = await axiosClient.put('/admin/settings/markup', { markupPercent: val });
+      if (res.data.success) {
+        setMarkupSuccessMsg(`${res.data.message}`);
+        queryClient.invalidateQueries({ queryKey: ['adminMarkup'] });
+        setTimeout(() => setMarkupSuccessMsg(''), 6000);
+      }
+    } catch (err) {
+      alert(`❌ Error al guardar margen: ${err.response?.data?.message || err.message}`);
+    } finally {
+      setSavingMarkup(false);
+    }
+  };
 
   // Cached Queries with 60s stale time (Instant 0ms transitions on return)
   const { data: metricsData, isLoading: metricsLoading } = useQuery({
@@ -324,6 +368,71 @@ export default function AdminDashboard() {
           </div>
           <p className="text-3xl font-black text-amber-600">{metrics?.lowStockProducts || 0}</p>
         </div>
+      </div>
+
+      {/* CUADRADO PRICING & MARKUP CONFIGURATION */}
+      <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 space-y-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 pb-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-brand-red/10 text-brand-red flex items-center justify-center shrink-0">
+              <Percent className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-extrabold text-gray-900 text-lg">
+                  Margen Comercial sobre Precios de ERP
+                </h3>
+                
+              </div>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Incremento automático sobre el precio mayorista. Los precios se redondean hacia arriba
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSaveMarkup} className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <div className="flex items-center bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-brand-red">
+              <span className="text-xs font-bold text-gray-500 mr-2">Margen:</span>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                max="1000"
+                value={markupInput}
+                onChange={(e) => setMarkupInput(e.target.value)}
+                placeholder="3"
+                className="w-16 bg-transparent font-black text-gray-900 text-sm outline-none text-right"
+                disabled={savingMarkup || markupLoading}
+              />
+              <span className="font-black text-gray-700 text-sm ml-1">%</span>
+            </div>
+
+            <button
+              type="submit"
+              disabled={savingMarkup || markupLoading}
+              className="inline-flex items-center justify-center gap-2 bg-brand-dark hover:bg-slate-800 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-sm transition-transform active:scale-95 disabled:opacity-50 cursor-pointer"
+            >
+              {savingMarkup ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>Guardando...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-3.5 h-3.5 text-brand-red-accent" />
+                  <span>Guardar y Recalcular</span>
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
+        {markupSuccessMsg && (
+          <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold rounded-xl flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{markupSuccessMsg}</span>
+          </div>
+        )}
       </div>
 
       {/* Orders Management Table */}

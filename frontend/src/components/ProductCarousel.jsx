@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard from './ProductCard';
@@ -12,19 +12,21 @@ export default function ProductCarousel({
   viewAllText = 'Ver Todo',
   products = [],
   loading = false,
-  limit = 10
+  limit = 10,
+  autoScrollInterval = 5000
 }) {
   const scrollRef = useRef(null);
+  const isPausedRef = useRef(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
-  const checkScrollability = () => {
+  const checkScrollability = useCallback(() => {
     if (scrollRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
       setCanScrollLeft(scrollLeft > 5);
       setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 5);
     }
-  };
+  }, []);
 
   useEffect(() => {
     checkScrollability();
@@ -37,20 +39,57 @@ export default function ProductCarousel({
         window.removeEventListener('resize', checkScrollability);
       };
     }
-  }, [products, loading]);
+  }, [products, loading, checkScrollability]);
+
+  // Continuous auto-scroll every 5 seconds (with hover/touch pause & smooth restart at end)
+  useEffect(() => {
+    if (loading || !products || products.length <= 1) return;
+
+    const timer = setInterval(() => {
+      if (isPausedRef.current) return;
+      const container = scrollRef.current;
+      if (!container) return;
+
+      const card = container.children[0];
+      const nextCard = container.children[1];
+      const scrollStep = (card && nextCard)
+        ? (nextCard.offsetLeft - card.offsetLeft)
+        : (container.clientWidth * 0.5);
+
+      // Smooth return to beginning if reached the end
+      if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 10) {
+        container.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        container.scrollBy({ left: scrollStep, behavior: 'smooth' });
+      }
+    }, autoScrollInterval);
+
+    return () => clearInterval(timer);
+  }, [products, loading, limit, autoScrollInterval]);
 
   const handleScroll = (direction) => {
     if (!scrollRef.current) return;
     const container = scrollRef.current;
-    const scrollDistance = container.clientWidth * 0.75;
+    const card = container.children[0];
+    const nextCard = container.children[1];
+    const scrollStep = (card && nextCard)
+      ? (nextCard.offsetLeft - card.offsetLeft)
+      : (container.clientWidth * 0.75);
+
     container.scrollBy({
-      left: direction === 'left' ? -scrollDistance : scrollDistance,
+      left: direction === 'left' ? -scrollStep : scrollStep,
       behavior: 'smooth'
     });
   };
 
   return (
-    <section className="max-w-[1440px] mx-auto px-4">
+    <section 
+      className="max-w-[1440px] mx-auto px-4"
+      onMouseEnter={() => { isPausedRef.current = true; }}
+      onMouseLeave={() => { isPausedRef.current = false; }}
+      onTouchStart={() => { isPausedRef.current = true; }}
+      onTouchEnd={() => { isPausedRef.current = false; }}
+    >
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
         <div>
@@ -106,24 +145,24 @@ export default function ProductCarousel({
       {loading ? (
         <div
           ref={scrollRef}
-          className="flex space-x-3 sm:space-x-4 md:space-x-5 overflow-x-auto no-scrollbar py-1"
+          className="flex gap-3 sm:gap-4 md:gap-5 overflow-x-auto no-scrollbar py-4 sm:py-5 px-1.5 sm:px-2 -my-2 sm:-my-3"
         >
           {[...Array(5)].map((_, i) => (
             <div
               key={i}
-              className="min-w-[calc((100%-0.75rem)/2)] max-w-[calc((100%-0.75rem)/2)] flex-[0_0_calc((100%-0.75rem)/2)] sm:min-w-[calc((100%-2rem)/3)] sm:max-w-[calc((100%-2rem)/3)] sm:flex-[0_0_calc((100%-2rem)/3)] md:min-w-[calc((100%-3rem)/4)] md:max-w-[calc((100%-3rem)/4)] md:flex-[0_0_calc((100%-3rem)/4)] xl:min-w-[calc((100%-4rem)/5)] xl:max-w-[calc((100%-4rem)/5)] xl:flex-[0_0_calc((100%-4rem)/5)] bg-gray-200/80 animate-pulse h-80 rounded-lg border border-gray-200"
+              className="min-w-[calc((100%-0.75rem)/2)] max-w-[calc((100%-0.75rem)/2)] flex-[0_0_calc((100%-0.75rem)/2)] sm:min-w-[calc((100%-2rem)/3)] sm:max-w-[calc((100%-2rem)/3)] sm:flex-[0_0_calc((100%-2rem)/3)] md:min-w-[calc((100%-3.75rem)/4)] md:max-w-[calc((100%-3.75rem)/4)] md:flex-[0_0_calc((100%-3.75rem)/4)] xl:min-w-[calc((100%-5rem)/5)] xl:max-w-[calc((100%-5rem)/5)] xl:flex-[0_0_calc((100%-5rem)/5)] bg-gray-200/80 animate-pulse h-80 rounded-lg border border-gray-200"
             />
           ))}
         </div>
       ) : products.length > 0 ? (
         <div
           ref={scrollRef}
-          className="flex space-x-3 sm:space-x-4 md:space-x-5 overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar py-1 px-0.5"
+          className="flex gap-3 sm:gap-4 md:gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar py-4 sm:py-5 px-1.5 sm:px-2 -my-2 sm:-my-3"
         >
           {products.slice(0, limit).map((product) => (
             <div
               key={product.id}
-              className="min-w-[calc((100%-0.75rem)/2)] max-w-[calc((100%-0.75rem)/2)] flex-[0_0_calc((100%-0.75rem)/2)] sm:min-w-[calc((100%-2rem)/3)] sm:max-w-[calc((100%-2rem)/3)] sm:flex-[0_0_calc((100%-2rem)/3)] md:min-w-[calc((100%-3rem)/4)] md:max-w-[calc((100%-3rem)/4)] md:flex-[0_0_calc((100%-3rem)/4)] xl:min-w-[calc((100%-4rem)/5)] xl:max-w-[calc((100%-4rem)/5)] xl:flex-[0_0_calc((100%-4rem)/5)] snap-start flex"
+              className="min-w-[calc((100%-0.75rem)/2)] max-w-[calc((100%-0.75rem)/2)] flex-[0_0_calc((100%-0.75rem)/2)] sm:min-w-[calc((100%-2rem)/3)] sm:max-w-[calc((100%-2rem)/3)] sm:flex-[0_0_calc((100%-2rem)/3)] md:min-w-[calc((100%-3.75rem)/4)] md:max-w-[calc((100%-3.75rem)/4)] md:flex-[0_0_calc((100%-3.75rem)/4)] xl:min-w-[calc((100%-5rem)/5)] xl:max-w-[calc((100%-5rem)/5)] xl:flex-[0_0_calc((100%-5rem)/5)] snap-start flex self-stretch"
             >
               <ProductCard product={product} />
             </div>

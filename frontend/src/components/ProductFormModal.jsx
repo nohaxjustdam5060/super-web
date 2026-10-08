@@ -22,6 +22,7 @@ const initialFormState = {
   sku: '',
   price: '',
   offer_price: '',
+  previous_price: '',
   stock: '0',
   category_id: '',
   brand_id: '',
@@ -81,6 +82,7 @@ const ProductFormModal = memo(function ProductFormModal({
         sku: product.sku || '',
         price: product.price ? String(product.price) : '',
         offer_price: product.offer_price ? String(product.offer_price) : '',
+        previous_price: product.previous_price ? String(product.previous_price) : '',
         stock: product.stock !== undefined ? String(product.stock) : '0',
         category_id: product.category_id || '',
         brand_id: product.brand_id || '',
@@ -324,9 +326,9 @@ const ProductFormModal = memo(function ProductFormModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-gray-50/80 p-3 rounded-2xl border border-gray-200/80">
             <div>
-              <label className="block font-bold text-gray-700 mb-1">Precio Normal (S/)</label>
+              <label className="block font-bold text-gray-700 mb-1">Precio Real de Venta (S/) *</label>
               <input
                 type="number"
                 step="0.01"
@@ -334,19 +336,21 @@ const ProductFormModal = memo(function ProductFormModal({
                 placeholder="2999.00"
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold focus:outline-none focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 transition-all"
+                className="w-full bg-white border border-gray-200 rounded-xl p-2.5 font-semibold focus:outline-none focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 transition-all"
               />
+              <span className="text-[10px] text-gray-400 block mt-0.5">Precio que se cobra al cliente en carrito y pasarela</span>
             </div>
             <div>
-              <label className="block font-bold text-gray-700 mb-1">Precio Oferta (S/)</label>
+              <label className="block font-bold text-gray-700 mb-1">Precio Antes / Lista (Tachado) (S/)</label>
               <input
                 type="number"
                 step="0.01"
-                placeholder="2799.00"
-                value={formData.offer_price}
-                onChange={(e) => setFormData({ ...formData, offer_price: e.target.value })}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold focus:outline-none focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 transition-all"
+                placeholder="ej. 3499.00 (Opcional)"
+                value={formData.previous_price}
+                onChange={(e) => setFormData({ ...formData, previous_price: e.target.value })}
+                className="w-full bg-white border border-gray-200 rounded-xl p-2.5 font-semibold focus:outline-none focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 transition-all"
               />
+              <span className="text-[10px] text-gray-400 block mt-0.5">Monto mayor para mostrar precio tachado y % OFF</span>
             </div>
           </div>
 

@@ -74,8 +74,8 @@ export default function PoliciesPage() {
             </div>
 
             <div className="flex-shrink-0 bg-gray-900/80 p-4 rounded-2xl border border-gray-800 text-xs text-gray-300 space-y-1">
-              <p className="font-bold text-white text-sm">SUPERLAPTOP E.I.R.L.</p>
-              <p>RUC: 20608594210</p>
+              <p className="font-bold text-white text-sm">SUPERLAPTOP S.A.C</p>
+              <p>RUC: 20609242575</p>
               <p>Atención: Lunes a Sábado 9:00 a 19:00</p>
               <Link 
                 to="/libro-de-reclamaciones" 
@@ -140,7 +140,7 @@ export default function PoliciesPage() {
                   <section className="space-y-2">
                     <h3 className="font-extrabold text-base text-gray-900">1. Identificación del vendedor</h3>
                     <p className="text-gray-700">
-                      El vendedor opera bajo la razón social <strong>SUPERLAPTOP E.I.R.L.</strong> y RUC <strong>20608594210</strong> declarados en la página Nosotros y en cada comprobante de venta. Las transacciones se realizan en Soles (PEN) salvo indicación contraria.
+                      El vendedor opera bajo la razón social <strong>SUPERLAPTOP S.A.C</strong> y RUC <strong>20609242575</strong> declarados en la página Nosotros y en cada comprobante de venta. Las transacciones se realizan en Soles (PEN) salvo indicación contraria.
                     </p>
                   </section>
 

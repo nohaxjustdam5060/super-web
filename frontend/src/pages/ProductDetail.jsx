@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { 
   ShoppingBag, ShieldCheck, Truck, RefreshCw, CheckCircle, Plus, Minus, 
   ArrowLeft, ChevronLeft, ChevronRight, MessageSquare, Clock, XCircle, Cpu, HardDrive, 
-  Database, Monitor, Layers, Wrench, FileText, Check 
+  Database, Monitor, Layers, Wrench, FileText, Check, Tag 
 } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import ProductCard from '../components/ProductCard';
@@ -190,11 +190,24 @@ export default function ProductDetail() {
     );
   }
 
-  const hasOffer = Boolean(product.offer_price && Number(product.offer_price) < Number(product.price));
-  const price = Number(product.price);
-  const offerPrice = Number(product.offer_price);
+  const price = Number(product.price) || 0;
+  const previousPrice = Number(product.previous_price) || 0;
+  const hasVisualOffer = Boolean(previousPrice && previousPrice > price);
+  const discountPercent = hasVisualOffer ? Math.round(((previousPrice - price) / previousPrice) * 100) : 0;
   const stockCount = Number(product.stock ?? 0);
   const isAvailable = stockCount > 0;
+
+  const formatPriceWithSup = (amount, colorClass = "text-gray-900") => {
+    const num = Number(amount) || 0;
+    const intPart = Math.floor(num);
+    const decPart = (num % 1).toFixed(2).slice(2);
+    return (
+      <span className={`inline-flex items-baseline font-black ${colorClass}`}>
+        <span>S/ {intPart.toLocaleString('es-PE')}</span>
+        <sup className="text-xs sm:text-sm ml-0.5 font-bold leading-none">{decPart}</sup>
+      </span>
+    );
+  };
 
   const highlightedSpecs = specsData.filter(s => s.highlight);
 
@@ -300,7 +313,7 @@ export default function ProductDetail() {
           <div className="space-y-4">
             {/* Header Meta: Brand, SKU & Stock Status Badge */}
             <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+              <div className="flex items-center flex-wrap gap-2">
                 <span className="text-xs font-bold text-brand-blue uppercase bg-brand-blue-light px-3 py-1 rounded-md border border-brand-blue/20">
                   {product.brand?.name || 'SUPERLAPTOP'}
                 </span>
@@ -327,29 +340,34 @@ export default function ProductDetail() {
               <span className="text-xs text-gray-400 font-mono">SKU: {product.sku}</span>
             </div>
 
+            {/* Discount Badge above title (when visual offer is active) */}
+            {hasVisualOffer && (
+              <div className="flex items-center pt-1">
+                <span className="inline-flex items-center gap-1.5 bg-red-50 text-brand-red border border-red-200 text-xs sm:text-sm font-black px-3 py-1 rounded-md shadow-2xs">
+                  <Tag className="w-4 h-4 text-brand-red flex-shrink-0" />
+                  <span>{discountPercent}% de descuento</span>
+                </span>
+              </div>
+            )}
+
             <h1 className="text-xl sm:text-3xl font-black text-gray-900 leading-tight">
               {product.name}
             </h1>
 
-            {/* Price Container with Offer Highlights */}
+            {/* Price Container with Visual Offer Highlights */}
             <div className="bg-gray-50 p-4 sm:p-5 rounded-lg border border-gray-100 flex flex-wrap items-baseline justify-between gap-3">
-              <div className="flex flex-wrap items-baseline gap-2 sm:gap-3">
-                {hasOffer ? (
-                  <>
-                    <span className="text-2xl sm:text-3xl font-black text-brand-red">
-                      S/ {offerPrice.toFixed(2)}
-                    </span>
-                    <span className="text-xs sm:text-sm text-gray-400 line-through">
-                      S/ {price.toFixed(2)}
-                    </span>
-                    <span className="bg-brand-red text-white text-xs font-extrabold px-2.5 py-0.5 rounded-md shadow">
-                      AHORRAS S/ {(price - offerPrice).toFixed(2)}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-2xl sm:text-3xl font-black text-gray-900">
-                    S/ {price.toFixed(2)}
-                  </span>
+              <div className="flex flex-wrap items-baseline gap-3 sm:gap-4">
+                {/* Real Selling Price (Charged in Cart & Checkout) */}
+                <div className="text-2xl sm:text-3xl font-black">
+                  {formatPriceWithSup(price, hasVisualOffer ? "text-brand-red" : "text-gray-900")}
+                </div>
+
+                {/* Previous Price (Strikethrough list price) */}
+                {hasVisualOffer && (
+                  <div className="text-sm sm:text-base text-gray-400 line-through font-semibold flex items-baseline">
+                    <span>S/ {Math.floor(previousPrice).toLocaleString('es-PE')}</span>
+                    <sup className="text-[10px] sm:text-xs ml-0.5 leading-none">{(previousPrice % 1).toFixed(2).slice(2)}</sup>
+                  </div>
                 )}
               </div>
 

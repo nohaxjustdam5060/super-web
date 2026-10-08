@@ -306,8 +306,8 @@ export default function ComplaintsBookPage() {
 
             {/* Provider Data Badge */}
             <div className="text-left sm:text-right text-xs text-gray-400 print:text-gray-700 bg-gray-900/60 print:bg-gray-100 p-3 rounded-lg border border-gray-800 print:border-gray-300">
-              <p className="font-bold text-white print:text-black">SUPERLAPTOP E.I.R.L.</p>
-              <p>RUC: 20608594210</p>
+              <p className="font-bold text-white print:text-black">SUPERLAPTOP S.A.C</p>
+              <p>RUC: 20609242575</p>
               <p>Jr.Velarde 172, Lima</p>
             </div>
           </div>
@@ -333,7 +333,7 @@ export default function ComplaintsBookPage() {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <span className="text-[11px] font-black text-brand-red uppercase tracking-widest block">
-                      SUPERLAPTOP E.I.R.L. &bull; RUC: 20608594210
+                      SUPERLAPTOP S.A.C &bull; RUC: 20609242575
                     </span>
                     <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
                       LIBRO DE RECLAMACIONES VIRTUAL

@@ -185,16 +185,16 @@ exports.processBankTransferPayment = async (req, res, next) => {
             <p>Gracias por tu compra en <strong>SUPERLAPTOP</strong>. Tu pedido estará reservado durante <strong>24 horas</strong> mientras se verifica la transferencia bancaria.</p>
 
             <div style="background: #f1f5f9; padding: 14px; border-radius: 10px; margin-bottom: 16px;">
-              <p style="margin: 0; font-size: 13px;"><strong>Razón Social:</strong> CUADRADO TECHNOLOGY & ADVANCE E.I.R.L.</p>
-              <p style="margin: 4px 0 0; font-size: 13px;"><strong>RUC:</strong> 20606455543</p>
+              <p style="margin: 0; font-size: 13px;"><strong>Razón Social:</strong> SUPERLAPTOP S.A.C</p>
+              <p style="margin: 4px 0 0; font-size: 13px;"><strong>RUC:</strong> 20609242575</p>
             </div>
 
-            <h3 style="color: #1e3a8a; margin-bottom: 8px;">Cuentas Bancarias Oficiales (Soles):</h3>
+            <h3 style="color: #1e3a8a; margin-bottom: 8px;">Cuentas Bancarias Oficiales:</h3>
             <ul style="line-height: 1.6; font-size: 13px;">
-              <li><strong>BCP Soles:</strong> Cta: <code>191-8742112-0-60</code> | CCI: <code>00219100874211206058</code></li>
-              <li><strong>Interbank Soles:</strong> Cta: <code>200-3003161925</code> | CCI: <code>00320000300316192534</code></li>
-              <li><strong>BBVA Soles:</strong> Cta: <code>0011-0175-0100075566</code> | CCI: <code>01117500010007556678</code></li>
-              <li><strong>Scotiabank Soles:</strong> Cta: <code>000-2987321</code> | CCI: <code>00902100000298732173</code></li>
+              <li><strong>BCP Soles:</strong> Cta: <code>191-9899662-0-83</code> | CCI: <code>00219100989966208351</code></li>
+              <li><strong>BBVA Soles:</strong> Cta: <code>0011-0175-0100082392</code> | CCI: <code>01117500010008239270</code></li>
+              <li><strong>Interbank Soles:</strong> Cta: <code>200-3004056157</code> | CCI: <code>003-200-003004056157-30</code></li>
+              <li><strong>BCP Dólares:</strong> Cta: <code>1919944889131</code> | CCI: <code>00219100994488913159</code></li>
             </ul>
 
             <p style="background: #fef2f2; padding: 12px; border-radius: 8px; font-weight: bold; border-left: 4px solid #dc2626; color: #991b1b; font-size: 15px;">

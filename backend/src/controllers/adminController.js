@@ -1,5 +1,7 @@
-const { Order, Product, User, Category, Brand, Review, AuditLog } = require('../models');
+const { Order, Product, User, Category, Brand, Review, AuditLog, SystemSetting } = require('../models');
 const { Op } = require('sequelize');
+const logger = require('../config/logger');
+const cuadradoSyncService = require('../services/cuadradoSyncService');
 
 exports.getDashboardMetrics = async (req, res, next) => {
   try {
@@ -330,6 +332,68 @@ exports.updateOrderInvoice = async (req, res, next) => {
       success: true,
       message: 'Comprobante fiscal actualizado exitosamente',
       order
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getMarkupSetting = async (req, res, next) => {
+  try {
+    const setting = await SystemSetting.findOne({ where: { key: 'cuadrado_markup_percent' } });
+    const markupPercent = setting ? parseFloat(setting.value) : (parseFloat(process.env.CUADRADO_PRICE_MARKUP_PERCENT) || 3);
+    return res.json({
+      success: true,
+      markupPercent: isNaN(markupPercent) ? 3 : markupPercent
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateMarkupSetting = async (req, res, next) => {
+  try {
+    const { markupPercent } = req.body;
+    const parsedPercent = parseFloat(markupPercent);
+    if (isNaN(parsedPercent) || parsedPercent < 0 || parsedPercent > 1000) {
+      return res.status(400).json({
+        success: false,
+        message: 'El porcentaje de incremento debe ser un número válido entre 0 y 1000.'
+      });
+    }
+
+    const [setting] = await SystemSetting.findOrCreate({
+      where: { key: 'cuadrado_markup_percent' },
+      defaults: {
+        key: 'cuadrado_markup_percent',
+        value: String(parsedPercent),
+        description: 'Porcentaje de incremento sobre precio mayorista de Cuadrado'
+      }
+    });
+
+    setting.value = String(parsedPercent);
+    await setting.save();
+
+    await AuditLog.create({
+      user_id: req.user.id,
+      action: 'UPDATE_MARKUP_SETTING',
+      entity: 'SystemSetting',
+      entity_id: setting.id,
+      details: { newMarkupPercent: parsedPercent }
+    });
+
+    // Asynchronous non-blocking background catalog recalculation
+    setImmediate(() => {
+      logger.info(`[AdminController] Iniciando recálculo asíncrono de catálogo con nuevo margen del ${parsedPercent}%...`);
+      cuadradoSyncService.syncCatalog().catch((err) => {
+        logger.error('[AdminController] Error en sincronización asíncrona tras cambio de margen:', err);
+      });
+    });
+
+    return res.json({
+      success: true,
+      message: `Margen comercial actualizado exitosamente a ${parsedPercent}%. Recalculando catálogo en segundo plano...`,
+      markupPercent: parsedPercent
     });
   } catch (error) {
     next(error);

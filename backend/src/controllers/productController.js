@@ -169,7 +169,7 @@ exports.getBrands = async (req, res, next) => {
 
 exports.createProduct = async (req, res, next) => {
   try {
-    const { name, slug, sku, description, technical_specs, price, offer_price, stock, category_id, brand_id, images, is_featured } = req.body;
+    const { name, slug, sku, description, technical_specs, price, offer_price, previous_price, stock, category_id, brand_id, images, is_featured } = req.body;
 
     const product = await Product.create({
       name,
@@ -179,6 +179,7 @@ exports.createProduct = async (req, res, next) => {
       technical_specs: technical_specs || {},
       price,
       offer_price,
+      previous_price: (previous_price !== undefined && previous_price !== null && previous_price !== '' && Number(previous_price) > 0) ? Number(previous_price) : null,
       stock,
       category_id,
       brand_id,
@@ -253,6 +254,12 @@ exports.updateProduct = async (req, res, next) => {
       updateData.storage_type = specs.storage_type || updateData.storage_type;
       updateData.screen_size = specs.screen_size || updateData.screen_size;
       updateData.full_name = specs.full_name || updateData.name;
+    }
+
+    if (updateData.previous_price !== undefined) {
+      updateData.previous_price = (updateData.previous_price === '' || updateData.previous_price === null || isNaN(Number(updateData.previous_price)) || Number(updateData.previous_price) <= 0)
+        ? null
+        : parseFloat(Number(updateData.previous_price).toFixed(2));
     }
 
     await product.update(updateData);
