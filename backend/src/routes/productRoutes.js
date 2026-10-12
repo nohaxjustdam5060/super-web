@@ -20,11 +20,14 @@ const upload = multer({
   }
 });
 
-router.get('/', productController.getProducts);
-router.get('/filters', productController.getFilterOptions);
-router.get('/categories', productController.getCategories);
-router.get('/brands', productController.getBrands);
-router.get('/:slug', productController.getProductBySlug);
+const { catalogLimiter } = require('../middlewares/rateLimiter');
+const { optionalAuth } = require('../middlewares/authMiddleware');
+
+router.get('/', optionalAuth, catalogLimiter, productController.getProducts);
+router.get('/filters', optionalAuth, catalogLimiter, productController.getFilterOptions);
+router.get('/categories', optionalAuth, catalogLimiter, productController.getCategories);
+router.get('/brands', optionalAuth, catalogLimiter, productController.getBrands);
+router.get('/:slug', optionalAuth, catalogLimiter, productController.getProductBySlug);
 
 // Reviews
 router.get('/:product_id/reviews', reviewController.getProductReviews);

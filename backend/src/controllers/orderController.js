@@ -23,9 +23,9 @@ exports.getShippingMethods = async (req, res, next) => {
           is_active: true
         },
         {
-          name: 'Envío a Provincias (Agencia de Transporte)',
+          name: 'Envío a Provincias',
           code: 'province',
-          description: 'Despacho a nivel nacional vía agencia (Shalom, Olva, Marvisur)',
+          description: 'Despacho a nivel nacional vía agencia',
           cost: 25.00,
           estimated_delivery: '48 - 72 horas',
           is_active: true

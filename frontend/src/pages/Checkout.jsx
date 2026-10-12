@@ -60,6 +60,34 @@ function renderShippingMethodIcon(method, isSelected) {
   return <PackageCheck className={iconClass} strokeWidth={2} />;
 }
 
+// Métodos de despacho por defecto para renderizado inmediato y protección offline
+const DEFAULT_SHIPPING_METHODS = [
+  {
+    id: 'dea7346e-ada6-4a4b-9049-cb002f3b8f11',
+    name: 'Recojo en Tienda',
+    code: 'pickup',
+    description: 'Retiro presencial sin costo en nuestra tienda (Jr. Velarde 172, Lima)',
+    cost: 0.00,
+    is_active: true
+  },
+  {
+    id: '6f09f09b-ec37-494f-8d81-011b7d203cd0',
+    name: 'Envío Express (Lima y Trujillo)',
+    code: 'express',
+    description: 'Entrega rápida a domicilio en 24-48h',
+    cost: 15.00,
+    is_active: true
+  },
+  {
+    id: 'f2e2ba23-b7f2-4d75-8409-358466833521',
+    name: 'Envío a Provincias',
+    code: 'province',
+    description: 'Despacho a nivel nacional vía agencia',
+    cost: 25.00,
+    is_active: true
+  }
+];
+
 export default function Checkout() {
   const navigate = useNavigate();
   const { items, getSubtotal, clearCart } = useCartStore();
@@ -97,10 +125,10 @@ export default function Checkout() {
     };
   });
 
-  // Shipping Methods fetched from DB
-  const [shippingMethods, setShippingMethods] = useState([]);
-  const [selectedShippingMethod, setSelectedShippingMethod] = useState(null);
-  const [loadingShippingMethods, setLoadingShippingMethods] = useState(true);
+  // Shipping Methods fetched from DB with fallback defaults
+  const [shippingMethods, setShippingMethods] = useState(DEFAULT_SHIPPING_METHODS);
+  const [selectedShippingMethod, setSelectedShippingMethod] = useState(DEFAULT_SHIPPING_METHODS[0]);
+  const [loadingShippingMethods, setLoadingShippingMethods] = useState(false);
 
   // Invoice / Receipt State (Boleta / Factura)
   const [invoiceInfo, setInvoiceInfo] = useState({
@@ -238,12 +266,15 @@ export default function Checkout() {
 
   // Load Shipping Methods from API
   useEffect(() => {
-    setLoadingShippingMethods(true);
     axiosClient.get('/orders/shipping-methods')
       .then((res) => {
         if (res.data.success && res.data.shippingMethods?.length > 0) {
           setShippingMethods(res.data.shippingMethods);
-          setSelectedShippingMethod(res.data.shippingMethods[0]);
+          setSelectedShippingMethod((prev) => {
+            if (!prev) return res.data.shippingMethods[0];
+            const match = res.data.shippingMethods.find((m) => m.code === prev.code || m.id === prev.id);
+            return match || res.data.shippingMethods[0];
+          });
         }
       })
       .catch((err) => console.error('[Checkout] Error loading shipping methods:', err))
@@ -801,14 +832,14 @@ export default function Checkout() {
                     Selecciona el Método de Entrega *
                   </label>
 
-                  {loadingShippingMethods ? (
+                  {loadingShippingMethods && shippingMethods.length === 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                       {[1, 2, 3].map((n) => (
                         <div
                           key={n}
-                          className="p-3 sm:p-3.5 rounded-xl border-2 border-slate-200/70 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 animate-pulse flex flex-col justify-between h-[130px]"
+                          className="p-3 rounded-xl border-2 border-slate-200/70 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 animate-pulse flex flex-col justify-between min-h-[92px]"
                         >
-                          <div className="space-y-2">
+                          <div className="space-y-1.5">
                             <div className="flex items-center justify-between">
                               <div className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700" />
                               <div className="w-14 h-4 rounded-full bg-slate-200 dark:bg-slate-700" />
@@ -824,11 +855,6 @@ export default function Checkout() {
                               <div className="h-2.5 w-2/3 rounded bg-slate-200 dark:bg-slate-700" />
                             </div>
                           </div>
-
-                          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 mt-1.5 flex items-center space-x-1">
-                            <div className="w-3 h-3 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
-                            <div className="h-2 w-1/2 rounded bg-slate-200 dark:bg-slate-700" />
-                          </div>
                         </div>
                       ))}
                     </div>
@@ -837,12 +863,14 @@ export default function Checkout() {
                       {shippingMethods.map((method) => {
                         const isSelected = selectedShippingMethod?.id === method.id;
                         const methodIsPickup = method.code === 'pickup' || Number(method.cost) === 0 || method.name?.toLowerCase().includes('recojo');
+                        const displayName = method.name?.replace(/\s*\(\s*Agencia de Transporte\s*\)/i, '') || method.name;
+                        const displayDescription = method.description?.replace(/\s*\(\s*Shalom,\s*Olva,\s*Marvisur\s*\)/i, '') || method.description;
 
                         return (
                           <div
                             key={method.id}
                             onClick={() => setSelectedShippingMethod(method)}
-                            className={`p-3 sm:p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                            className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between min-h-[86px] ${
                               isSelected
                                 ? 'border-brand-red bg-red-50/20 shadow-sm ring-1 ring-brand-red/30'
                                 : 'border-gray-200 hover:border-gray-300 bg-white'
@@ -860,17 +888,12 @@ export default function Checkout() {
 
                               <p className="font-extrabold text-gray-900 text-xs sm:text-sm flex items-center pt-0.5">
                                 {renderShippingMethodIcon(method, isSelected)}
-                                <span>{method.name}</span>
+                                <span>{displayName}</span>
                               </p>
 
                               <p className="text-[11px] text-gray-500 leading-tight">
-                                {method.description}
+                                {displayDescription}
                               </p>
-                            </div>
-
-                            <div className="pt-2 border-t border-gray-100 mt-1.5 text-[10px] text-gray-400 font-bold flex items-center">
-                              <Clock className="w-3 h-3 mr-1 text-gray-400 shrink-0" strokeWidth={2} />
-                              <span>{method.estimated_delivery}</span>
                             </div>
                           </div>
                         );
@@ -880,7 +903,7 @@ export default function Checkout() {
                 </div>
 
                 {/* 1.2 CONDITIONAL FIELDS BASED ON METHOD */}
-                {loadingShippingMethods ? (
+                {loadingShippingMethods && shippingMethods.length === 0 ? (
                   <div className="space-y-4 pt-1">
                     {/* Store Physical Info Card Skeleton */}
                     <div className="bg-emerald-50/40 dark:bg-slate-800/40 border border-emerald-100/60 dark:border-slate-800 rounded-xl p-3.5 space-y-2.5 animate-pulse">
@@ -971,11 +994,11 @@ export default function Checkout() {
                         </div>
                       </div>
 
-                      <div className="text-[11px] text-emerald-800 bg-emerald-100/50 p-2 rounded-lg border border-emerald-200/60 leading-relaxed font-semibold flex items-start space-x-2">
-                        <div className="bg-slate-100 dark:bg-slate-800 rounded-full p-1 shrink-0 mt-0.5">
+                      <div className="text-[11px] text-emerald-800 bg-emerald-100/50 p-1 rounded-lg border border-emerald-200/60 leading-relaxed font-semibold flex items-start space-x-2">
+                      
                           <AlertCircle className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" strokeWidth={2} />
-                        </div>
-                        <p>
+                        
+                        <p className="leading-tight">
                           <strong>Requisitos de retiro:</strong> Presentar DNI/CE físico y el código de pedido para retirar en tienda.
                         </p>
                       </div>
@@ -1328,7 +1351,7 @@ export default function Checkout() {
 
                 <button
                   type="submit"
-                  disabled={loading || loadingShippingMethods}
+                  disabled={loading || (loadingShippingMethods && shippingMethods.length === 0)}
                   className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-md transition-transform active:scale-95 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   <span>Continuar al Paso 2: Comprobante & Pago</span>
@@ -1337,28 +1360,28 @@ export default function Checkout() {
               </form>
             ) : (
               /* STEP 2: INVOICE SELECTOR & PAYMENT METHOD */
-              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm space-y-6">
-                <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                  <h3 className="text-xl font-black text-gray-900 flex items-center">
-                    <CreditCard className="w-5 h-5 mr-2 text-brand-red" /> 2. Comprobante & Método de Pago
+              <div className="bg-white p-4 sm:p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
+                  <h3 className="text-lg sm:text-xl font-black text-gray-900 flex items-center">
+                    <CreditCard className="w-5 h-5 mr-2 text-brand-red shrink-0" /> 2. Comprobante & Método de Pago
                   </h3>
                   <button
                     type="button"
                     onClick={() => setStep(1)}
-                    className="text-xs text-brand-red font-bold hover:underline flex items-center bg-red-50 px-3 py-1.5 rounded-xl border border-red-100 transition-colors hover:bg-red-100 cursor-pointer"
+                    className="text-xs text-brand-red font-bold hover:underline flex items-center bg-red-50 px-2.5 py-1.5 rounded-xl border border-red-100 transition-colors hover:bg-red-100 cursor-pointer"
                   >
                     <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Volver a Envío
                   </button>
                 </div>
 
                 {/* RECEIPT / INVOICE TYPE SELECTOR (BOLETA vs FACTURA) */}
-                <div className="bg-gray-50 p-4 sm:p-5 rounded-2xl border border-gray-200 space-y-4">
-                  <h4 className="font-extrabold text-gray-900 text-xs flex items-center uppercase tracking-wider text-brand-red">
-                    <FileText className="w-4 h-4 mr-1.5" /> Selección de Comprobante Electrónico (SUNAT)
+                <div className="bg-gray-50 p-3 sm:p-3.5 rounded-xl border border-gray-200 space-y-2.5">
+                  <h4 className="font-extrabold text-gray-900 text-[11px] sm:text-xs flex items-center uppercase tracking-wider text-brand-red">
+                    <FileText className="w-3.5 h-3.5 mr-1.5" /> Selección de Comprobante Electrónico (SUNAT)
                   </h4>
 
                   {/* Top Buttons: Boleta vs Factura */}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2.5">
                     <button
                       type="button"
                       onClick={() => {
@@ -1384,7 +1407,7 @@ export default function Checkout() {
                             : targetDoc.toUpperCase().slice(0, 12)
                         }));
                       }}
-                      className={`p-3 rounded-xl font-extrabold text-xs border text-center transition-all cursor-pointer ${
+                      className={`py-2 px-3 rounded-xl font-extrabold text-xs border text-center transition-all cursor-pointer ${
                         invoiceInfo.invoice_type === 'boleta'
                           ? 'bg-brand-red hover:bg-brand-red-hover text-white border-brand-red shadow-sm'
                           : 'bg-white text-gray-700 border-gray-300 hover:border-brand-red/60 hover:bg-red-50/40 hover:text-brand-red'
@@ -1410,7 +1433,7 @@ export default function Checkout() {
                           document_number: documentDrafts.RUC || ''
                         }));
                       }}
-                      className={`p-3 rounded-xl font-extrabold text-xs border text-center transition-all cursor-pointer ${
+                      className={`py-2 px-3 rounded-xl font-extrabold text-xs border text-center transition-all cursor-pointer ${
                         invoiceInfo.invoice_type === 'factura'
                           ? 'bg-brand-red hover:bg-brand-red-hover text-white border-brand-red shadow-sm'
                           : 'bg-white text-gray-700 border-gray-300 hover:border-brand-red/60 hover:bg-red-50/40 hover:text-brand-red'
@@ -1422,9 +1445,9 @@ export default function Checkout() {
 
                   {/* CASE 1: BOLETA DE VENTA FIELDS */}
                   {invoiceInfo.invoice_type === 'boleta' ? (
-                    <div className="space-y-3 pt-1">
+                    <div className="space-y-2.5 pt-0.5">
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                        <label className="block text-xs font-bold text-gray-700 mb-1">
                           Tipo de Documento de Identidad *
                         </label>
                         <div className="flex gap-2">
@@ -1452,7 +1475,7 @@ export default function Checkout() {
                                 document_number: targetDNI
                               }));
                             }}
-                            className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                               invoiceInfo.document_type === 'DNI'
                                 ? 'bg-brand-red hover:bg-brand-red-hover text-white border-brand-red shadow-xs'
                                 : 'bg-white text-gray-700 border-gray-300 hover:border-brand-red/60 hover:bg-red-50/40 hover:text-brand-red'
@@ -1484,7 +1507,7 @@ export default function Checkout() {
                                 document_number: targetCE
                               }));
                             }}
-                            className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                               invoiceInfo.document_type === 'CE'
                                 ? 'bg-brand-red hover:bg-brand-red-hover text-white border-brand-red shadow-xs'
                                 : 'bg-white text-gray-700 border-gray-300 hover:border-brand-red/60 hover:bg-red-50/40 hover:text-brand-red'
@@ -1537,19 +1560,19 @@ export default function Checkout() {
                               }));
                             }
                           }}
-                          className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                          className={`w-full bg-white rounded-xl px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
                             errors.invoice_document
                               ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                               : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                           }`}
                         />
                         {errors.invoice_document ? (
-                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                          <p className="text-xs text-red-600 font-medium mt-1 flex items-center">
                             <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
                             <span>{errors.invoice_document}</span>
                           </p>
                         ) : (
-                          <span className="text-[10px] text-gray-400 mt-1 block">
+                          <span className="text-[10px] text-gray-400 mt-0.5 block">
                             Autocompletado desde los datos del paso anterior si ingresaste tu documento.
                           </span>
                         )}
@@ -1557,8 +1580,8 @@ export default function Checkout() {
                     </div>
                   ) : (
                     /* CASE 2: FACTURA ELECTRÓNICA (RUC) FIELDS */
-                    <div className="space-y-3 pt-1">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-2.5 pt-0.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                         <div>
                           <label className="block text-xs font-bold text-gray-700 mb-1">
                             Número de RUC (11 dígitos, inicia con 10, 20, 15 o 17) *
@@ -1576,14 +1599,14 @@ export default function Checkout() {
                               setDocumentDrafts((prev) => ({ ...prev, RUC: cleanRUC }));
                               setInvoiceInfo((prev) => ({ ...prev, document_number: cleanRUC }));
                             }}
-                            className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                            className={`w-full bg-white rounded-xl px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
                               errors.invoice_document
                                 ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                                 : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                             }`}
                           />
                           {errors.invoice_document && (
-                            <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                            <p className="text-xs text-red-600 font-medium mt-1 flex items-center">
                               <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
                               <span>{errors.invoice_document}</span>
                             </p>
@@ -1604,14 +1627,14 @@ export default function Checkout() {
                               setInvoiceInfo({ ...invoiceInfo, company_name: e.target.value });
                               clearError('company_name');
                             }}
-                            className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                            className={`w-full bg-white rounded-xl px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
                               errors.company_name
                                 ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                                 : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                             }`}
                           />
                           {errors.company_name && (
-                            <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                            <p className="text-xs text-red-600 font-medium mt-1 flex items-center">
                               <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
                               <span>{errors.company_name}</span>
                             </p>
@@ -1647,14 +1670,14 @@ export default function Checkout() {
                             setInvoiceInfo({ ...invoiceInfo, fiscal_address: e.target.value });
                             clearError('fiscal_address');
                           }}
-                          className={`w-full bg-white rounded-xl px-4 py-3 text-sm md:text-base text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
+                          className={`w-full bg-white rounded-xl px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm text-gray-800 placeholder-gray-400 outline-none transition-all duration-150 caret-brand-red ${
                             errors.fiscal_address
                               ? 'border-2 border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                               : 'border border-gray-300 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20'
                           }`}
                         />
                         {errors.fiscal_address && (
-                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                          <p className="text-xs text-red-600 font-medium mt-1 flex items-center">
                             <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
                             <span>{errors.fiscal_address}</span>
                           </p>
@@ -1665,24 +1688,24 @@ export default function Checkout() {
                 </div>
 
                 {/* PAYMENT METHOD SELECTOR */}
-                <div className="space-y-3">
-                  <h4 className="font-extrabold text-gray-900 text-sm">Elegir Forma de Pago</h4>
+                <div className="space-y-2">
+                  <h4 className="font-extrabold text-gray-900 text-xs sm:text-sm">Elegir Forma de Pago</h4>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('mercadopago')}
-                      className={`p-4 rounded-2xl border-2 text-left flex items-center justify-between transition-all cursor-pointer ${
+                      className={`p-3 rounded-xl border-2 text-left flex items-center justify-between transition-all cursor-pointer ${
                         paymentMethod === 'mercadopago'
                           ? 'border-brand-red bg-red-50/20 text-brand-red shadow-sm'
                           : 'border-gray-200 text-gray-700 hover:border-brand-red/50 hover:bg-red-50/20'
                       }`}
                     >
-                      <div className="flex items-start space-x-3">
-                        <CreditCard className="w-5 h-5 mt-0.5 text-brand-red shrink-0" />
+                      <div className="flex items-start space-x-2.5">
+                        <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 text-brand-red shrink-0" />
                         <div>
-                          <span className="font-black text-xs block text-gray-900">Mercado Pago (Tarjetas de crédito/débito y saldo)</span>
-                          <span className="text-[11px] font-medium text-amber-700 block mt-0.5">Incluye un recargo del 5% por uso de pasarela</span>
+                          <span className="font-black text-xs block text-gray-900 leading-tight">Mercado Pago (Tarjetas, Yape y saldo)</span>
+                          <span className="text-[11px] font-medium text-amber-700 block mt-0.5 leading-tight">Recargo de pasarela: 5%</span>
                         </div>
                       </div>
                       {paymentMethod === 'mercadopago' && <Check className="w-4 h-4 text-brand-red shrink-0 ml-2" />}
@@ -1691,17 +1714,17 @@ export default function Checkout() {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('bank_transfer')}
-                      className={`p-4 rounded-2xl border-2 text-left flex items-center justify-between transition-all cursor-pointer ${
+                      className={`p-3 rounded-xl border-2 text-left flex items-center justify-between transition-all cursor-pointer ${
                         paymentMethod === 'bank_transfer'
                           ? 'border-brand-red bg-red-50/20 text-brand-red shadow-sm'
                           : 'border-gray-200 text-gray-700 hover:border-brand-red/50 hover:bg-red-50/20'
                       }`}
                     >
-                      <div className="flex items-start space-x-3">
-                        <Building2 className="w-5 h-5 mt-0.5 text-emerald-600 shrink-0" />
+                      <div className="flex items-start space-x-2.5">
+                        <Building2 className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 text-emerald-600 shrink-0" />
                         <div>
-                          <span className="font-black text-xs block text-gray-900">Transferencia Bancaria</span>
-                          <span className="text-[11px] font-medium text-emerald-600 block mt-0.5">Sin recargo adicional (0%)</span>
+                          <span className="font-black text-xs block text-gray-900 leading-tight">Transferencia Bancaria</span>
+                          <span className="text-[11px] font-medium text-emerald-600 block mt-0.5 leading-tight">Sin recargo adicional (0%)</span>
                         </div>
                       </div>
                       {paymentMethod === 'bank_transfer' && <Check className="w-4 h-4 text-brand-red shrink-0 ml-2" />}
@@ -1711,7 +1734,7 @@ export default function Checkout() {
 
                 {/* TERMS AND CONDITIONS CHECKBOX (REQUIRED BEFORE PAYMENT) */}
                 <div>
-                  <div className={`p-4 rounded-2xl border transition-colors flex items-start space-x-3 ${
+                  <div className={`p-2.5 sm:p-3 rounded-xl border transition-colors flex items-start space-x-2.5 ${
                     errors.terms_agree ? 'bg-red-50/60 border-brand-red' : 'bg-slate-50 border-slate-200 hover:bg-slate-100/70'
                   }`}>
                     <input
@@ -1722,9 +1745,9 @@ export default function Checkout() {
                         setAcceptedTerms(e.target.checked);
                         clearError('terms_agree');
                       }}
-                      className="mt-0.5 w-4 h-4 text-brand-red rounded border-gray-300 focus:ring-brand-red cursor-pointer"
+                      className="mt-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-red rounded border-gray-300 focus:ring-brand-red cursor-pointer"
                     />
-                    <label htmlFor="terms_agree" className="text-xs text-gray-700 font-bold cursor-pointer select-none leading-relaxed">
+                    <label htmlFor="terms_agree" className="text-xs text-gray-700 font-bold cursor-pointer select-none leading-snug">
                       He leído y acepto los{' '}
                       <Link to="/politicas?tab=terminos" target="_blank" rel="noopener noreferrer" className="text-brand-red underline hover:text-brand-red-hover">
                         Términos y Condiciones de Compra
@@ -1737,7 +1760,7 @@ export default function Checkout() {
                     </label>
                   </div>
                   {errors.terms_agree && (
-                    <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center">
+                    <p className="text-xs text-red-600 font-medium mt-1 flex items-center">
                       <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-red-600" />
                       <span>{errors.terms_agree}</span>
                     </p>
@@ -1746,28 +1769,29 @@ export default function Checkout() {
 
                 {/* OPTION A: MERCADO PAGO CHECKOUT PRO */}
                 {paymentMethod === 'mercadopago' ? (
-                  <div className="space-y-3 pt-1">
-                    <p className="text-xs text-gray-500">
+                  <div className="space-y-2 pt-0.5">
+                    <p className="text-xs text-gray-500 leading-tight">
                       Al hacer clic en el botón, serás redirigido a la plataforma segura de Mercado Pago para completar tu pago con tarjeta de crédito, débito, Yape o efectivo:
                     </p>
-                    <PaymentBadges className="pt-1 pb-1" />
+                    <PaymentBadges className="py-0.5" />
                     <CheckoutButton
                       orderId={createdOrder?.id}
                       invoiceInfo={invoiceInfo}
                       getOrderPayload={() => getConsolidatedPayload('mercadopago')}
                       onSuccess={(order) => setCreatedOrder(order)}
                       onBeforePay={validateBeforePayment}
+                      className="!py-3 !text-sm sm:!text-base shadow-md cursor-pointer"
                     />
                   </div>
                 ) : (
                   /* OPTION B: BANK TRANSFER DETAILS & RESERVATION */
-                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-4">
+                  <div className="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-3">
                     <div className="flex items-center space-x-2 text-brand-red">
-                      <Building2 className="w-5 h-5" />
-                      <h4 className="font-black text-sm">Cuentas Bancarias Oficiales</h4>
+                      <Building2 className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                      <h4 className="font-black text-xs sm:text-sm">Cuentas Bancarias Oficiales</h4>
                     </div>
 
-                    <div className="bg-white p-3 rounded-xl border border-gray-200 text-[11px] text-gray-600 space-y-0.5">
+                    <div className="bg-white p-2.5 sm:p-3 rounded-xl border border-gray-200 text-[11px] text-gray-600 space-y-0.5">
                       <p><strong>Titular:</strong> SUPERLAPTOP S.A.C</p>
                       <p><strong>RUC:</strong> 20609242575</p>
                     </div>
@@ -1776,40 +1800,40 @@ export default function Checkout() {
                       Realiza la transferencia por el monto exacto de <strong className="text-brand-red font-black">S/ {total.toFixed(2)}</strong> a cualquiera de nuestras cuentas oficiales:
                     </p>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                      <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-xs space-y-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                      <div className="bg-white p-2.5 rounded-xl border border-gray-200 shadow-xs space-y-0.5">
                         <p className="font-black text-brand-blue">BCP Soles</p>
                         <p className="font-mono text-gray-800 text-[11px]">Cta: 191-9899662-0-83</p>
                         <p className="text-[10px] text-gray-400 font-mono">CCI: 00219100989966208351</p>
                       </div>
-                      <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-xs space-y-1">
+                      <div className="bg-white p-2.5 rounded-xl border border-gray-200 shadow-xs space-y-0.5">
                         <p className="font-black text-blue-800">BBVA Soles</p>
                         <p className="font-mono text-gray-800 text-[11px]">Cta: 0011-0175-0100082392</p>
                         <p className="text-[10px] text-gray-400 font-mono">CCI: 01117500010008239270</p>
                       </div>
-                      <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-xs space-y-1">
+                      <div className="bg-white p-2.5 rounded-xl border border-gray-200 shadow-xs space-y-0.5">
                         <p className="font-black text-emerald-700">Interbank Soles</p>
                         <p className="font-mono text-gray-800 text-[11px]">Cta: 200-3004056157</p>
                         <p className="text-[10px] text-gray-400 font-mono">CCI: 003-200-003004056157-30</p>
                       </div>
-                      <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-xs space-y-1">
+                      <div className="bg-white p-2.5 rounded-xl border border-gray-200 shadow-xs space-y-0.5">
                         <p className="font-black text-brand-blue">BCP Dólares</p>
                         <p className="font-mono text-gray-800 text-[11px]">Cta: 1919944889131</p>
                         <p className="text-[10px] text-gray-400 font-mono">CCI: 00219100994488913159</p>
                       </div>
                     </div>
 
-                    <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl text-xs text-amber-800 space-y-1">
+                    <div className="bg-amber-50 border border-amber-200 p-2.5 sm:p-3 rounded-xl text-xs text-amber-800 space-y-1">
                       <p className="font-bold flex items-center">
-                        <Clock className="w-4 h-4 mr-1 text-amber-600" /> Reserva garantizada por 24 horas
+                        <Clock className="w-3.5 h-3.5 mr-1 text-amber-600 shrink-0" /> Envío del comprobante
                       </p>
-                      <p className="text-[11px] text-amber-700">
+                      <p className="text-[11px] text-amber-700 leading-snug">
                         Una vez generada la orden, tus productos quedarán reservados durante 24h. Envía tu voucher adjuntando el número de orden por correo o WhatsApp para la verificación administrativa.
                       </p>
                     </div>
 
                     {submitError && (
-                      <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center space-x-2">
+                      <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center space-x-2">
                         <AlertCircle className="w-4 h-4 text-brand-red shrink-0" />
                         <span>{submitError}</span>
                       </div>
@@ -1819,9 +1843,9 @@ export default function Checkout() {
                       type="button"
                       onClick={handleConfirmBankTransfer}
                       disabled={loading}
-                      className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-base disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-md transition-transform active:scale-95 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
-                      <Building2 className="w-5 h-5" />
+                      <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
                       <span>Confirmar Pedido por Transferencia</span>
                     </button>
                   </div>

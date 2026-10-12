@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ShoppingBag, ShieldCheck, Truck, RefreshCw, CheckCircle, Plus, Minus, 
@@ -19,7 +19,19 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
 
+  const thumbnailRefs = useRef([]);
   const addItem = useCartStore((state) => state.addItem);
+
+  // Auto-scroll active thumbnail into view smoothly
+  useEffect(() => {
+    if (thumbnailRefs.current[currentImageIndex]) {
+      thumbnailRefs.current[currentImageIndex].scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    }
+  }, [currentImageIndex]);
 
   useEffect(() => {
     setLoading(true);
@@ -228,14 +240,42 @@ export default function ProductDetail() {
       <div className="bg-white p-6 sm:p-8 rounded-lg border border-gray-200 shadow-sm grid grid-cols-1 lg:grid-cols-2 gap-10">
         {/* Images Gallery Carousel */}
         <div className="space-y-4">
-          <div className="bg-gray-50 rounded-lg p-4 sm:p-6 border border-gray-100 flex items-center justify-center h-64 sm:h-96 relative overflow-hidden group select-none">
-            <div className="w-full h-full flex items-center justify-center">
-              <ProductImage
-                src={imagesList[currentImageIndex]?.image_url || product.image_url || null}
-                alt={product.name}
-                className="max-h-full object-contain drop-shadow-md hover:scale-105 transition-transform duration-300"
-                size="lg"
-              />
+          <div className="bg-gray-50/70 rounded-2xl p-4 sm:p-6 border border-gray-100 flex items-center justify-center h-64 sm:h-[400px] relative overflow-hidden group select-none">
+            {/* Smooth Crossfade Image Stage */}
+            <div className="w-full h-full relative flex items-center justify-center overflow-hidden">
+              {imagesList.length > 0 ? (
+                imagesList.map((img, idx) => {
+                  const isCurrent = currentImageIndex === idx;
+                  return (
+                    <div
+                      key={img.id || img.image_url || idx}
+                      className={`absolute inset-0 flex items-center justify-center p-2 sm:p-4 transition-all duration-300 ease-in-out ${
+                        isCurrent
+                          ? 'opacity-100 scale-100 pointer-events-auto z-10'
+                          : 'opacity-0 scale-95 pointer-events-none z-0'
+                      }`}
+                      aria-hidden={!isCurrent}
+                    >
+                      <ProductImage
+                        src={img.image_url}
+                        alt={`${product.name} - Vista ${idx + 1}`}
+                        className="max-h-full max-w-full object-contain drop-shadow-md transition-transform duration-300 hover:scale-105"
+                        size="lg"
+                        loading={idx === 0 ? 'eager' : 'lazy'}
+                      />
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="w-full h-full flex items-center justify-center p-4">
+                  <ProductImage
+                    src={product.image_url || null}
+                    alt={product.name}
+                    className="max-h-full max-w-full object-contain drop-shadow-md"
+                    size="lg"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Carousel Navigation Arrows */}
@@ -244,23 +284,23 @@ export default function ProductDetail() {
                 <button
                   type="button"
                   onClick={handlePrevImage}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-md bg-slate-900/60 hover:bg-brand-red text-white flex items-center justify-center backdrop-blur-md shadow-lg transition-all active:scale-95 z-10 opacity-90 group-hover:opacity-100 cursor-pointer"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/90 hover:bg-brand-red text-gray-800 hover:text-white flex items-center justify-center backdrop-blur-md shadow-md border border-gray-200/60 transition-all duration-200 hover:scale-105 active:scale-95 z-20 cursor-pointer opacity-90 group-hover:opacity-100"
                   aria-label="Imagen anterior"
                 >
-                  <ChevronLeft className="w-6 h-6" />
+                  <ChevronLeft className="w-5 h-5" />
                 </button>
 
                 <button
                   type="button"
                   onClick={handleNextImage}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-md bg-slate-900/60 hover:bg-brand-red text-white flex items-center justify-center backdrop-blur-md shadow-lg transition-all active:scale-95 z-10 opacity-90 group-hover:opacity-100 cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/90 hover:bg-brand-red text-gray-800 hover:text-white flex items-center justify-center backdrop-blur-md shadow-md border border-gray-200/60 transition-all duration-200 hover:scale-105 active:scale-95 z-20 cursor-pointer opacity-90 group-hover:opacity-100"
                   aria-label="Siguiente imagen"
                 >
-                  <ChevronRight className="w-6 h-6" />
+                  <ChevronRight className="w-5 h-5" />
                 </button>
 
                 {/* Counter indicator */}
-                <span className="absolute bottom-3 right-3 bg-slate-900/70 text-white text-[10px] font-bold px-2.5 py-1 rounded-md backdrop-blur-sm z-10 shadow">
+                <span className="absolute bottom-3 right-3 bg-slate-900/70 text-white text-[10px] font-bold px-2.5 py-1 rounded-full backdrop-blur-sm z-20 shadow-sm pointer-events-none tracking-wider">
                   {currentImageIndex + 1} / {imagesList.length}
                 </span>
               </>
@@ -275,16 +315,17 @@ export default function ProductDetail() {
                 return (
                   <button
                     key={idx}
+                    ref={(el) => (thumbnailRefs.current[idx] = el)}
                     type="button"
                     onClick={() => setCurrentImageIndex(idx)}
-                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex items-center justify-center p-1 bg-white transition-all cursor-pointer relative flex-shrink-0 ${
+                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex items-center justify-center p-1 bg-white transition-all duration-200 cursor-pointer relative flex-shrink-0 ${
                       isActive
-                        ? 'border border-transparent ring-2 ring-red-600 shadow-sm scale-102 opacity-100 z-10'
-                        : 'border border-slate-200 hover:border-slate-300 opacity-70 hover:opacity-100'
+                        ? 'ring-2 ring-brand-red ring-offset-2 ring-offset-white border-transparent shadow-md scale-105 opacity-100 z-10'
+                        : 'border border-gray-200 hover:border-gray-400 opacity-60 hover:opacity-100 hover:scale-102'
                     }`}
                     title={`Ver imagen ${idx + 1}`}
                   >
-                    <div className="w-full h-full flex items-center justify-center overflow-hidden rounded-md">
+                    <div className="w-full h-full flex items-center justify-center overflow-hidden rounded-lg">
                       <ProductImage
                         src={img.image_url}
                         alt={`Miniatura ${idx + 1}`}
@@ -295,7 +336,7 @@ export default function ProductDetail() {
                     </div>
                     {img.is_primary && (
                       <span
-                        className="absolute top-1 left-1 w-3.5 h-3.5 bg-red-600 text-white rounded-full flex items-center justify-center p-0.5 text-[9px] z-10 shadow-xs leading-none font-bold pointer-events-none"
+                        className="absolute top-1 left-1 w-3.5 h-3.5 bg-brand-red text-white rounded-full flex items-center justify-center text-[9px] z-10 shadow-xs leading-none font-bold pointer-events-none"
                         title="Imagen Principal"
                       >
                         ★

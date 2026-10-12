@@ -2,11 +2,21 @@ const { Product, Category, Brand, ProductImage, ProductVariant, Review, User } =
 const searchService = require('../services/searchService');
 const storageService = require('../services/storageService');
 
+const MAX_PUBLIC_PAGE_SIZE = 48;
+const MAX_ADMIN_PAGE_SIZE = 100;
+
 exports.getProducts = async (req, res, next) => {
   try {
     const { page = 1, limit = 12, sort = 'newest', search, category_id, brand_id, min_price, max_price, in_stock, is_featured, include_inactive, status, ...otherSpecs } = req.query;
 
-    const offset = (Number(page) - 1) * Number(limit);
+    const isAdmin = req.user && ['admin', 'super_admin'].includes(req.user.role);
+    const maxAllowedLimit = isAdmin ? MAX_ADMIN_PAGE_SIZE : MAX_PUBLIC_PAGE_SIZE;
+
+    const pageNum = Math.max(1, Number(page) || 1);
+    const requestedLimit = Number(limit) || 12;
+    const limitNum = Math.min(Math.max(1, requestedLimit), maxAllowedLimit);
+    const offset = (pageNum - 1) * limitNum;
+
     const where = await searchService.buildProductSearchQuery({
       search, category_id, brand_id, min_price, max_price, in_stock, is_featured, include_inactive, status,
       specs: otherSpecs
@@ -19,7 +29,7 @@ exports.getProducts = async (req, res, next) => {
 
     let { count, rows: products } = await Product.findAndCountAll({
       where,
-      limit: Number(limit),
+      limit: limitNum,
       offset,
       order,
       include: [
@@ -38,7 +48,7 @@ exports.getProducts = async (req, res, next) => {
           is_active: true,
           stock: { [require('sequelize').Op.gt]: 0 }
         },
-        limit: Number(limit),
+        limit: limitNum,
         offset,
         order: [['stock', 'DESC'], ['createdAt', 'DESC']],
         include: [
@@ -52,8 +62,6 @@ exports.getProducts = async (req, res, next) => {
       count = fallbackResult.count;
     }
 
-    const pageNum = Math.max(1, Number(page) || 1);
-    const limitNum = Math.max(1, Number(limit) || 12);
     const totalPages = Math.ceil(count / limitNum) || 1;
 
     return res.json({

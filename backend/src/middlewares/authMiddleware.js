@@ -26,4 +26,24 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
+const optionalAuth = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super_secret_jwt_key_tech_ecommerce_2026_change_in_prod');
+      if (decoded && decoded.id) {
+        const user = await User.findByPk(decoded.id);
+        if (user && user.is_active) {
+          req.user = user;
+        }
+      }
+    }
+  } catch (error) {
+    // Si el token es inválido o expiró, continuar como visitante anónimo
+  }
+  return next();
+};
+
+authMiddleware.optionalAuth = optionalAuth;
 module.exports = authMiddleware;

@@ -21,4 +21,25 @@ const apiLimiter = rateLimit({
   }
 });
 
-module.exports = { authLimiter, apiLimiter };
+const catalogLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minuto
+  max: 80, // 80 peticiones por minuto (permite búsqueda predictiva/debounce y navegación fluida)
+  skip: (req) => {
+    if (req.method === 'OPTIONS' || req.path === '/payments/webhook' || req.originalUrl?.includes('/payments/webhook')) {
+      return true;
+    }
+    // No aplicar restricción de catálogo a administradores autenticados
+    if (req.user && ['admin', 'super_admin'].includes(req.user.role)) {
+      return true;
+    }
+    return false;
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Límite de consultas al catálogo alcanzado temporalmente. Por favor espera un momento antes de continuar.'
+  }
+});
+
+module.exports = { authLimiter, apiLimiter, catalogLimiter };
