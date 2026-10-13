@@ -33,7 +33,16 @@ const renderShippingBadge = (shippingMethodStr, shippingAddress) => {
   );
 };
 
-const OrderDetailsModal = memo(function OrderDetailsModal({ selectedOrder, loadingDetail, onClose, onOrderUpdated }) {
+const OrderDetailsModal = memo(function OrderDetailsModal({ 
+  selectedOrder, 
+  loadingDetail, 
+  onClose, 
+  onOrderUpdated,
+  onCancelOrder,
+  onVerifyBankTransfer,
+  verifyingId,
+  cancellingId
+}) {
   const [toastNotice, setToastNotice] = useState(null);
   const [copiedKey, setCopiedKey] = useState(null);
   const [invoiceNumberInput, setInvoiceNumberInput] = useState('');
@@ -142,22 +151,45 @@ const OrderDetailsModal = memo(function OrderDetailsModal({ selectedOrder, loadi
                   ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
                   : localOrder.status === 'payment_review'
                   ? 'bg-amber-100 text-amber-800 border-amber-300'
+                  : localOrder.status === 'cancelled'
+                  ? 'bg-red-100 text-red-800 border-red-300'
                   : 'bg-gray-100 text-gray-600 border-gray-300'
               }`}>
-                Estado: {localOrder.status === 'paid' ? 'Pagado' : localOrder.status === 'payment_review' ? 'En Revisión (24h)' : localOrder.status}
+                Estado: {localOrder.status === 'paid' ? 'Pagado' : localOrder.status === 'payment_review' ? 'En Revisión (4h)' : localOrder.status === 'cancelled' ? 'Cancelado' : localOrder.status}
               </span>
+              {localOrder.status === 'payment_review' && localOrder.reservation_expires_at && (
+                <span className="text-[11px] text-amber-800 font-bold bg-amber-50 border border-amber-300 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-amber-600" />
+                  Reserva válida hasta: {new Date(localOrder.reservation_expires_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
             </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-900 transition-colors"
+            className="p-2 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
             title="Cerrar ventana"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Supplier Stock Shortage Critical Alert */}
+        {localOrder.supplier_stock_shortage && (
+          <div className="bg-red-50 border-2 border-red-400 text-red-950 p-4 rounded-2xl flex items-start space-x-3 animate-fadeIn shadow-sm">
+            <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="text-xs space-y-1">
+              <p className="font-black uppercase tracking-wider text-red-800">
+                ⚠️ Alerta: Stock de Proveedor Mayorista Insuficiente
+              </p>
+              <p className="text-red-700 font-semibold leading-relaxed">
+                El stock en el almacén de Cuadrado ERP es inferior a la cantidad reservada en esta orden. Por favor valida con el proveedor antes de verificar el comprobante de pago.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Panel de Facturación Manual & Copiado Rápido para NubeFact */}
         <div className="bg-slate-900 text-white rounded-2xl p-4 sm:p-5 space-y-4 shadow-md border border-slate-800">
@@ -431,7 +463,29 @@ const OrderDetailsModal = memo(function OrderDetailsModal({ selectedOrder, loadi
 
         {/* Modal Actions Footer */}
         <div className="flex flex-col sm:flex-row justify-end items-center gap-3 pt-4 border-t border-gray-200">
-          
+          {(localOrder.status === 'payment_review' || localOrder.status === 'pending') && onCancelOrder && (
+            <button
+              type="button"
+              onClick={() => onCancelOrder(localOrder.id)}
+              disabled={cancellingId === localOrder.id}
+              className="w-full sm:w-auto bg-red-50 hover:bg-red-100 text-red-700 font-extrabold px-4 py-2.5 rounded-xl text-xs border border-red-200 transition-all active:scale-95 disabled:opacity-50 inline-flex items-center justify-center space-x-1.5 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+              <span>{cancellingId === localOrder.id ? 'Cancelando...' : 'Cancelar Orden y Liberar Stock'}</span>
+            </button>
+          )}
+
+          {localOrder.status === 'payment_review' && localOrder.payment_method === 'bank_transfer' && onVerifyBankTransfer && (
+            <button
+              type="button"
+              onClick={() => onVerifyBankTransfer(localOrder.id)}
+              disabled={verifyingId === localOrder.id}
+              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs shadow transition-all active:scale-95 disabled:opacity-50 inline-flex items-center justify-center space-x-1.5 cursor-pointer"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>{verifyingId === localOrder.id ? 'Verificando...' : 'Verificar Pago (Aprobar)'}</span>
+            </button>
+          )}
 
           <button
             type="button"

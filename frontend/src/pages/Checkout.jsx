@@ -585,7 +585,7 @@ export default function Checkout() {
   };
 
   const whatsappNumber = WHATSAPP_NUMBER;
-  const whatsappMessage = `Hola ${STORE_NAME}, adjunto mi constancia de transferencia para el Pedido #${createdOrder?.order_number || ''} por el monto de S/ ${Number(createdOrder?.total || total).toFixed(2)}. Titular: ${createdOrder?.shipping_address?.recipient_name || shippingAddress?.recipient_name || user?.name || ''}`;
+  const whatsappMessage = `Hola ${STORE_NAME}, adjunto mi comprobante de transferencia para el Pedido #${createdOrder?.order_number || ''} por el monto de S/ ${Number(createdOrder?.total || total).toFixed(2)} dentro del plazo de reserva de 4 horas. Titular: ${createdOrder?.shipping_address?.recipient_name || shippingAddress?.recipient_name || user?.name || ''}`;
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
@@ -628,13 +628,13 @@ export default function Checkout() {
           </div>
           <div>
             <span className="bg-amber-100 text-amber-800 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider">
-              Reserva Activa (24h)
+              Reserva Activa (4h)
             </span>
             <h2 className="text-2xl sm:text-3xl font-black text-gray-900 pt-2">
               ¡PEDIDO #{createdOrder?.order_number} RESERVADO CON ÉXITO!
             </h2>
             <p className="text-sm text-gray-600 max-w-md mx-auto pt-1">
-              Tu orden ha sido registrada en estado <strong>Pendiente de Verificación de Transferencia</strong>. Tus productos quedan separados por 24 horas.
+              Tu orden ha sido registrada en estado <strong>Pendiente de Verificación de Transferencia</strong>. Tus productos quedan separados por <strong>4 horas</strong>. Por favor, realiza la transferencia y envíanos la captura de tu voucher vía WhatsApp.
             </p>
           </div>
 
@@ -1825,10 +1825,10 @@ export default function Checkout() {
 
                     <div className="bg-amber-50 border border-amber-200 p-2.5 sm:p-3 rounded-xl text-xs text-amber-800 space-y-1">
                       <p className="font-bold flex items-center">
-                        <Clock className="w-3.5 h-3.5 mr-1 text-amber-600 shrink-0" /> Envío del comprobante
+                        <Clock className="w-3.5 h-3.5 mr-1 text-amber-600 shrink-0" /> Reserva garantizada por 4 horas
                       </p>
                       <p className="text-[11px] text-amber-700 leading-snug">
-                        Una vez generada la orden, tus productos quedarán reservados durante 24h. Envía tu voucher adjuntando el número de orden por correo o WhatsApp para la verificación administrativa.
+                        Una vez generada la orden, tus productos quedarán reservados durante 4 horas. Envía tu voucher adjuntando el número de orden por WhatsApp para la verificación inmediata.
                       </p>
                     </div>
 

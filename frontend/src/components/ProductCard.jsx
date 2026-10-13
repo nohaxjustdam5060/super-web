@@ -93,18 +93,48 @@ export default function ProductCard({ product }) {
           </div>
 
           {/* Stock Status */}
-          <div className="flex items-center text-[10px] sm:text-xs text-emerald-600 font-medium mb-2 sm:mb-3">
-            <CheckCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 flex-shrink-0" />
-            <span className="truncate">Stock ({product.stock})</span>
-          </div>
+          {(() => {
+            const availableStock = product.available_stock !== undefined
+              ? Number(product.available_stock)
+              : Math.max(0, Number(product.stock || 0) - Number(product.reserved_stock || 0));
+            const isOutOfStock = availableStock <= 0;
 
-          <button
-            onClick={() => addItem(product, 1)}
-            className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-bold py-2 sm:py-2.5 px-2 sm:px-4 rounded-md flex items-center justify-center space-x-1.5 sm:space-x-2 shadow-md active:scale-95 transition-all text-xs sm:text-sm cursor-pointer"
-          >
-            <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-            <span className="truncate">Agregar al Carrito</span>
-          </button>
+            if (isOutOfStock) {
+              return (
+                <>
+                  <div className="flex items-center text-[10px] sm:text-xs text-amber-600 font-semibold mb-2 sm:mb-3">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 mr-1.5 flex-shrink-0 animate-pulse" />
+                    <span className="truncate">Agotado / En reserva</span>
+                  </div>
+
+                  <button
+                    disabled
+                    className="w-full bg-gray-200 text-gray-500 font-bold py-2 sm:py-2.5 px-2 sm:px-4 rounded-md flex items-center justify-center space-x-1.5 sm:space-x-2 text-xs sm:text-sm cursor-not-allowed opacity-80"
+                  >
+                    <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <span className="truncate">Sin Stock Disponible</span>
+                  </button>
+                </>
+              );
+            }
+
+            return (
+              <>
+                <div className="flex items-center text-[10px] sm:text-xs text-emerald-600 font-medium mb-2 sm:mb-3">
+                  <CheckCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 flex-shrink-0" />
+                  <span className="truncate">Stock disponible ({availableStock})</span>
+                </div>
+
+                <button
+                  onClick={() => addItem(product, 1)}
+                  className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-bold py-2 sm:py-2.5 px-2 sm:px-4 rounded-md flex items-center justify-center space-x-1.5 sm:space-x-2 shadow-md active:scale-95 transition-all text-xs sm:text-sm cursor-pointer"
+                >
+                  <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                  <span className="truncate">Agregar al Carrito</span>
+                </button>
+              </>
+            );
+          })()}
         </div>
       </div>
     </div>

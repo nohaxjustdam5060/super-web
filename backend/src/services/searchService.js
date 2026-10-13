@@ -91,20 +91,30 @@ class SearchService {
       if (max_price) where.price[Op.lte] = Number(max_price);
     }
 
-    if (in_stock === 'true' || in_stock === true) {
-      where.stock = { [Op.gt]: 0 };
-    }
-
-    if (is_featured === 'true' || is_featured === true) {
-      where.is_featured = true;
-      where.stock = { [Op.gt]: 0 };
-    }
-
     // ==========================================
     // CONSOLIDATED SPEC FILTERS (Hybrid relational & JSONB)
     // ==========================================
     const sequelize = require('../config/database');
     const andClauses = [];
+
+    if (in_stock === 'true' || in_stock === true) {
+      andClauses.push(
+        sequelize.where(
+          sequelize.literal('(stock - COALESCE(reserved_stock, 0))'),
+          { [Op.gt]: 0 }
+        )
+      );
+    }
+
+    if (is_featured === 'true' || is_featured === true) {
+      where.is_featured = true;
+      andClauses.push(
+        sequelize.where(
+          sequelize.literal('(stock - COALESCE(reserved_stock, 0))'),
+          { [Op.gt]: 0 }
+        )
+      );
+    }
 
     // 1. Processor Family Filter
     if (specs?.processor_family) {

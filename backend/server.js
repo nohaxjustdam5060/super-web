@@ -20,8 +20,8 @@ async function startServer() {
     logger.info(`🚀 SUPER Backend API Server running at http://localhost:${PORT}`);
     logger.info(`Healthcheck available at http://localhost:${PORT}/api/health`);
 
-    // Start 24-hour pending order auto-cancellation service
-    orderExpirationService.startExpirationCron();
+    // Start 4-hour bank transfer reservation and 1-hour MP order expiration service
+    orderExpirationService.start();
 
     // Start 5-minute catalog sync Cron Job with cuadrado.pe
     syncCron.startCron();

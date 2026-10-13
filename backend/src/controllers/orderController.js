@@ -88,59 +88,109 @@ exports.processBankTransferPayment = async (req, res, next) => {
     const { order_id, items, shipping_address, shipping_method, shipping_cost, invoice_info, coupon_code, notes } = req.body;
 
     let order = null;
+    const reservationExpiresAt = new Date(Date.now() + 4 * 60 * 60 * 1000); // 4 horas exactas
 
     if (order_id) {
-      // Legacy flow: Update existing order
-      order = await Order.findOne({ where: { id: order_id, user_id: req.user.id } });
+      // Legacy flow: Update existing order within transaction with pessimistic lock
+      await sequelize.transaction(async (t) => {
+        order = await Order.findOne({
+          where: { id: order_id, user_id: req.user.id },
+          transaction: t,
+          lock: t.LOCK.UPDATE
+        });
 
-      if (!order) {
-        return res.status(404).json({ success: false, message: 'Orden no encontrada' });
-      }
-
-      order.status = 'payment_review';
-      order.payment_method = 'bank_transfer';
-      if (shipping_address) order.shipping_address = shipping_address;
-      if (shipping_method) order.shipping_method = shipping_method;
-      if (shipping_cost !== undefined) order.shipping_cost = Number(shipping_cost);
-      if (invoice_info) order.invoice_info = invoice_info;
-      if (notes) order.notes = notes;
-
-      // Recalculate total with 0% surcharge for bank transfer
-      const subtotal = Number(order.subtotal) || 0;
-      const discount = Number(order.discount_amount) || 0;
-      const currentShippingCost = Number(order.shipping_cost) || 0;
-      order.total = Math.max(0, subtotal - discount + currentShippingCost);
-      await order.save();
-
-      // Create or update Payment record
-      const [payment] = await Payment.findOrCreate({
-        where: { order_id: order.id },
-        defaults: {
-          order_id: order.id,
-          provider: 'bank_transfer',
-          status: 'pending_verification',
-          payment_method: 'bank_transfer',
-          amount: order.total,
-          currency: 'PEN'
+        if (!order) {
+          const err = new Error('Orden no encontrada');
+          err.statusCode = 404;
+          throw err;
         }
-      });
 
-      if (payment) {
-        payment.provider = 'bank_transfer';
-        payment.status = 'pending_verification';
-        payment.payment_method = 'bank_transfer';
-        payment.amount = order.total;
-        await payment.save();
-      }
+        const existingItems = await OrderItem.findAll({ where: { order_id: order.id }, transaction: t });
+        const physicalItems = (existingItems || []).filter((item) => {
+          if (!item || !item.product_id) return false;
+          const pid = String(item.product_id).toUpperCase();
+          return pid !== 'SHIPPING' && pid !== 'GATEWAY_SURCHARGE' && !pid.startsWith('VIRTUAL_');
+        });
 
-      await OrderStatusHistory.create({
-        order_id: order.id,
-        status: 'payment_review',
-        comment: 'Pago por transferencia bancaria iniciado. Pendiente de verificación por administrador (Reserva 24h).',
-        created_by_user_id: req.user.id
+        if (physicalItems.length > 0) {
+          const productIds = physicalItems.map((i) => i.product_id);
+          const dbProducts = await Product.findAll({
+            where: { id: { [Op.in]: productIds } },
+            transaction: t,
+            lock: t.LOCK.UPDATE
+          });
+
+          const productMap = new Map(dbProducts.map((p) => [String(p.id), p]));
+
+          for (const item of physicalItems) {
+            const product = productMap.get(String(item.product_id));
+            const reqQty = Number(item.quantity) || 1;
+            if (!product || !product.is_active) {
+              const err = new Error(`Producto no disponible: ${item.product_name || item.product_id}`);
+              err.statusCode = 400;
+              throw err;
+            }
+
+            const availableStock = Math.max(0, (product.stock || 0) - (product.reserved_stock || 0));
+            if (availableStock < reqQty) {
+              const err = new Error(`Stock insuficiente o reservado para "${product.name}". Disponible: ${availableStock}`);
+              err.statusCode = 400;
+              throw err;
+            }
+
+            // Increment reserved_stock atomically
+            product.reserved_stock = (product.reserved_stock || 0) + reqQty;
+            await product.save({ transaction: t });
+          }
+        }
+
+        order.status = 'payment_review';
+        order.payment_method = 'bank_transfer';
+        order.reservation_expires_at = reservationExpiresAt;
+        if (shipping_address) order.shipping_address = shipping_address;
+        if (shipping_method) order.shipping_method = shipping_method;
+        if (shipping_cost !== undefined) order.shipping_cost = Number(shipping_cost);
+        if (invoice_info) order.invoice_info = invoice_info;
+        if (notes) order.notes = notes;
+
+        // Recalculate total with 0% surcharge for bank transfer
+        const subtotal = Number(order.subtotal) || 0;
+        const discount = Number(order.discount_amount) || 0;
+        const currentShippingCost = Number(order.shipping_cost) || 0;
+        order.total = Math.max(0, subtotal - discount + currentShippingCost);
+        await order.save({ transaction: t });
+
+        // Create or update Payment record
+        const [payment] = await Payment.findOrCreate({
+          where: { order_id: order.id },
+          defaults: {
+            order_id: order.id,
+            provider: 'bank_transfer',
+            status: 'pending_verification',
+            payment_method: 'bank_transfer',
+            amount: order.total,
+            currency: 'PEN'
+          },
+          transaction: t
+        });
+
+        if (payment) {
+          payment.provider = 'bank_transfer';
+          payment.status = 'pending_verification';
+          payment.payment_method = 'bank_transfer';
+          payment.amount = order.total;
+          await payment.save({ transaction: t });
+        }
+
+        await OrderStatusHistory.create({
+          order_id: order.id,
+          status: 'payment_review',
+          comment: 'Pago por transferencia bancaria iniciado. Reserva activa garantizada por 4 horas.',
+          created_by_user_id: req.user.id
+        }, { transaction: t });
       });
     } else {
-      // Consolidated atomic flow: create order directly in 'payment_review'
+      // Consolidated atomic flow: create order directly in 'payment_review' with 4-hour reservation and reserved_stock
       await sequelize.transaction(async (t) => {
         order = await orderService.createOrderCore({
           userId: req.user.id,
@@ -155,9 +205,38 @@ exports.processBankTransferPayment = async (req, res, next) => {
           coupon_code,
           notes,
           status: 'payment_review',
-          statusComment: 'Pago por transferencia bancaria iniciado. Pendiente de verificación por administrador (Reserva 24h).',
+          statusComment: 'Pago por transferencia bancaria iniciado. Reserva activa garantizada por 4 horas.',
+          reservation_expires_at: reservationExpiresAt,
           transaction: t
         });
+
+        // Reserve stock in database for physical items
+        const rawItems = order.items || items || [];
+        const physicalItems = rawItems.filter((item) => {
+          if (!item || !item.product_id) return false;
+          const pid = String(item.product_id).toUpperCase();
+          return pid !== 'SHIPPING' && pid !== 'GATEWAY_SURCHARGE' && !pid.startsWith('VIRTUAL_');
+        });
+
+        if (physicalItems.length > 0) {
+          const productIds = physicalItems.map((i) => i.product_id);
+          const dbProducts = await Product.findAll({
+            where: { id: { [Op.in]: productIds } },
+            transaction: t,
+            lock: t.LOCK.UPDATE
+          });
+
+          const productMap = new Map(dbProducts.map((p) => [String(p.id), p]));
+
+          for (const item of physicalItems) {
+            const product = productMap.get(String(item.product_id));
+            if (product) {
+              const reqQty = Number(item.quantity) || 1;
+              product.reserved_stock = (product.reserved_stock || 0) + reqQty;
+              await product.save({ transaction: t });
+            }
+          }
+        }
 
         await Payment.create({
           order_id: order.id,
@@ -170,57 +249,17 @@ exports.processBankTransferPayment = async (req, res, next) => {
       });
     }
 
-    // Send Bank Transfer Instruction Email
-    try {
-      const whatsappMsg = encodeURIComponent(`Hola SUPERLAPTOP, adjunto mi comprobante de transferencia para el Pedido #${order.order_number} por el monto de S/ ${Number(order.total).toFixed(2)}.`);
-      const whatsappNumber = process.env.WHATSAPP_NUMBER || '51967554065';
-      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMsg}`;
-
-      await emailService.sendEmail({
-        to: req.user.email,
-        subject: `[SUPERLAPTOP] Reserva de Pedido #${order.order_number} - Instrucciones de Transferencia Bancaria`,
-        html: `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; background: #ffffff;">
-            <h2 style="color: #dc2626;">¡Tu pedido #${order.order_number} ha sido reservado!</h2>
-            <p>Gracias por tu compra en <strong>SUPERLAPTOP</strong>. Tu pedido estará reservado durante <strong>24 horas</strong> mientras se verifica la transferencia bancaria.</p>
-
-            <div style="background: #f1f5f9; padding: 14px; border-radius: 10px; margin-bottom: 16px;">
-              <p style="margin: 0; font-size: 13px;"><strong>Razón Social:</strong> SUPERLAPTOP S.A.C</p>
-              <p style="margin: 4px 0 0; font-size: 13px;"><strong>RUC:</strong> 20609242575</p>
-            </div>
-
-            <h3 style="color: #1e3a8a; margin-bottom: 8px;">Cuentas Bancarias Oficiales:</h3>
-            <ul style="line-height: 1.6; font-size: 13px;">
-              <li><strong>BCP Soles:</strong> Cta: <code>191-9899662-0-83</code> | CCI: <code>00219100989966208351</code></li>
-              <li><strong>BBVA Soles:</strong> Cta: <code>0011-0175-0100082392</code> | CCI: <code>01117500010008239270</code></li>
-              <li><strong>Interbank Soles:</strong> Cta: <code>200-3004056157</code> | CCI: <code>003-200-003004056157-30</code></li>
-              <li><strong>BCP Dólares:</strong> Cta: <code>1919944889131</code> | CCI: <code>00219100994488913159</code></li>
-            </ul>
-
-            <p style="background: #fef2f2; padding: 12px; border-radius: 8px; font-weight: bold; border-left: 4px solid #dc2626; color: #991b1b; font-size: 15px;">
-              Monto Total a Transferir: S/ ${Number(order.total).toFixed(2)}
-            </p>
-
-            <p style="margin-top: 20px;">Envía tu constancia adjuntando el número de orden <strong>#${order.order_number}</strong>:</p>
-            <div style="margin: 14px 0;">
-              <a href="${whatsappUrl}" style="background: #16a34a; color: #ffffff; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 13px;">
-                📲 Enviar Constancia por WhatsApp
-              </a>
-              <span style="margin: 0 10px; color: #64748b; font-size: 12px;">o por correo a</span>
-              <a href="mailto:ventas@cuadrado.pe?subject=Constancia%20Pedido%20${order.order_number}" style="color: #1e3a8a; font-weight: bold; font-size: 13px;">
-                ventas@cuadrado.pe
-              </a>
-            </div>
-          </div>
-        `
-      });
-    } catch (emailErr) {
-      console.error('[BankTransferEmailError]', emailErr);
-    }
+    const whatsappNumber = process.env.WHATSAPP_NUMBER || '51967554065';
+    const whatsappMsg = encodeURIComponent(
+      `Hola SUPERLAPTOP, adjunto mi comprobante de transferencia para el Pedido #${order.order_number} por el monto de S/ ${Number(order.total).toFixed(2)} dentro del plazo de reserva de 4 horas.`
+    );
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMsg}`;
 
     return res.json({
       success: true,
-      message: 'Pedido por transferencia bancaria registrado exitosamente. Tu reserva estará activa por 24 horas.',
+      message: 'Pedido por transferencia bancaria registrado exitosamente. Tu reserva estará activa durante 4 horas.',
+      whatsapp_url: whatsappUrl,
+      reservation_expires_at: order.reservation_expires_at || reservationExpiresAt,
       order
     });
   } catch (error) {
@@ -312,32 +351,38 @@ exports.verifyBankTransfer = async (req, res, next) => {
         return pid !== 'SHIPPING' && pid !== 'GATEWAY_SURCHARGE' && !pid.startsWith('VIRTUAL_');
       });
 
-      if (physicalItems.length > 0) {
-        const productIds = physicalItems.map((i) => i.product_id);
-        const dbProducts = await Product.findAll({
-          where: { id: { [Op.in]: productIds } },
-          transaction: t
-        });
+        if (physicalItems.length > 0) {
+          const productIds = physicalItems.map((i) => i.product_id);
+          const dbProducts = await Product.findAll({
+            where: { id: { [Op.in]: productIds } },
+            transaction: t,
+            lock: t.LOCK.UPDATE
+          });
 
-        const productMap = new Map(dbProducts.map((p) => [String(p.id), p]));
+          const productMap = new Map(dbProducts.map((p) => [String(p.id), p]));
 
-        for (const item of physicalItems) {
-          const product = productMap.get(String(item.product_id));
-          const reqQty = Number(item.quantity) || 1;
-          const currentStock = product ? Number(product.stock) : 0;
+          for (const item of physicalItems) {
+            const product = productMap.get(String(item.product_id));
+            const reqQty = Number(item.quantity) || 1;
+            const currentStock = product ? Number(product.stock) : 0;
 
-          if (!product || !product.is_active || currentStock < reqQty) {
-            const prodName = product ? product.name : (item.product_name || 'Producto');
-            const err = new Error(`Stock insuficiente para "${prodName}". Stock disponible: ${currentStock}, Requerido: ${reqQty}. No se puede aprobar la orden.`);
-            err.statusCode = 409;
-            err.code = 'INSUFFICIENT_STOCK';
-            throw err;
+            if (!product || !product.is_active || currentStock < reqQty) {
+              const prodName = product ? product.name : (item.product_name || 'Producto');
+              const err = new Error(`Stock insuficiente para "${prodName}". Stock disponible: ${currentStock}, Requerido: ${reqQty}. No se puede aprobar la orden.`);
+              err.statusCode = 409;
+              err.code = 'INSUFFICIENT_STOCK';
+              throw err;
+            }
+
+            // Release the local reservation counter (official sale decrement happens next)
+            product.reserved_stock = Math.max(0, (product.reserved_stock || 0) - reqQty);
+            await product.save({ transaction: t });
           }
         }
-      }
 
-      order.status = 'paid';
-      await order.save({ transaction: t });
+        order.status = 'paid';
+        order.reservation_expires_at = null;
+        await order.save({ transaction: t });
 
       let payment = await Payment.findOne({ where: { order_id: order.id }, transaction: t });
       if (payment) {
@@ -410,6 +455,91 @@ exports.verifyBankTransfer = async (req, res, next) => {
       message: 'Transferencia bancaria verificada exitosamente. Orden marcada como PAGADA.',
       warning: syncWarning,
       order
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Admin Route to manually cancel order and release reserved stock
+exports.cancelOrderAdmin = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    let updatedOrder = null;
+
+    await sequelize.transaction(async (t) => {
+      const order = await Order.findByPk(id, {
+        transaction: t,
+        lock: t.LOCK.UPDATE
+      });
+
+      if (!order) {
+        const err = new Error('Orden no encontrada');
+        err.statusCode = 404;
+        throw err;
+      }
+
+      if (order.status === 'cancelled') {
+        const err = new Error('La orden ya se encuentra cancelada.');
+        err.statusCode = 400;
+        throw err;
+      }
+
+      const orderItems = await OrderItem.findAll({
+        where: { order_id: order.id },
+        transaction: t
+      });
+      order.items = orderItems;
+
+      // If the order was reserving stock in payment_review, restore reserved_stock
+      if (order.status === 'payment_review' && order.payment_method === 'bank_transfer') {
+        const physicalItems = (order.items || []).filter((item) => {
+          if (!item || !item.product_id) return false;
+          const pid = String(item.product_id).toUpperCase();
+          return pid !== 'SHIPPING' && pid !== 'GATEWAY_SURCHARGE' && !pid.startsWith('VIRTUAL_');
+        });
+
+        if (physicalItems.length > 0) {
+          const productIds = physicalItems.map((i) => i.product_id);
+          const dbProducts = await Product.findAll({
+            where: { id: { [Op.in]: productIds } },
+            transaction: t,
+            lock: t.LOCK.UPDATE
+          });
+
+          const productMap = new Map(dbProducts.map((p) => [String(p.id), p]));
+
+          for (const item of physicalItems) {
+            const product = productMap.get(String(item.product_id));
+            if (product) {
+              const reqQty = Number(item.quantity) || 1;
+              product.reserved_stock = Math.max(0, (product.reserved_stock || 0) - reqQty);
+              await product.save({ transaction: t });
+            }
+          }
+        }
+      }
+
+      order.status = 'cancelled';
+      order.reservation_expires_at = null;
+      await order.save({ transaction: t });
+
+      await OrderStatusHistory.create({
+        order_id: order.id,
+        status: 'cancelled',
+        comment: reason || 'Orden cancelada manualmente por administrador.',
+        created_by_user_id: req.user.id
+      }, { transaction: t });
+
+      updatedOrder = order;
+    });
+
+    return res.json({
+      success: true,
+      message: 'Orden cancelada exitosamente y reserva de stock liberada.',
+      order: updatedOrder
     });
   } catch (error) {
     next(error);

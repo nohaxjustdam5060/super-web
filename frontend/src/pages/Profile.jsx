@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Package, LogOut, KeyRound, Lock, CheckCircle2, AlertCircle, ShoppingBag, Truck, CreditCard } from 'lucide-react';
+import { User, Package, LogOut, KeyRound, Lock, CheckCircle2, AlertCircle, ShoppingBag, Truck, CreditCard, MessageSquare } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { WHATSAPP_NUMBER, STORE_NAME } from '../utils/whatsappMessage';
 import axiosClient from '../api/axiosClient';
@@ -315,14 +315,38 @@ export default function Profile() {
                       </span>
                     )}
                   </div>
-                  <a
-                    href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hola ${STORE_NAME}, tengo una consulta sobre mi orden #${ord.order_number}`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-brand-blue hover:text-brand-red font-bold transition-colors self-start sm:self-auto"
-                  >
-                    Consultar por WhatsApp →
-                  </a>
+                  {(() => {
+                    const isPendingBankTransfer = ord.payment_method === 'bank_transfer' && ord.status === 'payment_review';
+
+                    if (isPendingBankTransfer) {
+                      const recipientName = ord.shipping_address?.recipient_name || user?.name || '';
+                      const transferMessage = `Hola ${STORE_NAME}, adjunto mi comprobante de transferencia para el Pedido #${ord.order_number} por el monto de S/ ${Number(ord.total).toFixed(2)} dentro del plazo de reserva de 4 horas.${recipientName ? ` Titular: ${recipientName}` : ''}`;
+                      const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(transferMessage)}`;
+
+                      return (
+                        <a
+                          href={whatsappUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-sm transition-all active:scale-95 self-start sm:self-auto cursor-pointer"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5 flex-shrink-0" />
+                          <span>Enviar comprobante por WhatsApp</span>
+                        </a>
+                      );
+                    }
+
+                    return (
+                      <a
+                        href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hola ${STORE_NAME}, tengo una consulta sobre mi orden #${ord.order_number}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center text-brand-blue hover:text-brand-red font-bold transition-colors self-start sm:self-auto"
+                      >
+                        Consultar por WhatsApp →
+                      </a>
+                    );
+                  })()}
                 </div>
               </div>
             ))}

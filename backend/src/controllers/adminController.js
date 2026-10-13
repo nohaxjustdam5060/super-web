@@ -1,4 +1,4 @@
-const { Order, Product, User, Category, Brand, Review, AuditLog, SystemSetting } = require('../models');
+const { Order, OrderItem, Product, User, Category, Brand, Review, AuditLog, SystemSetting } = require('../models');
 const { Op } = require('sequelize');
 const logger = require('../config/logger');
 const cuadradoSyncService = require('../services/cuadradoSyncService');
@@ -218,18 +218,45 @@ exports.getAdminOrders = async (req, res, next) => {
         'discount_amount', 'shipping_cost', 'total', 'shipping_address',
         'shipping_method', 'invoice_info', 'payment_method', 'payment_method_detail', 'coupon_code',
         'notes', 'invoice_status', 'invoice_error_message', 'invoice_response_code',
-        'invoice_series', 'invoice_number', 'invoice_pdf_url', 'createdAt'
+        'invoice_series', 'invoice_number', 'invoice_pdf_url', 'reservation_expires_at', 'createdAt'
       ],
       include: [
-        { model: User, as: 'user', attributes: ['id', 'name', 'email', 'phone'] }
+        { model: User, as: 'user', attributes: ['id', 'name', 'email', 'phone'] },
+        {
+          model: OrderItem,
+          as: 'items',
+          attributes: ['id', 'product_id', 'product_name', 'quantity'],
+          include: [
+            {
+              model: Product,
+              as: 'product',
+              attributes: ['id', 'stock', 'reserved_stock']
+            }
+          ]
+        }
       ]
+    });
+
+    // Detect if any order in payment_review has supplier stock shortage in warehouse
+    const enhancedOrders = rows.map((orderInstance) => {
+      const orderJson = orderInstance.toJSON();
+      if (orderJson.status === 'payment_review') {
+        const hasShortage = (orderJson.items || []).some((item) => {
+          if (!item || !item.product) return false;
+          return Number(item.product.stock || 0) < Number(item.quantity || 1);
+        });
+        orderJson.supplier_stock_shortage = hasShortage;
+      } else {
+        orderJson.supplier_stock_shortage = false;
+      }
+      return orderJson;
     });
 
     const totalPages = Math.ceil(count / limit) || 1;
 
     return res.json({
       success: true,
-      orders: rows,
+      orders: enhancedOrders,
       pagination: {
         total: count,
         totalPages,
@@ -257,7 +284,7 @@ exports.getAdminOrderDetail = async (req, res, next) => {
             {
               model: Product,
               as: 'product',
-              attributes: ['id', 'name', 'sku', 'price'],
+              attributes: ['id', 'name', 'sku', 'price', 'stock', 'reserved_stock'],
               include: [{ model: ProductImage, as: 'images', attributes: ['id', 'image_url', 'is_primary'] }]
             }
           ]
@@ -269,7 +296,18 @@ exports.getAdminOrderDetail = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Orden no encontrada' });
     }
 
-    return res.json({ success: true, order });
+    const orderJson = order.toJSON();
+    if (orderJson.status === 'payment_review') {
+      const hasShortage = (orderJson.items || []).some((item) => {
+        if (!item || !item.product) return false;
+        return Number(item.product.stock || 0) < Number(item.quantity || 1);
+      });
+      orderJson.supplier_stock_shortage = hasShortage;
+    } else {
+      orderJson.supplier_stock_shortage = false;
+    }
+
+    return res.json({ success: true, order: orderJson });
   } catch (error) {
     next(error);
   }

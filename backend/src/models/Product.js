@@ -46,6 +46,19 @@ const Product = sequelize.define('Product', {
     defaultValue: 0,
     allowNull: false
   },
+  reserved_stock: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    allowNull: false
+  },
+  available_stock: {
+    type: DataTypes.VIRTUAL,
+    get() {
+      const currentStock = this.getDataValue('stock') || 0;
+      const reserved = this.getDataValue('reserved_stock') || 0;
+      return Math.max(0, currentStock - reserved);
+    }
+  },
   min_stock_alert: {
     type: DataTypes.INTEGER,
     defaultValue: 5

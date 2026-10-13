@@ -13,4 +13,7 @@ router.get('/:id', authMiddleware, orderController.getOrderById);
 // Admin Route to verify bank transfer
 router.put('/:id/verify-bank-transfer', authMiddleware, requireRole('admin', 'super_admin'), orderController.verifyBankTransfer);
 
+// Admin Route to cancel order and release reservation
+router.put('/:id/cancel', authMiddleware, requireRole('admin', 'super_admin'), orderController.cancelOrderAdmin);
+
 module.exports = router;

@@ -206,7 +206,9 @@ export default function ProductDetail() {
   const previousPrice = Number(product.previous_price) || 0;
   const hasVisualOffer = Boolean(previousPrice && previousPrice > price);
   const discountPercent = hasVisualOffer ? Math.round(((previousPrice - price) / previousPrice) * 100) : 0;
-  const stockCount = Number(product.stock ?? 0);
+  const stockCount = product.available_stock !== undefined
+    ? Number(product.available_stock)
+    : Math.max(0, Number(product.stock || 0) - Number(product.reserved_stock || 0));
   const isAvailable = stockCount > 0;
 
   const formatPriceWithSup = (amount, colorClass = "text-gray-900") => {

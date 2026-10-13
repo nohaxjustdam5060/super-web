@@ -19,6 +19,7 @@ async function createOrderCore({
   notes,
   status = 'pending',
   statusComment = 'Orden creada por el cliente',
+  reservation_expires_at = null,
   transaction = null
 }) {
   if (!items || items.length === 0) {
@@ -34,7 +35,8 @@ async function createOrderCore({
   const productIds = items.map((item) => item.product_id);
   const dbProducts = await Product.findAll({
     where: { id: { [Op.in]: productIds } },
-    transaction
+    transaction,
+    lock: transaction ? transaction.LOCK.UPDATE : undefined
   });
 
   const productMap = new Map(dbProducts.map((p) => [String(p.id), p]));
@@ -47,8 +49,9 @@ async function createOrderCore({
       throw err;
     }
 
-    if (product.stock < item.quantity) {
-      const err = new Error(`Stock insuficiente para ${product.name}. Stock disponible: ${product.stock}`);
+    const availableStock = Math.max(0, (product.stock || 0) - (product.reserved_stock || 0));
+    if (availableStock < item.quantity) {
+      const err = new Error(`Stock insuficiente o reservado para "${product.name}". Disponible para compra: ${availableStock}`);
       err.statusCode = 400;
       throw err;
     }
@@ -138,7 +141,8 @@ async function createOrderCore({
     invoice_info: invoice_info || null,
     payment_method,
     coupon_code: coupon_code || null,
-    notes: notes || null
+    notes: notes || null,
+    reservation_expires_at: reservation_expires_at || null
   }, { transaction });
 
   await Promise.all(

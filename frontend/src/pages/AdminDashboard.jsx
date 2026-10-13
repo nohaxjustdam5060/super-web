@@ -40,6 +40,7 @@ export default function AdminDashboard() {
   const queryClient = useQueryClient();
   const tableRef = useRef(null);
   const [verifyingId, setVerifyingId] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
   const [shippingFilter, setShippingFilter] = useState('all');
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
   const [datePreset, setDatePreset] = useState('all');
@@ -248,6 +249,27 @@ export default function AdminDashboard() {
       }
     } finally {
       setVerifyingId(null);
+    }
+  };
+
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm('¿Confirmar que deseas cancelar esta orden? El stock reservado será liberado inmediatamente para la tienda.')) return;
+
+    setCancellingId(orderId);
+    try {
+      const res = await axiosClient.put(`/orders/${orderId}/cancel`);
+      if (res.data.success) {
+        alert('✅ ¡Orden cancelada con éxito! El stock reservado ha sido liberado.');
+        queryClient.invalidateQueries({ queryKey: ['adminMetrics'] });
+        queryClient.invalidateQueries({ queryKey: ['adminOrders'] });
+        if (selectedOrder && selectedOrder.id === orderId) {
+          setSelectedOrder((prev) => ({ ...prev, status: 'cancelled' }));
+        }
+      }
+    } catch (err) {
+      alert(`❌ Error al cancelar orden: ${err.response?.data?.message || err.message}`);
+    } finally {
+      setCancellingId(null);
     }
   };
 
@@ -548,7 +570,7 @@ export default function AdminDashboard() {
                 <th className="p-3 whitespace-nowrap">Forma de Pago</th>
                 <th className="p-3 whitespace-nowrap">Monto Total</th>
                 <th className="p-3 text-center whitespace-nowrap">Estado</th>
-                <th className="p-3 text-right whitespace-nowrap">Acciones</th>
+                <th className="p-3 text-right whitespace-nowrap w-28 sm:w-32">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 font-semibold text-gray-800">
@@ -574,6 +596,8 @@ export default function AdminDashboard() {
                   const isBankTransfer = ord.payment_method === 'bank_transfer';
                   const isReview = ord.status === 'payment_review';
                   const isPaid = ord.status === 'paid';
+                  const sm = (ord.shipping_method || '').toLowerCase();
+                  const isPickup = sm.includes('recojo') || sm.includes('pickup') || sm.includes('tienda') || ord.shipping_type === 'pickup';
                   const { date: limaDate, time: limaTime } = formatLimaDateTime(ord.createdAt);
 
                   return (
@@ -601,12 +625,14 @@ export default function AdminDashboard() {
                         <p className="text-[10px] text-gray-400">{ord.user?.email || addr.phone}</p>
                       </td>
                       <td className="p-3 max-w-xs truncate">
-                        <div className="mb-1">
+                        <div className={!isPickup ? 'mb-1' : ''}>
                           {renderShippingBadge(ord.shipping_method, addr)}
                         </div>
-                        <p className="text-[10px] text-gray-500 truncate font-medium">
-                          {addr.address_line1 ? `${addr.address_line1}, ${addr.district || ''} - ${addr.department || ''}` : 'Sin dirección'}
-                        </p>
+                        {!isPickup && (
+                          <p className="text-[10px] text-gray-500 truncate font-medium">
+                            {addr.address_line1 ? `${addr.address_line1}, ${addr.district || ''} - ${addr.department || ''}` : 'Sin dirección'}
+                          </p>
+                        )}
                       </td>
                       <td className="p-3 whitespace-nowrap space-y-1">
                         <div className="flex items-center space-x-1.5">
@@ -665,20 +691,38 @@ export default function AdminDashboard() {
                             ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
                             : isReview
                             ? 'bg-amber-100 text-amber-800 border-amber-300 animate-pulse'
+                            : ord.status === 'cancelled'
+                            ? 'bg-red-100 text-red-800 border-red-300'
                             : 'bg-gray-100 text-gray-600 border-gray-300'
                         }`}>
-                          {isPaid ? 'Pagado' : isReview ? 'En Revisión (24h)' : ord.status}
+                          {isPaid ? 'Pagado' : isReview ? 'En Revisión (4h)' : ord.status === 'cancelled' ? 'Cancelado' : ord.status}
                         </span>
+                        {isReview && ord.reservation_expires_at && (
+                          <span className="block text-[10px] text-amber-700 font-semibold mt-0.5">
+                            Expira: {formatLimaDateTime(ord.reservation_expires_at).time}
+                          </span>
+                        )}
+                        {ord.supplier_stock_shortage && (
+                          <div className="mt-1">
+                            <span 
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black bg-red-100 text-red-800 border border-red-300 animate-pulse cursor-help"
+                              title="¡Atención! El stock en almacén físico de Cuadrado ERP es menor a la cantidad solicitada. Verifica con el mayorista antes de validar."
+                            >
+                              <AlertTriangle className="w-3 h-3 text-red-600 flex-shrink-0" />
+                              <span>Stock proveedor insuficiente</span>
+                            </span>
+                          </div>
+                        )}
                       </td>
                       <td className="p-3 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end space-x-1.5">
+                        <div className="w-28 sm:w-32 ml-auto flex flex-col gap-1 items-stretch">
                           <button
                             type="button"
                             onClick={() => handleOpenDetail(ord)}
-                            className="bg-slate-100 hover:bg-slate-200 text-gray-800 font-extrabold px-2.5 py-1.5 rounded-xl text-[11px] inline-flex items-center space-x-1 transition-all active:scale-95 border border-slate-200"
+                            className="w-full bg-slate-100 hover:bg-slate-200 text-gray-800 font-extrabold px-2 py-1 rounded-lg text-[11px] inline-flex items-center justify-center space-x-1 transition-all active:scale-95 border border-slate-200 cursor-pointer"
                             title="Ver detalle completo de la orden"
                           >
-                            <Eye className="w-3.5 h-3.5 text-brand-blue" />
+                            <Eye className="w-3.5 h-3.5 text-brand-blue flex-shrink-0" />
                             <span>Ver detalle</span>
                           </button>
 
@@ -687,10 +731,24 @@ export default function AdminDashboard() {
                               type="button"
                               onClick={() => handleVerifyBankTransfer(ord.id)}
                               disabled={verifyingId === ord.id}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-3 py-1.5 rounded-xl text-[11px] inline-flex items-center space-x-1 shadow transition-all active:scale-95 disabled:opacity-50"
+                              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-2 py-1 rounded-lg text-[11px] inline-flex items-center justify-center space-x-1 shadow-xs transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                              title="Verificar y aprobar pago por transferencia"
                             >
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              <span>{verifyingId === ord.id ? 'Verificando...' : 'Verificar Pago'}</span>
+                              <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
+                              <span>{verifyingId === ord.id ? 'Verificando...' : 'Verificar'}</span>
+                            </button>
+                          )}
+
+                          {(isReview || ord.status === 'pending') && (
+                            <button
+                              type="button"
+                              onClick={() => handleCancelOrder(ord.id)}
+                              disabled={cancellingId === ord.id}
+                              className="w-full bg-red-50 hover:bg-red-100 text-red-700 font-extrabold px-2 py-1 rounded-lg text-[11px] inline-flex items-center justify-center space-x-1 border border-red-200 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                              title="Cancelar orden y liberar stock reservado"
+                            >
+                              <X className="w-3.5 h-3.5 flex-shrink-0" />
+                              <span>{cancellingId === ord.id ? '...' : 'Cancelar'}</span>
                             </button>
                           )}
                         </div>
@@ -793,6 +851,10 @@ export default function AdminDashboard() {
         selectedOrder={selectedOrder} 
         loadingDetail={loadingDetail} 
         onClose={handleCloseModal}
+        onCancelOrder={handleCancelOrder}
+        onVerifyBankTransfer={handleVerifyBankTransfer}
+        verifyingId={verifyingId}
+        cancellingId={cancellingId}
         onOrderUpdated={() => {
           queryClient.invalidateQueries({ queryKey: ['adminOrders'] });
         }}

@@ -101,6 +101,10 @@ const Order = sequelize.define('Order', {
   invoice_pdf_url: {
     type: DataTypes.TEXT,
     allowNull: true
+  },
+  reservation_expires_at: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   tableName: 'orders',
@@ -109,6 +113,7 @@ const Order = sequelize.define('Order', {
     { fields: ['order_number'] },
     { fields: ['user_id'] },
     { fields: ['status'] },
+    { fields: ['reservation_expires_at'] },
     { fields: ['invoice_status'] },
     { fields: ['preference_id'] },
     { fields: ['mp_payment_id'] }
