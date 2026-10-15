@@ -62,13 +62,19 @@ export default function Compare() {
                     alt=""
                     className="w-24 h-24 object-contain mx-auto mb-2"
                   />
-                  <h4 className="font-bold text-xs text-gray-900 line-clamp-2">{p.name}</h4>
-                  <p className="text-sm font-black text-brand-red mt-1">S/ {Number(p.offer_price || p.price).toFixed(2)}</p>
+                  <p className="text-sm font-black text-brand-red mt-1">
+                    {Number(p.offer_price || p.price) > 0 ? `S/ ${Number(p.offer_price || p.price).toFixed(2)}` : 'Consultar precio'}
+                  </p>
                   <button
                     onClick={() => addItem(p, 1)}
-                    className="mt-2 bg-brand-red text-white text-xs font-bold py-1.5 px-3 rounded-lg flex items-center justify-center space-x-1 mx-auto hover:bg-brand-red-hover"
+                    disabled={Number(p.offer_price || p.price) <= 0}
+                    className={`mt-2 text-xs font-bold py-1.5 px-3 rounded-lg flex items-center justify-center space-x-1 mx-auto ${
+                      Number(p.offer_price || p.price) > 0
+                        ? 'bg-brand-red text-white hover:bg-brand-red-hover'
+                        : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60 pointer-events-none'
+                    }`}
                   >
-                    <ShoppingBag className="w-3 h-3" /> <span>Agregar</span>
+                    <ShoppingBag className="w-3 h-3" /> <span>{Number(p.offer_price || p.price) > 0 ? 'Agregar' : 'Consultar'}</span>
                   </button>
                 </th>
               ))}

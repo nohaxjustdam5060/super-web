@@ -21,6 +21,15 @@ export function generateWhatsAppOrderUrl(items) {
     return `https://wa.me/${WHATSAPP_NUMBER}`;
   }
 
+  // Check if single item with price 0 (direct product detail inquiry)
+  if (items.length === 1 && Number(items[0].offer_price || items[0].price) <= 0) {
+    const item = items[0];
+    const qty = Number(item.quantity) || 1;
+    const skuStr = item.sku ? ` (SKU: ${item.sku})` : '';
+    const messageText = `Hola ${STORE_NAME}, estoy interesado en este producto y deseo consultar el precio y disponibilidad:\n• ${qty} x ${item.name}${skuStr}`;
+    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(messageText)}`;
+  }
+
   let grandTotal = 0;
 
   const itemLines = items.map((item) => {
@@ -30,10 +39,14 @@ export function generateWhatsAppOrderUrl(items) {
     grandTotal += itemTotal;
 
     const skuStr = item.sku ? item.sku : 'SUP-ITEM';
-    return `• ${qty} x ${item.name} (${skuStr}) — S/. ${itemTotal.toFixed(2)}`;
+    return unitPrice > 0
+      ? `• ${qty} x ${item.name} (${skuStr}) — S/. ${itemTotal.toFixed(2)}`
+      : `• ${qty} x ${item.name} (${skuStr}) — (Consultar precio)`;
   });
 
-  const messageText = `Hola. Me gustaria hacer este pedido en ${STORE_NAME}:\n${itemLines.join('\n')}\n\nTotal: S/. ${grandTotal.toFixed(2)}`;
+  const messageText = grandTotal > 0
+    ? `Hola. Me gustaria hacer este pedido en ${STORE_NAME}:\n${itemLines.join('\n')}\n\nTotal: S/. ${grandTotal.toFixed(2)}`
+    : `Hola. Me gustaria consultar la cotización en ${STORE_NAME} para:\n${itemLines.join('\n')}`;
 
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(messageText)}`;
 }

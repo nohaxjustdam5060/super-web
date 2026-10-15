@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, MessageSquare } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
@@ -8,6 +8,30 @@ import ProductImage from './ProductImage';
 const CartDrawer = memo(function CartDrawer() {
   const { items, isOpen, closeCart, updateQuantity, removeItem, getSubtotal } = useCartStore();
   const navigate = useNavigate();
+
+  // Lock body scroll when cart is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        closeCart();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, closeCart]);
 
   const totalItemsCount = useMemo(() => {
     return items.reduce((acc, item) => acc + item.quantity, 0);
@@ -21,18 +45,35 @@ const CartDrawer = memo(function CartDrawer() {
     return generateWhatsAppOrderUrl(items);
   }, [items]);
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden animate-fadeIn">
-      {/* Backdrop without GPU backdrop-blur */}
+    <div
+      className={`fixed inset-0 z-50 overflow-hidden transition-all duration-300 ${
+        isOpen
+          ? 'visible pointer-events-auto'
+          : 'invisible pointer-events-none delay-200'
+      }`}
+      aria-modal="true"
+      role="dialog"
+    >
+      {/* Backdrop */}
       <div
         onClick={closeCart}
-        className="absolute inset-0 bg-slate-900/65 transition-opacity duration-300"
+        className={`fixed inset-0 bg-slate-900 transition-opacity ${
+          isOpen
+            ? 'opacity-60 duration-300 ease-out'
+            : 'opacity-0 duration-200 ease-in'
+        }`}
+        aria-hidden="true"
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-2 sm:pl-10">
-        <div className="w-[92vw] sm:w-screen max-w-md bg-white shadow-2xl flex flex-col transform transition-transform duration-300">
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-2 sm:pl-10 pointer-events-none">
+        <div
+          className={`w-[92vw] sm:w-screen max-w-md bg-white shadow-2xl flex flex-col pointer-events-auto transform transition-transform ${
+            isOpen
+              ? 'translate-x-0 duration-300 ease-out'
+              : 'translate-x-full duration-200 ease-in'
+          }`}
+        >
           {/* Header */}
           <div className="p-5 bg-brand-dark text-white flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -42,7 +83,11 @@ const CartDrawer = memo(function CartDrawer() {
                 {totalItemsCount}
               </span>
             </div>
-            <button onClick={closeCart} className="text-gray-400 hover:text-white p-1 rounded-lg">
+            <button
+              onClick={closeCart}
+              className="text-gray-400 hover:text-white p-1 rounded-lg cursor-pointer transition-colors"
+              aria-label="Cerrar carrito"
+            >
               <X className="w-6 h-6" />
             </button>
           </div>

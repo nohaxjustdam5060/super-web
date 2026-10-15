@@ -78,22 +78,49 @@ export default function ProductCard({ product }) {
         {/* Price & Cart CTA */}
         <div className="pt-2.5 sm:pt-3 border-t border-gray-100 mt-1 sm:mt-2">
           <div className="flex items-baseline space-x-2 mb-2 sm:mb-3 flex-wrap">
-            {/* Real Selling Price (Charged in Cart & Checkout) */}
-            <div className="text-base sm:text-lg lg:text-xl font-black">
-              {formatPriceWithSup(price, hasVisualOffer ? "text-brand-red" : "text-gray-900")}
-            </div>
-
-            {/* Previous Strikethrough Price */}
-            {hasVisualOffer && (
-              <div className="text-xs sm:text-sm text-gray-400 line-through font-semibold flex items-baseline">
-                <span>S/ {Math.floor(previousPrice).toLocaleString('es-PE')}</span>
-                <sup className="text-[9px] sm:text-[10px] ml-0.5 leading-none">{(previousPrice % 1).toFixed(2).slice(2)}</sup>
+            {price <= 0 ? (
+              <div className="text-base sm:text-lg lg:text-xl font-black text-gray-900">
+                Consultar precio
               </div>
+            ) : (
+              <>
+                {/* Real Selling Price (Charged in Cart & Checkout) */}
+                <div className="text-base sm:text-lg lg:text-xl font-black">
+                  {formatPriceWithSup(price, hasVisualOffer ? "text-brand-red" : "text-gray-900")}
+                </div>
+
+                {/* Previous Strikethrough Price */}
+                {hasVisualOffer && (
+                  <div className="text-xs sm:text-sm text-gray-400 line-through font-semibold flex items-baseline">
+                    <span>S/ {Math.floor(previousPrice).toLocaleString('es-PE')}</span>
+                    <sup className="text-[9px] sm:text-[10px] ml-0.5 leading-none">{(previousPrice % 1).toFixed(2).slice(2)}</sup>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
           {/* Stock Status */}
           {(() => {
+            if (price <= 0) {
+              return (
+                <>
+                  <div className="flex items-center text-[10px] sm:text-xs text-gray-600 font-medium mb-2 sm:mb-3">
+                    <span className="w-2 h-2 rounded-full bg-gray-400 mr-1.5 flex-shrink-0" />
+                    <span className="truncate">Precio por consultar</span>
+                  </div>
+
+                  <button
+                    disabled
+                    className="w-full bg-gray-200 text-gray-400 font-bold py-2 sm:py-2.5 px-2 sm:px-4 rounded-md flex items-center justify-center space-x-1.5 sm:space-x-2 text-xs sm:text-sm cursor-not-allowed opacity-60 pointer-events-none shadow-none"
+                  >
+                    <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <span className="truncate">Precio por consultar</span>
+                  </button>
+                </>
+              );
+            }
+
             const availableStock = product.available_stock !== undefined
               ? Number(product.available_stock)
               : Math.max(0, Number(product.stock || 0) - Number(product.reserved_stock || 0));

@@ -57,6 +57,12 @@ async function createOrderCore({
     }
 
     const unitPrice = Number(product.offer_price || product.price);
+    if (!unitPrice || unitPrice <= 0) {
+      const err = new Error(`El producto "${product.name}" no tiene un precio válido y no puede ser adquirido.`);
+      err.statusCode = 400;
+      throw err;
+    }
+
     const itemTotal = unitPrice * item.quantity;
     subtotal += itemTotal;
 

@@ -69,6 +69,14 @@ exports.addToCart = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Stock insuficiente' });
     }
 
+    const unitPrice = Number(product.offer_price || product.price);
+    if (!unitPrice || unitPrice <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: `El producto "${product.name}" no tiene un precio válido y no puede ser adquirido.`
+      });
+    }
+
     let cart;
     if (req.user) {
       [cart] = await Cart.findOrCreate({ where: { user_id: req.user.id } });
@@ -82,7 +90,7 @@ exports.addToCart = async (req, res, next) => {
       where: { cart_id: cart.id, product_id }
     });
 
-    const unitPrice = product.offer_price || product.price;
+    
 
     if (item) {
       item.quantity += Number(quantity);

@@ -146,9 +146,7 @@ export default function Home() {
               <h3 className="text-3xl sm:text-4xl font-black tracking-tight leading-none font-heading text-white group-hover:text-brand-red-accent transition-colors duration-200">
                 Tablets & Móviles
               </h3>
-              <p className="text-gray-300 text-xs sm:text-sm line-clamp-2 leading-relaxed">
-                Tablets táctiles, celulares inteligentes y dispositivos móviles para máxima productividad y entretenimiento.
-              </p>
+
               <div className="pt-2 flex items-center text-xs font-black uppercase tracking-wider text-white group-hover:text-brand-red transition-colors duration-200 space-x-1.5">
                 <span>VER TODO</span>
                 <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1.5 transition-transform duration-300 ease-out" />
@@ -180,9 +178,6 @@ export default function Home() {
               <h3 className="text-3xl sm:text-4xl font-black tracking-tight leading-none font-heading text-white group-hover:text-amber-300 transition-colors duration-200">
                 Workstations & All in One
               </h3>
-              <p className="text-gray-300 text-xs sm:text-sm line-clamp-2 leading-relaxed">
-                Estaciones de trabajo de alto rendimiento preparadas para renderizado 3D, IA y desarrollo.
-              </p>
               <div className="pt-2 flex items-center text-xs font-black uppercase tracking-wider text-white group-hover:text-amber-400 transition-colors duration-200 space-x-1.5">
                 <span>VER TODO</span>
                 <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1.5 transition-transform duration-300 ease-out" />

@@ -10,6 +10,11 @@ export const useCartStore = create((set, get) => ({
   closeCart: () => set({ isOpen: false }),
 
   addItem: (product, quantity = 1) => {
+    if (!product || Number(product.offer_price || product.price) <= 0) {
+      // No permitir agregar al carrito productos con precio 0 o inválido
+      return;
+    }
+
     const { items } = get();
     const existingIndex = items.findIndex((i) => i.product_id === product.id || i.id === product.id);
 

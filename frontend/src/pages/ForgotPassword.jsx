@@ -47,7 +47,7 @@ export default function ForgotPassword() {
             <div className="pt-2">
               <Link
                 to="/login"
-                className="inline-flex items-center text-xs font-bold text-brand-blue hover:underline"
+                className="inline-flex items-center text-xs font-bold text-brand-red hover:underline"
               >
                 <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Volver a Iniciar Sesión
               </Link>
@@ -82,7 +82,7 @@ export default function ForgotPassword() {
 
         {!submitted && (
           <div className="text-center text-xs text-gray-500 pt-2 border-t border-gray-100">
-            <Link to="/login" className="text-brand-blue font-bold hover:underline flex items-center justify-center">
+            <Link to="/login" className="text-brand-red font-bold hover:underline flex items-center justify-center">
               <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Volver a Iniciar Sesión
             </Link>
           </div>

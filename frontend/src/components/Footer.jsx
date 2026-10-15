@@ -58,7 +58,7 @@ export default function Footer() {
             />
           </Link>
           <p className="text-sm text-gray-400 leading-relaxed mb-4">
-            Tu tienda de confianza en hardware y componentes de alto rendimiento. Las mejores marcas del mundo al mejor precio.
+            Tu tienda de confianza en laptops y componentes. Con garantía oficial y al mejor precio.
           </p>
           <div className="space-y-2 text-sm text-gray-400">
             <p className="flex items-center"><MapPin className="w-4 h-4 mr-2 text-brand-red-accent flex-shrink-0" /> Jr.Velarde 172, Lima</p>
@@ -137,7 +137,7 @@ export default function Footer() {
       </div>
 
       <div className="max-w-[1440px] mx-auto px-4 pt-6 border-t border-gray-800 text-center text-xs text-gray-500">
-        © {new Date().getFullYear()} SUPERLAPTOP. Todos los derechos reservados. Diseñado para alto rendimiento y producción.
+        © {new Date().getFullYear()} SUPERLAPTOP. Todos los derechos reservados.
       </div>
     </footer>
   );

@@ -38,7 +38,7 @@ export default function Login() {
             <LogIn className="w-6 h-6" />
           </div>
           <h2 className="text-2xl font-black text-gray-900">Iniciar Sesión</h2>
-          <p className="text-xs text-gray-500">Accede a tus pedidos, direcciones y lista de deseos en SUPERLAPTOP</p>
+          <p className="text-xs text-gray-500">Accede a tu cuenta para realizar compras y consultar tus pedidos en SUPERLAPTOP</p>
         </div>
 
         {errorMsg && (
@@ -65,7 +65,7 @@ export default function Login() {
           <div>
             <div className="flex justify-between items-center mb-1">
               <label className="block text-xs font-bold text-gray-700">Contraseña</label>
-              <Link to="/forgot-password" className="text-xs font-bold text-brand-blue hover:underline">
+              <Link to="/forgot-password" className="text-xs font-bold text-brand-red hover:underline">
                 ¿Olvidaste tu contraseña?
               </Link>
             </div>

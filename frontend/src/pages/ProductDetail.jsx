@@ -8,6 +8,7 @@ import {
 import { useCartStore } from '../store/useCartStore';
 import ProductCard from '../components/ProductCard';
 import ProductImage from '../components/ProductImage';
+import ProductDetailSkeleton from '../components/ProductDetailSkeleton';
 import axiosClient from '../api/axiosClient';
 import { generateWhatsAppOrderUrl } from '../utils/whatsappMessage';
 
@@ -190,7 +191,7 @@ export default function ProductDetail() {
   };
 
   if (loading) {
-    return <div className="max-w-[1440px] mx-auto px-4 py-16 text-center text-gray-500 font-bold">Cargando detalles del producto...</div>;
+    return <ProductDetailSkeleton />;
   }
 
   if (!product) {
@@ -203,6 +204,7 @@ export default function ProductDetail() {
   }
 
   const price = Number(product.price) || 0;
+  const isPriceValid = price > 0;
   const previousPrice = Number(product.previous_price) || 0;
   const hasVisualOffer = Boolean(previousPrice && previousPrice > price);
   const discountPercent = hasVisualOffer ? Math.round(((previousPrice - price) / previousPrice) * 100) : 0;
@@ -210,6 +212,42 @@ export default function ProductDetail() {
     ? Number(product.available_stock)
     : Math.max(0, Number(product.stock || 0) - Number(product.reserved_stock || 0));
   const isAvailable = stockCount > 0;
+  const canPurchase = isAvailable && isPriceValid;
+
+  // Stock Urgency Bar Data (Cálculo derivado directo)
+  const stockBarInfo = (() => {
+    const MAX_STOCK_REF = 15;
+    if (stockCount <= 0) {
+      return {
+        text: '● Agotado - Sin unidades disponibles',
+        textColor: 'text-red-700',
+        barColor: 'bg-red-600',
+        percent: 0
+      };
+    }
+    if (stockCount <= 2) {
+      return {
+        text: `● ${stockCount} disponibles - ¡Aprovecha! solo ${stockCount === 1 ? 'queda 1 unidad' : 'quedan 2 unidades'}`,
+        textColor: 'text-red-700',
+        barColor: 'bg-red-600',
+        percent: Math.min(100, Math.max(12, Math.round((stockCount / MAX_STOCK_REF) * 100)))
+      };
+    }
+    if (stockCount <= 5) {
+      return {
+        text: `● ${stockCount} disponibles - ¡Aprovecha! solo quedan pocos en stock`,
+        textColor: 'text-amber-600',
+        barColor: 'bg-amber-500',
+        percent: Math.min(100, Math.max(20, Math.round((stockCount / MAX_STOCK_REF) * 100)))
+      };
+    }
+    return {
+      text: `● ${stockCount} disponibles - Aprovecha este producto antes de que se acabe`,
+      textColor: 'text-emerald-700',
+      barColor: 'bg-emerald-600',
+      percent: Math.min(100, Math.max(30, Math.round((stockCount / MAX_STOCK_REF) * 100)))
+    };
+  })();
 
   const formatPriceWithSup = (amount, colorClass = "text-gray-900") => {
     const num = Number(amount) || 0;
@@ -242,7 +280,7 @@ export default function ProductDetail() {
       <div className="bg-white p-6 sm:p-8 rounded-lg border border-gray-200 shadow-sm grid grid-cols-1 lg:grid-cols-2 gap-10">
         {/* Images Gallery Carousel */}
         <div className="space-y-4">
-          <div className="bg-gray-50/70 rounded-2xl p-4 sm:p-6 border border-gray-100 flex items-center justify-center h-64 sm:h-[400px] relative overflow-hidden group select-none">
+          <div className="bg-white rounded-2xl flex items-center justify-center h-[340px] sm:h-[440px] md:h-[480px] lg:h-[520px] relative overflow-hidden group select-none">
             {/* Smooth Crossfade Image Stage */}
             <div className="w-full h-full relative flex items-center justify-center overflow-hidden">
               {imagesList.length > 0 ? (
@@ -251,7 +289,7 @@ export default function ProductDetail() {
                   return (
                     <div
                       key={img.id || img.image_url || idx}
-                      className={`absolute inset-0 flex items-center justify-center p-2 sm:p-4 transition-all duration-300 ease-in-out ${
+                      className={`absolute inset-0 flex items-center justify-center p-2 transition-all duration-300 ease-in-out ${
                         isCurrent
                           ? 'opacity-100 scale-100 pointer-events-auto z-10'
                           : 'opacity-0 scale-95 pointer-events-none z-0'
@@ -261,20 +299,20 @@ export default function ProductDetail() {
                       <ProductImage
                         src={img.image_url}
                         alt={`${product.name} - Vista ${idx + 1}`}
-                        className="max-h-full max-w-full object-contain drop-shadow-md transition-transform duration-300 hover:scale-105"
-                        size="lg"
+                        className="w-full h-full object-contain transition-transform duration-300 hover:scale-105 select-none"
+                        size="xl"
                         loading={idx === 0 ? 'eager' : 'lazy'}
                       />
                     </div>
                   );
                 })
               ) : (
-                <div className="w-full h-full flex items-center justify-center p-4">
+                <div className="w-full h-full flex items-center justify-center p-2">
                   <ProductImage
                     src={product.image_url || null}
                     alt={product.name}
-                    className="max-h-full max-w-full object-contain drop-shadow-md"
-                    size="lg"
+                    className="w-full h-full object-contain select-none"
+                    size="xl"
                   />
                 </div>
               )}
@@ -286,7 +324,7 @@ export default function ProductDetail() {
                 <button
                   type="button"
                   onClick={handlePrevImage}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/90 hover:bg-brand-red text-gray-800 hover:text-white flex items-center justify-center backdrop-blur-md shadow-md border border-gray-200/60 transition-all duration-200 hover:scale-105 active:scale-95 z-20 cursor-pointer opacity-90 group-hover:opacity-100"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/90 hover:bg-brand-red text-gray-800 hover:text-white flex items-center justify-center backdrop-blur-md shadow-md border border-gray-200/60 transition-all duration-200 hover:scale-105 active:scale-95 z-20 cursor-pointer opacity-90 group-hover:opacity-100"
                   aria-label="Imagen anterior"
                 >
                   <ChevronLeft className="w-5 h-5" />
@@ -295,7 +333,7 @@ export default function ProductDetail() {
                 <button
                   type="button"
                   onClick={handleNextImage}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/90 hover:bg-brand-red text-gray-800 hover:text-white flex items-center justify-center backdrop-blur-md shadow-md border border-gray-200/60 transition-all duration-200 hover:scale-105 active:scale-95 z-20 cursor-pointer opacity-90 group-hover:opacity-100"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/90 hover:bg-brand-red text-gray-800 hover:text-white flex items-center justify-center backdrop-blur-md shadow-md border border-gray-200/60 transition-all duration-200 hover:scale-105 active:scale-95 z-20 cursor-pointer opacity-90 group-hover:opacity-100"
                   aria-label="Siguiente imagen"
                 >
                   <ChevronRight className="w-5 h-5" />
@@ -320,25 +358,23 @@ export default function ProductDetail() {
                     ref={(el) => (thumbnailRefs.current[idx] = el)}
                     type="button"
                     onClick={() => setCurrentImageIndex(idx)}
-                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex items-center justify-center p-1 bg-white transition-all duration-200 cursor-pointer relative flex-shrink-0 ${
+                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex items-center justify-center p-1.5 bg-white transition-all duration-200 cursor-pointer relative flex-shrink-0 ${
                       isActive
-                        ? 'ring-2 ring-brand-red ring-offset-2 ring-offset-white border-transparent shadow-md scale-105 opacity-100 z-10'
-                        : 'border border-gray-200 hover:border-gray-400 opacity-60 hover:opacity-100 hover:scale-102'
+                        ? 'border-2 border-brand-red shadow-xs'
+                        : 'border border-gray-200 hover:border-gray-300'
                     }`}
                     title={`Ver imagen ${idx + 1}`}
                   >
-                    <div className="w-full h-full flex items-center justify-center overflow-hidden rounded-lg">
-                      <ProductImage
-                        src={img.image_url}
-                        alt={`Miniatura ${idx + 1}`}
-                        className="w-full h-full object-contain"
-                        size="xs"
-                        showText={false}
-                      />
-                    </div>
+                    <ProductImage
+                      src={img.image_url}
+                      alt={`Miniatura ${idx + 1}`}
+                      className="w-full h-full object-contain"
+                      size="xs"
+                      showText={false}
+                    />
                     {img.is_primary && (
                       <span
-                        className="absolute top-1 left-1 w-3.5 h-3.5 bg-brand-red text-white rounded-full flex items-center justify-center text-[9px] z-10 shadow-xs leading-none font-bold pointer-events-none"
+                        className="absolute top-1.5 left-1.5 w-4 h-4 bg-brand-red text-white rounded-full flex items-center justify-center text-[9px] z-10 shadow-xs leading-none font-bold pointer-events-none"
                         title="Imagen Principal"
                       >
                         ★
@@ -400,23 +436,35 @@ export default function ProductDetail() {
             {/* Price Container with Visual Offer Highlights */}
             <div className="bg-gray-50 p-4 sm:p-5 rounded-lg border border-gray-100 flex flex-wrap items-baseline justify-between gap-3">
               <div className="flex flex-wrap items-baseline gap-3 sm:gap-4">
-                {/* Real Selling Price (Charged in Cart & Checkout) */}
-                <div className="text-2xl sm:text-3xl font-black">
-                  {formatPriceWithSup(price, hasVisualOffer ? "text-brand-red" : "text-gray-900")}
-                </div>
-
-                {/* Previous Price (Strikethrough list price) */}
-                {hasVisualOffer && (
-                  <div className="text-sm sm:text-base text-gray-400 line-through font-semibold flex items-baseline">
-                    <span>S/ {Math.floor(previousPrice).toLocaleString('es-PE')}</span>
-                    <sup className="text-[10px] sm:text-xs ml-0.5 leading-none">{(previousPrice % 1).toFixed(2).slice(2)}</sup>
+                {!isPriceValid ? (
+                  <div className="text-2xl sm:text-3xl font-black text-gray-900">
+                    Consultar precio
                   </div>
+                ) : (
+                  <>
+                    {/* Real Selling Price (Charged in Cart & Checkout) */}
+                    <div className="text-2xl sm:text-3xl font-black">
+                      {formatPriceWithSup(price, hasVisualOffer ? "text-brand-red" : "text-gray-900")}
+                    </div>
+
+                    {/* Previous Price (Strikethrough list price) */}
+                    {hasVisualOffer && (
+                      <div className="text-sm sm:text-base text-gray-400 line-through font-semibold flex items-baseline">
+                        <span>S/ {Math.floor(previousPrice).toLocaleString('es-PE')}</span>
+                        <sup className="text-[10px] sm:text-xs ml-0.5 leading-none">{(previousPrice % 1).toFixed(2).slice(2)}</sup>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
               <div className="text-right">
                 <span className="text-[11px] font-bold text-gray-500 block">
-                  {isAvailable ? `Disponibilidad: ${stockCount} unidades` : 'Sin unidades en almacén'}
+                  {!isPriceValid
+                    ? 'Cotización personalizada'
+                    : isAvailable
+                    ? `Disponibilidad: ${stockCount} unidades`
+                    : 'Sin unidades en almacén'}
                 </span>
                 <span className="text-[10px] text-emerald-600 font-extrabold flex items-center justify-end">
                   <Check className="w-3 h-3 mr-0.5" /> Entrega Inmediata
@@ -456,13 +504,26 @@ export default function ProductDetail() {
 
           {/* Action Controls & Stock Validation */}
           <div className="space-y-3 sm:space-y-4 pt-4 border-t border-gray-100">
+            {/* Dynamic Stock Urgency Bar */}
+            <div className="space-y-1.5 pb-1">
+              <div className={`text-sm font-medium ${stockBarInfo.textColor} flex items-center`}>
+                <span>{stockBarInfo.text}</span>
+              </div>
+              <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${stockBarInfo.barColor}`}
+                  style={{ width: `${stockBarInfo.percent}%` }}
+                />
+              </div>
+            </div>
+
             <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-4">
               {/* Quantity Selector */}
               <div className="flex items-center border border-gray-300 rounded-md bg-gray-50 flex-shrink-0">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={!isAvailable}
-                  className="p-2 sm:p-2.5 text-gray-600 hover:text-brand-red transition-colors disabled:opacity-40 cursor-pointer"
+                  disabled={!canPurchase}
+                  className="p-2 sm:p-2.5 text-gray-600 hover:text-brand-red transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                   aria-label="Disminuir cantidad"
                 >
                   <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -470,8 +531,8 @@ export default function ProductDetail() {
                 <span className="px-2.5 sm:px-3.5 font-extrabold text-xs sm:text-sm text-gray-900">{quantity}</span>
                 <button
                   onClick={() => setQuantity(Math.min(stockCount, quantity + 1))}
-                  disabled={!isAvailable || quantity >= stockCount}
-                  className="p-2 sm:p-2.5 text-gray-600 hover:text-brand-red transition-colors disabled:opacity-40 cursor-pointer"
+                  disabled={!canPurchase || quantity >= stockCount}
+                  className="p-2 sm:p-2.5 text-gray-600 hover:text-brand-red transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                   aria-label="Aumentar cantidad"
                 >
                   <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -481,15 +542,17 @@ export default function ProductDetail() {
               {/* Add to Cart Button (Fluid typography and multi-line wrapping text) */}
               <button
                 onClick={() => addItem(product, quantity)}
-                disabled={!isAvailable}
-                className={`flex-1 font-extrabold py-2.5 sm:py-3.5 px-3 sm:px-6 rounded-md flex items-center justify-center space-x-1.5 sm:space-x-2 shadow-lg transition-transform active:scale-95 text-[11px] sm:text-xs md:text-sm text-center leading-tight whitespace-normal break-words min-h-[44px] ${
-                  isAvailable
-                    ? 'bg-brand-red hover:bg-brand-red-hover text-white cursor-pointer'
-                    : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
+                disabled={!canPurchase}
+                className={`flex-1 font-extrabold py-2.5 sm:py-3.5 px-3 sm:px-6 rounded-md flex items-center justify-center space-x-1.5 sm:space-x-2 shadow-lg transition-transform text-[11px] sm:text-xs md:text-sm text-center leading-tight whitespace-normal break-words min-h-[44px] ${
+                  canPurchase
+                    ? 'bg-brand-red hover:bg-brand-red-hover text-white cursor-pointer active:scale-95'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60 pointer-events-none shadow-none'
                 }`}
               >
                 <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                <span className="break-words">{isAvailable ? 'Agregar al Carrito' : 'Agotado'}</span>
+                <span className="break-words">
+                  {!isPriceValid ? 'Precio por consultar' : isAvailable ? 'Agregar al Carrito' : 'Agotado'}
+                </span>
               </button>
             </div>
 
@@ -499,14 +562,16 @@ export default function ProductDetail() {
                 name: product.name,
                 sku: product.sku,
                 quantity,
-                price: Number(product.offer_price || product.price)
+                price: isPriceValid ? Number(product.offer_price || product.price) : 0
               }])}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold py-2.5 sm:py-3.5 px-3 sm:px-6 rounded-md flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-[11px] sm:text-xs md:text-sm text-center leading-tight whitespace-normal break-words min-h-[44px]"
+              className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold py-2.5 sm:py-3.5 px-3 sm:px-6 rounded-md flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-[11px] sm:text-xs md:text-sm text-center leading-tight whitespace-normal break-words min-h-[44px] cursor-pointer"
             >
               <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-              <span className="break-words">Consultar / Comprar por WhatsApp</span>
+              <span className="break-words">
+                {!isPriceValid ? 'Consultar precio y disponibilidad por WhatsApp' : 'Consultar / Comprar por WhatsApp'}
+              </span>
             </a>
 
             {/* Service Highlights */}

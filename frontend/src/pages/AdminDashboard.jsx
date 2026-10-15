@@ -520,22 +520,28 @@ export default function AdminDashboard() {
 
             {/* Custom Date Inputs */}
             {datePreset === 'custom' && (
-              <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-300 rounded-xl p-1 text-xs">
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={handleStartDateChange}
-                  className="bg-white border border-gray-200 text-gray-800 text-xs font-semibold rounded-lg px-2 py-1 focus:ring-1 focus:ring-brand-blue outline-none"
-                  title="Fecha de inicio (Desde)"
-                />
-                <span className="text-gray-400 font-bold text-xs">-</span>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={handleEndDateChange}
-                  className="bg-white border border-gray-200 text-gray-800 text-xs font-semibold rounded-lg px-2 py-1 focus:ring-1 focus:ring-brand-blue outline-none"
-                  title="Fecha de fin (Hasta)"
-                />
+              <div className="flex items-center gap-2 bg-gray-50 border border-gray-300 rounded-xl px-2.5 py-1 text-xs">
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <span className="text-xs font-semibold text-gray-500 select-none">Desde:</span>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={handleStartDateChange}
+                    className="bg-white border border-gray-200 text-gray-800 text-xs font-semibold rounded-lg px-2 py-1 focus:ring-1 focus:ring-brand-blue outline-none cursor-pointer"
+                    title="Fecha de inicio (Desde)"
+                  />
+                </label>
+                <span className="text-gray-300 font-bold text-xs select-none">-</span>
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <span className="text-xs font-semibold text-gray-500 select-none">Hasta:</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={handleEndDateChange}
+                    className="bg-white border border-gray-200 text-gray-800 text-xs font-semibold rounded-lg px-2 py-1 focus:ring-1 focus:ring-brand-blue outline-none cursor-pointer"
+                    title="Fecha de fin (Hasta)"
+                  />
+                </label>
               </div>
             )}
 

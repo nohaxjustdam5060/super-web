@@ -31,7 +31,7 @@ export default function Register() {
     <div className="max-w-md mx-auto my-12 px-4">
       <div className="bg-white p-8 rounded-3xl border border-gray-200 shadow-xl space-y-6">
         <div className="text-center space-y-2">
-          <div className="inline-flex bg-brand-blue text-white p-3 rounded-2xl shadow-md mb-2">
+          <div className="inline-flex bg-brand-red text-white p-3 rounded-2xl shadow-md mb-2">
             <UserPlus className="w-6 h-6" />
           </div>
           <h2 className="text-2xl font-black text-gray-900">Crear Cuenta SUPERLAPTOP</h2>
@@ -55,7 +55,7 @@ export default function Register() {
                 placeholder="Juan Pérez"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-300 rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-brand-blue"
+                className="w-full bg-gray-50 border border-gray-300 rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-brand-red"
               />
             </div>
           </div>
@@ -70,7 +70,7 @@ export default function Register() {
                 placeholder="juan@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-300 rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-brand-blue"
+                className="w-full bg-gray-50 border border-gray-300 rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-brand-red"
               />
             </div>
           </div>
@@ -85,7 +85,7 @@ export default function Register() {
                 placeholder="+51 912 345 678"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-300 rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-brand-blue"
+                className="w-full bg-gray-50 border border-gray-300 rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-brand-red"
               />
             </div>
           </div>
@@ -100,7 +100,7 @@ export default function Register() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-300 rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-brand-blue"
+                className="w-full bg-gray-50 border border-gray-300 rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-brand-red"
               />
             </div>
           </div>
@@ -108,7 +108,7 @@ export default function Register() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brand-blue hover:bg-brand-blue-hover text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition-transform active:scale-95 text-sm"
+            className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition-transform active:scale-95 text-sm cursor-pointer"
           >
             {loading ? 'Creando...' : 'Registrarme'}
           </button>
@@ -116,7 +116,7 @@ export default function Register() {
 
         <div className="text-center text-xs text-gray-500 pt-2 border-t border-gray-100">
           ¿Ya tienes cuenta?{' '}
-          <Link to="/login" state={location.state} className="text-brand-blue font-bold hover:underline">
+          <Link to="/login" state={location.state} className="text-brand-red font-bold hover:underline">
             Inicia sesión
           </Link>
         </div>
