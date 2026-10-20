@@ -468,6 +468,17 @@ class CuadradoSyncService {
   }
 
   /**
+   * Compares two sets of image URLs preserving order
+   */
+  areImageSetsEqual(currentUrls = [], incomingUrls = []) {
+    if (currentUrls.length !== incomingUrls.length) return false;
+    for (let i = 0; i < currentUrls.length; i++) {
+      if (currentUrls[i] !== incomingUrls[i]) return false;
+    }
+    return true;
+  }
+
+  /**
    * Main Sincronization Engine
    * Executes in-memory conditional updates and batch inserts to reduce DB load to zero for unchanged products
    */
@@ -502,6 +513,18 @@ class CuadradoSyncService {
 
       const existingMap = new Map();
       existingProducts.forEach((p) => existingMap.set(p.sku, p));
+
+      // Pre-load all existing product images into memory Map <productId, string[]>
+      const existingImages = await ProductImage.findAll({
+        attributes: ['product_id', 'image_url', 'order'],
+        order: [['product_id', 'ASC'], ['order', 'ASC']]
+      });
+      const existingImagesMap = new Map();
+      existingImages.forEach((img) => {
+        const list = existingImagesMap.get(img.product_id) || [];
+        list.push(img.image_url);
+        existingImagesMap.set(img.product_id, list);
+      });
 
       const activeDbSkus = new Set(
         existingProducts.filter((p) => p.is_active).map((p) => p.sku)
@@ -584,7 +607,13 @@ class CuadradoSyncService {
             brandIdToAssign = await this.getOrCreateBrandForProduct(name, brandCache, item.brand);
           }
 
-          if (priceChanged || offerPriceChanged || stockChanged || statusChanged || externalIdChanged || (missingBrand && brandIdToAssign)) {
+          // Evaluate image synchronization:
+          // Check if API provides images and if they differ from current DB images
+          const incomingImages = this.extractImageUrlsFromRawItem(item);
+          const currentImages = existingImagesMap.get(existing.id) || [];
+          const imagesChanged = incomingImages.length > 0 && !this.areImageSetsEqual(currentImages, incomingImages);
+
+          if (priceChanged || offerPriceChanged || stockChanged || statusChanged || externalIdChanged || (missingBrand && brandIdToAssign) || imagesChanged) {
             itemsToUpdate.push({
               id: existing.id,
               sku,
@@ -594,7 +623,8 @@ class CuadradoSyncService {
               stock,
               is_active: isActive,
               technical_specs: technicalSpecs,
-              ...(brandIdToAssign ? { brand_id: brandIdToAssign } : {})
+              ...(brandIdToAssign ? { brand_id: brandIdToAssign } : {}),
+              newImages: imagesChanged ? incomingImages : null
             });
           } else {
             skippedCount++;
@@ -610,6 +640,7 @@ class CuadradoSyncService {
 
       // 3. Process Batch Updates (In batches of 100)
       let updatedCount = 0;
+      let imagesUpdatedCount = 0;
       const BATCH_SIZE = 100;
 
       for (let i = 0; i < itemsToUpdate.length; i += BATCH_SIZE) {
@@ -636,6 +667,26 @@ class CuadradoSyncService {
                 transaction: t
               }
             );
+
+            // Synchronize images if new or changed
+            if (upd.newImages) {
+              await ProductImage.destroy({
+                where: { product_id: upd.id },
+                transaction: t
+              });
+              await ProductImage.bulkCreate(
+                upd.newImages.map((url, idx) => ({
+                  product_id: upd.id,
+                  image_url: url,
+                  is_primary: idx === 0,
+                  order: idx
+                })),
+                { transaction: t }
+              );
+              existingImagesMap.set(upd.id, upd.newImages);
+              imagesUpdatedCount++;
+            }
+
             updatedCount++;
           }
         });
@@ -672,17 +723,14 @@ class CuadradoSyncService {
             // Insert all extracted images for new product
             const imageUrls = this.extractImageUrlsFromRawItem(newItem.rawItem);
             if (imageUrls.length > 0) {
-              await Promise.all(
-                imageUrls.map((url, idx) =>
-                  ProductImage.create({
-                    product_id: createdProduct.id,
-                    image_url: url,
-                    is_primary: idx === 0,
-                    order: idx
-                  })
-                )
+              await ProductImage.bulkCreate(
+                imageUrls.map((url, idx) => ({
+                  product_id: createdProduct.id,
+                  image_url: url,
+                  is_primary: idx === 0,
+                  order: idx
+                }))
               );
-              await createdProduct.update({ image_url: imageUrls[0] });
             }
 
             createdCount++;
@@ -708,7 +756,7 @@ class CuadradoSyncService {
       const durationSec = ((Date.now() - startTime) / 1000).toFixed(2);
       logger.info(`✅ [CuadradoSync] Sincronización completada exitosamente en ${durationSec}s:
         - Creados: ${createdCount}
-        - Actualizados: ${updatedCount}
+        - Actualizados: ${updatedCount} (Imágenes actualizadas: ${imagesUpdatedCount})
         - Sin cambio (Omitidos): ${skippedCount}
         - Desactivados (Huérfanos): ${disabledCount}`);
 
@@ -719,6 +767,7 @@ class CuadradoSyncService {
           totalReceived: items.length,
           createdCount,
           updatedCount,
+          imagesUpdatedCount,
           skippedCount,
           disabledCount
         }

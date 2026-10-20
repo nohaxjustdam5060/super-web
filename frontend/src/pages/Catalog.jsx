@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { Filter, Grid, List, Search, RefreshCw, ChevronDown, CheckCircle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import DualRangeSlider from '../components/DualRangeSlider';
@@ -377,21 +377,102 @@ export default function Catalog() {
     return brandSlugOrId.replace(/-/g, ' ').toUpperCase();
   };
 
-  // Dynamic Title h1 Computation
+  // Breadcrumb generation based on active category, search or brand
+  const getBreadcrumbs = () => {
+    const crumbs = [];
+
+    if (search) {
+      crumbs.push({ name: 'Catálogo', link: '/catalog' });
+      crumbs.push({ name: `Búsqueda: "${search}"`, link: null });
+      return crumbs;
+    }
+
+    if (categoryId) {
+      const items = String(categoryId).split(',').map((s) => s.trim()).filter(Boolean);
+
+      if (items.length > 1) {
+        // Multi-category (e.g. Convertibles + ThinkBook)
+        let parentCat = null;
+        for (const parent of categoriesTree) {
+          if (parent.subcategories?.some((sub) => items.includes(sub.slug) || items.includes(sub.id))) {
+            parentCat = parent;
+            break;
+          }
+        }
+        if (parentCat) {
+          crumbs.push({ name: parentCat.name, link: `/catalog?category_id=${parentCat.slug}` });
+        }
+        crumbs.push({ name: getDynamicTitle(), link: null });
+        return crumbs;
+      }
+
+      // Single category
+      const targetSlugOrId = items[0];
+      let foundParent = null;
+      let foundSub = null;
+
+      for (const parent of categoriesTree) {
+        if (parent.slug === targetSlugOrId || parent.id === targetSlugOrId) {
+          foundParent = parent;
+          break;
+        }
+        if (parent.subcategories) {
+          for (const sub of parent.subcategories) {
+            if (sub.slug === targetSlugOrId || sub.id === targetSlugOrId) {
+              foundParent = parent;
+              foundSub = sub;
+              break;
+            }
+          }
+          if (foundSub) break;
+        }
+      }
+
+      if (foundSub && foundParent) {
+        // Subcategory level (e.g. Inicio / Laptops / Laptops de Consumo)
+        crumbs.push({ name: foundParent.name, link: `/catalog?category_id=${foundParent.slug}` });
+        crumbs.push({ name: foundSub.name, link: null });
+      } else if (foundParent) {
+        // Main category level (e.g. Inicio / Laptops)
+        crumbs.push({ name: foundParent.name, link: null });
+      } else {
+        crumbs.push({ name: getCategoryName(categoryId), link: null });
+      }
+
+      return crumbs;
+    }
+
+    if (brandId) {
+      crumbs.push({ name: 'Catálogo', link: '/catalog' });
+      crumbs.push({ name: getBrandName(brandId), link: null });
+      return crumbs;
+    }
+
+    if (searchParams.get('is_featured') === 'true') {
+      crumbs.push({ name: 'Catálogo', link: '/catalog' });
+      crumbs.push({ name: 'Destacados', link: null });
+      return crumbs;
+    }
+
+    crumbs.push({ name: 'Catálogo', link: null });
+    return crumbs;
+  };
+
+  // Dynamic Title h1 Computation (Title Case)
   const getDynamicTitle = () => {
     if (search) {
-      return `Resultados para: "${search}"`;
+      return `Resultados para "${search}"`;
     }
     if (categoryId) {
-      const catName = getCategoryName(categoryId);
-      return catName.toUpperCase();
+      if (categoryId === 'convertibles,thinbooks') return 'Convertibles & ThinkBook';
+      return getCategoryName(categoryId);
     }
     if (brandId) {
       const bName = getBrandName(brandId);
-      return `PRODUCTOS ${bName.toUpperCase()}`;
+      return `Productos ${bName}`;
     }
     if (searchParams.get('is_featured') === 'true') {
-      return 'OFERTAS TOP Y DESTACADOS';
+      return 'Ofertas y Productos Destacados';
     }
     return 'Catálogo de Productos';
   };
@@ -399,63 +480,83 @@ export default function Catalog() {
   return (
     <div className="max-w-[1440px] mx-auto px-4 py-6 sm:py-8 space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-sm">
-        <div>
-          <h1 className="text-xl sm:text-3xl font-black text-gray-900 uppercase tracking-tight">
-            {getDynamicTitle()}
-          </h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1 font-medium">
-            {total > 0
-              ? `Mostrando ${startIndex} - ${endIndex} de ${total} productos (pág. ${safeCurrentPage} de ${totalPages})`
-              : 'No se encontraron productos coincidentes'}
-          </p>
-        </div>
+      <div className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-sm space-y-3">
+        {/* 1. Breadcrumbs */}
+        <nav aria-label="Breadcrumb" className="flex items-center space-x-2 text-xs sm:text-sm text-slate-400 flex-wrap">
+          <Link to="/" className="hover:text-brand-red transition-colors">
+            Inicio
+          </Link>
+          {getBreadcrumbs().map((crumb, idx) => (
+            <React.Fragment key={idx}>
+              <span className="text-slate-300">/</span>
+              {crumb.link ? (
+                <Link to={crumb.link} className="hover:text-brand-red transition-colors">
+                  {crumb.name}
+                </Link>
+              ) : (
+                <span className="text-slate-600 font-medium">{crumb.name}</span>
+              )}
+            </React.Fragment>
+          ))}
+        </nav>
 
-        {/* View mode & Sort Controls Bar */}
-        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full md:w-auto justify-between sm:justify-end border-t border-gray-100 pt-3 md:pt-0 md:border-t-0 min-w-0">
-          {/* Sort Selector */}
-          <div className="flex items-center space-x-1.5 sm:space-x-2 flex-wrap min-w-0">
-            <label className="text-[10px] sm:text-xs font-black text-gray-500 uppercase tracking-wider flex-shrink-0">
-              Ordenar:
-            </label>
-            <select
-              value={sort}
-              onChange={(e) => handleFilterChange('sort', e.target.value)}
-              className="bg-gray-100 border border-gray-300 text-[11px] sm:text-xs md:text-sm font-bold rounded-xl px-2.5 py-1.5 sm:py-2 focus:ring-2 focus:ring-brand-red max-w-[150px] sm:max-w-xs truncate text-gray-800 cursor-pointer"
-            >
-              <option value="newest">Más recientes</option>
-              <option value="price_asc">Precio: Menor a Mayor</option>
-              <option value="price_desc">Precio: Mayor a Menor</option>
-              <option value="name">Nombre A-Z</option>
-            </select>
+        {/* 2. Main Row: Title + Minimalist Count Badge on left, Sort + View toggles on right */}
+        <div className="flex items-center justify-between flex-wrap gap-4 pt-1">
+          <div className="flex items-center flex-wrap gap-2.5 sm:gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+              {getDynamicTitle()}
+            </h1>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200/60">
+              {total === 1 ? '1 producto' : `${total.toLocaleString('es-PE')} productos`}
+            </span>
           </div>
 
-          <div className="flex items-center space-x-2 flex-shrink-0">
-            {/* Mobile Filter Toggle Button */}
-            <button
-              onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
-              className="lg:hidden bg-brand-dark hover:bg-slate-800 text-white px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-extrabold flex items-center space-x-1.5 shadow active:scale-95 transition-all flex-shrink-0"
-            >
-              <Filter className="w-3.5 h-3.5 text-brand-red-accent flex-shrink-0" />
-              <span className="truncate">Filtros {activeFiltersCount > 0 && `(${activeFiltersCount})`}</span>
-            </button>
+          {/* View mode & Sort Controls Bar */}
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full sm:w-auto justify-between sm:justify-end min-w-0">
+            {/* Sort Selector */}
+            <div className="flex items-center space-x-1.5 sm:space-x-2 flex-wrap min-w-0">
+              <label className="text-[10px] sm:text-xs font-black text-gray-500 uppercase tracking-wider flex-shrink-0">
+                Ordenar:
+              </label>
+              <select
+                value={sort}
+                onChange={(e) => handleFilterChange('sort', e.target.value)}
+                className="bg-gray-100 border border-gray-300 text-[11px] sm:text-xs md:text-sm font-bold rounded-xl px-2.5 py-1.5 sm:py-2 focus:ring-2 focus:ring-brand-red max-w-[150px] sm:max-w-xs truncate text-gray-800 cursor-pointer"
+              >
+                <option value="newest">Más recientes</option>
+                <option value="price_asc">Precio: Menor a Mayor</option>
+                <option value="price_desc">Precio: Mayor a Menor</option>
+                <option value="name">Nombre A-Z</option>
+              </select>
+            </div>
 
-            {/* Grid/List View Toggle (Hidden on Mobile < 640px) */}
-            <div className="hidden sm:flex items-center border border-gray-300 rounded-xl bg-gray-100 p-1 flex-shrink-0">
+            <div className="flex items-center space-x-2 flex-shrink-0">
+              {/* Mobile Filter Toggle Button */}
               <button
-                onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-white shadow text-brand-red font-bold' : 'text-gray-500'}`}
-                aria-label="Vista cuadrícula"
+                onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+                className="lg:hidden bg-brand-dark hover:bg-slate-800 text-white px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-extrabold flex items-center space-x-1.5 shadow active:scale-95 transition-all flex-shrink-0"
               >
-                <Grid className="w-4 h-4" />
+                <Filter className="w-3.5 h-3.5 text-brand-red-accent flex-shrink-0" />
+                <span className="truncate">Filtros {activeFiltersCount > 0 && `(${activeFiltersCount})`}</span>
               </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-white shadow text-brand-red font-bold' : 'text-gray-500'}`}
-                aria-label="Vista lista"
-              >
-                <List className="w-4 h-4" />
-              </button>
+
+              {/* Grid/List View Toggle (Hidden on Mobile < 640px) */}
+              <div className="hidden sm:flex items-center border border-gray-300 rounded-xl bg-gray-100 p-1 flex-shrink-0">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-1.5 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-white shadow text-brand-red font-bold' : 'text-gray-500'}`}
+                  aria-label="Vista cuadrícula"
+                >
+                  <Grid className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-1.5 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-white shadow text-brand-red font-bold' : 'text-gray-500'}`}
+                  aria-label="Vista lista"
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -32,22 +32,33 @@ class SearchService {
     }
 
     if (category_id) {
-      let targetCat = null;
-      if (UUID_REGEX.test(category_id)) {
-        targetCat = await Category.findByPk(category_id, {
-          include: [{ model: Category, as: 'subcategories', attributes: ['id'] }]
-        });
-      } else {
-        targetCat = await Category.findOne({
-          where: { slug: category_id },
-          include: [{ model: Category, as: 'subcategories', attributes: ['id'] }]
-        });
+      const catItems = Array.isArray(category_id)
+        ? category_id
+        : String(category_id).split(',').map((s) => s.trim()).filter(Boolean);
+
+      const allIds = new Set();
+      for (const item of catItems) {
+        let targetCat = null;
+        if (UUID_REGEX.test(item)) {
+          targetCat = await Category.findByPk(item, {
+            include: [{ model: Category, as: 'subcategories', attributes: ['id'] }]
+          });
+        } else {
+          targetCat = await Category.findOne({
+            where: { slug: item },
+            include: [{ model: Category, as: 'subcategories', attributes: ['id'] }]
+          });
+        }
+
+        if (targetCat) {
+          allIds.add(targetCat.id);
+          const subCatIds = targetCat.subcategories?.map((s) => s.id) || [];
+          subCatIds.forEach((id) => allIds.add(id));
+        }
       }
 
-      if (targetCat) {
-        const subCatIds = targetCat.subcategories?.map((s) => s.id) || [];
-        const allIds = [targetCat.id, ...subCatIds];
-        where.category_id = { [Op.in]: allIds };
+      if (allIds.size > 0) {
+        where.category_id = { [Op.in]: Array.from(allIds) };
       } else {
         where.category_id = '00000000-0000-0000-0000-000000000000';
       }

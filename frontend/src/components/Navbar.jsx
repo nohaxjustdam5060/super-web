@@ -433,10 +433,6 @@ export default function Navbar() {
                     {currentCategory.name}
                   </h3>
 
-                  <p className="text-xs text-slate-500 leading-snug line-clamp-2">
-                    {currentCategory.description || 'Explora nuestra selección oficial con la mejor garantía en Perú.'}
-                  </p>
-
                   <Link
                     to={`/catalog?category_id=${currentCategory.slug}`}
                     onClick={() => setActiveParentSlug(null)}

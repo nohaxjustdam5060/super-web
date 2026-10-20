@@ -4,6 +4,7 @@ import { ChevronRight, Sparkles, Flame } from 'lucide-react';
 import LocationMap from '../components/LocationMap';
 import HeroCarousel from '../components/HeroCarousel';
 import ProductCarousel from '../components/ProductCarousel';
+import CategoryBannerCarousel from '../components/CategoryBannerCarousel';
 import axiosClient from '../api/axiosClient';
 
 export default function Home() {
@@ -11,6 +12,17 @@ export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loadingNewest, setLoadingNewest] = useState(true);
   const [loadingFeatured, setLoadingFeatured] = useState(true);
+
+  // States for the 4 Category Banner Carousels
+  const [gamingProducts, setGamingProducts] = useState([]);
+  const [consumoProducts, setConsumoProducts] = useState([]);
+  const [convertiblesProducts, setConvertiblesProducts] = useState([]);
+  const [computadorasProducts, setComputadorasProducts] = useState([]);
+
+  const [loadingGaming, setLoadingGaming] = useState(true);
+  const [loadingConsumo, setLoadingConsumo] = useState(true);
+  const [loadingConvertibles, setLoadingConvertibles] = useState(true);
+  const [loadingComputadoras, setLoadingComputadoras] = useState(true);
 
   useEffect(() => {
     // 1. Fetch Newest Products for single-row carousel
@@ -32,6 +44,46 @@ export default function Home() {
       })
       .catch((err) => console.error('[FEATURED_PRODUCTS_ERROR]', err))
       .finally(() => setLoadingFeatured(false));
+
+    // 3. Fetch Laptops Gaming
+    axiosClient.get('/products?category_id=laptops-gaming&limit=10')
+      .then((res) => {
+        if (res.data.success) {
+          setGamingProducts(res.data.products || []);
+        }
+      })
+      .catch((err) => console.error('[GAMING_PRODUCTS_ERROR]', err))
+      .finally(() => setLoadingGaming(false));
+
+    // 4. Fetch Laptops de Consumo
+    axiosClient.get('/products?category_id=laptops-consumo&limit=10')
+      .then((res) => {
+        if (res.data.success) {
+          setConsumoProducts(res.data.products || []);
+        }
+      })
+      .catch((err) => console.error('[CONSUMO_PRODUCTS_ERROR]', err))
+      .finally(() => setLoadingConsumo(false));
+
+    // 5. Fetch Convertibles + ThinkBook
+    axiosClient.get('/products?category_id=convertibles,thinbooks&limit=10')
+      .then((res) => {
+        if (res.data.success) {
+          setConvertiblesProducts(res.data.products || []);
+        }
+      })
+      .catch((err) => console.error('[CONVERTIBLES_PRODUCTS_ERROR]', err))
+      .finally(() => setLoadingConvertibles(false));
+
+    // 6. Fetch Computadoras y Componentes
+    axiosClient.get('/products?category_id=computadoras-y-componentes&limit=10')
+      .then((res) => {
+        if (res.data.success) {
+          setComputadorasProducts(res.data.products || []);
+        }
+      })
+      .catch((err) => console.error('[COMPUTADORAS_PRODUCTS_ERROR]', err))
+      .finally(() => setLoadingComputadoras(false));
   }, []);
 
   return (
@@ -187,7 +239,75 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. Novedades (Carrusel 1 sola fila: 5 en Desktop, 2 en Móvil) */}
+      {/* 5. Sección con Banner Lateral: Laptops Gaming */}
+      <CategoryBannerCarousel
+        title="Laptops Gaming"
+        viewAllLink="/catalog?category_id=laptops-gaming"
+        viewAllText="Ver Todo Gaming"
+        bannerTitle="Laptops Gaming"
+        bannerSubtitle=""
+        bannerTag="ALTO RENDIMIENTO"
+        bannerTagBg="bg-brand-red/20 border-brand-red/40 text-brand-red-accent"
+        bannerBorderColor="border-brand-red/40 hover:border-brand-red/80"
+        bannerImage="/images/compressed-laptop-gaming.webp"
+        bannerLink="/catalog?category_id=laptops-gaming"
+        products={gamingProducts}
+        loading={loadingGaming}
+        limit={10}
+      />
+
+      {/* 6. Sección con Banner Lateral: Laptops de Consumo */}
+      <CategoryBannerCarousel
+        title="Laptops de Consumo"
+        viewAllLink="/catalog?category_id=laptops-consumo"
+        viewAllText="Ver Todo Consumo"
+        bannerTitle="Laptops de Consumo"
+        bannerSubtitle=""
+        bannerTag="USO DIARIO & ESTUDIO"
+        bannerTagBg="bg-sky-500/20 border-sky-500/40 text-sky-300"
+        bannerBorderColor="border-slate-800/90 hover:border-sky-500/60"
+        bannerImage="/images/laptop_banner.jpg"
+        bannerLink="/catalog?category_id=laptops-consumo"
+        products={consumoProducts}
+        loading={loadingConsumo}
+        limit={10}
+      />
+
+      {/* 7. Sección con Banner Lateral: Convertibles & ThinkBook */}
+      <CategoryBannerCarousel
+        title="Convertibles & ThinkBook"
+        viewAllLink="/catalog?category_id=laptops"
+        viewAllText="Ver Todas las Laptops"
+        bannerTitle="Convertibles & ThinkBook"
+        bannerSubtitle=""
+        bannerTag="PRODUCTIVIDAD FLEXIBLE"
+        bannerTagBg="bg-purple-500/20 border-purple-500/40 text-purple-300"
+        bannerBorderColor="border-slate-800/90 hover:border-purple-500/60"
+        bannerImage="https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&auto=format&fit=crop"
+        bannerLink="/catalog?category_id=laptops"
+        products={convertiblesProducts}
+        loading={loadingConvertibles}
+        limit={10}
+      />
+
+      {/* 8. Sección con Banner Lateral: Computadoras y Componentes */}
+      <CategoryBannerCarousel
+        title="Computadoras y Componentes"
+        viewAllLink="/catalog?category_id=computadoras-y-componentes"
+        viewAllText="Ver Todo Hardware"
+        bannerTitle="Computadoras y Componentes"
+        bannerSubtitle=""
+        bannerTag="HARDWARE & POTENCIA"
+        bannerTagBg="bg-amber-500/20 border-amber-500/40 text-amber-300"
+        bannerBorderColor="border-slate-800/90 hover:border-amber-500/60"
+        bannerImage="/images/compressed-pc-gaming.webp"
+        bannerLink="/catalog?category_id=computadoras-y-componentes"
+        products={computadorasProducts}
+        loading={loadingComputadoras}
+        limit={10}
+      />
+
+      {/* 9. Novedades (Carrusel 1 sola fila: 5 en Desktop, 2 en Móvil) */}
       <ProductCarousel
         title="Novedades"
         subtitle=""

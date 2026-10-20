@@ -28,7 +28,7 @@ export default function ProductCard({ product }) {
   const discountPercent = hasVisualOffer ? Math.round(((previousPrice - price) / previousPrice) * 100) : 0;
 
   return (
-    <div className="group bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-xl hover:border-brand-red/40 transition-all duration-300 flex flex-col justify-between overflow-hidden relative">
+    <div className="group bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-xl hover:border-brand-red/40 transition-all duration-300 flex flex-col justify-between overflow-hidden relative w-full h-full">
       {/* Top Badges */}
       <div className="absolute top-2.5 sm:top-3 left-2.5 sm:left-3 z-10 flex flex-col gap-1 sm:gap-1.5">
         {product.is_featured && (
