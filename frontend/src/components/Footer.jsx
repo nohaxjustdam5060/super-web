@@ -64,7 +64,7 @@ export default function Footer() {
             <p className="flex items-center"><MapPin className="w-4 h-4 mr-2 text-brand-red-accent flex-shrink-0" /> Jr.Velarde 172, Lima</p>
             <p className="flex items-center">
               <Phone className="w-4 h-4 mr-2 text-brand-red-accent flex-shrink-0" />
-              <a href="tel:+51967554065" className="hover:text-white transition-colors">+51 967 554 065</a>
+              <a href="tel:+51904436463" className="hover:text-white transition-colors">+51 904 436 463</a>
             </p>
             <p className="flex items-center"><Mail className="w-4 h-4 mr-2 text-brand-red-accent flex-shrink-0" /> ventas@superlaptop.pe</p>
           </div>

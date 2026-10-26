@@ -249,7 +249,7 @@ exports.processBankTransferPayment = async (req, res, next) => {
       });
     }
 
-    const whatsappNumber = process.env.WHATSAPP_NUMBER || '51967554065';
+    const whatsappNumber = process.env.WHATSAPP_NUMBER || '51904436463';
     const whatsappMsg = encodeURIComponent(
       `Hola SUPERLAPTOP, adjunto mi comprobante de transferencia para el Pedido #${order.order_number} por el monto de S/ ${Number(order.total).toFixed(2)} dentro del plazo de reserva de 4 horas.`
     );
