@@ -46,7 +46,7 @@ export const useCartStore = create((set, get) => ({
     localStorage.setItem('super_local_cart', JSON.stringify(updatedItems));
     set({ items: updatedItems, isOpen: true });
 
-    // Sync with backend if user is authenticated
+    // Sync with backend if user is authenticated (fire-and-forget, zero latency)
     const token = localStorage.getItem('super_access_token');
     if (token) {
       axiosClient.post('/cart/add', { product_id: product.id, quantity }).catch(() => {});
@@ -72,17 +72,35 @@ export const useCartStore = create((set, get) => ({
 
     localStorage.setItem('super_local_cart', JSON.stringify(updatedItems));
     set({ items: updatedItems });
+
+    // Sync with backend if user is authenticated (fire-and-forget, zero latency)
+    const token = localStorage.getItem('super_access_token');
+    if (token) {
+      axiosClient.put(`/cart/item/${productId}`, { quantity }).catch(() => {});
+    }
   },
 
   removeItem: (productId) => {
     const updatedItems = get().items.filter((item) => item.product_id !== productId && item.id !== productId);
     localStorage.setItem('super_local_cart', JSON.stringify(updatedItems));
     set({ items: updatedItems });
+
+    // Sync with backend if user is authenticated (fire-and-forget, zero latency)
+    const token = localStorage.getItem('super_access_token');
+    if (token) {
+      axiosClient.delete(`/cart/item/${productId}`).catch(() => {});
+    }
   },
 
   clearCart: () => {
     localStorage.removeItem('super_local_cart');
     set({ items: [] });
+
+    // Sync with backend if user is authenticated (fire-and-forget, zero latency)
+    const token = localStorage.getItem('super_access_token');
+    if (token) {
+      axiosClient.delete('/cart/clear').catch(() => {});
+    }
   },
 
   getSubtotal: () => {

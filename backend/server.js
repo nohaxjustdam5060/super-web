@@ -2,6 +2,7 @@ const app = require('./src/app');
 const sequelize = require('./src/config/database');
 const logger = require('./src/config/logger');
 const orderExpirationService = require('./src/services/orderExpirationService');
+const cartReminderService = require('./src/services/cartReminderService');
 const syncCron = require('./src/cron/syncCron');
 
 const PORT = process.env.PORT || 5000;
@@ -23,6 +24,9 @@ async function startServer() {
     // Start 4-hour bank transfer reservation and 1-hour MP order expiration service
     orderExpirationService.start();
 
+    // Start abandoned cart email reminder service (checks every hour)
+    cartReminderService.start();
+
     // Start 5-minute catalog sync Cron Job with cuadrado.pe
     syncCron.startCron();
   });
@@ -33,6 +37,14 @@ function gracefulShutdown(signal, error) {
     logger.error(`[ProcessExit] Excepción no capturada o rechazo no manejado (${signal}):`, error);
   } else {
     logger.info(`[ProcessExit] Señal recibida (${signal}). Cerrando servidor de forma segura...`);
+  }
+
+  // Stop background services
+  try {
+    orderExpirationService.stop && orderExpirationService.stop();
+    cartReminderService.stop && cartReminderService.stop();
+  } catch (stopErr) {
+    logger.error('[ProcessExit] Error al detener servicios background:', stopErr);
   }
 
   if (server) {

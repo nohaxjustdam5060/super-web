@@ -1,4 +1,4 @@
-const { Order, OrderItem, OrderStatusHistory, Product, Coupon, Address } = require('../models');
+const { Order, OrderItem, OrderStatusHistory, Product, Coupon, Address, Cart, CartItem } = require('../models');
 const { Op } = require('sequelize');
 
 /**
@@ -166,6 +166,20 @@ async function createOrderCore({
     comment: statusComment,
     created_by_user_id: userId
   }, { transaction });
+
+  // Clear user's persistent cart in database upon order creation
+  if (userId) {
+    try {
+      const userCart = await Cart.findOne({ where: { user_id: userId }, transaction });
+      if (userCart) {
+        await CartItem.destroy({ where: { cart_id: userCart.id }, transaction });
+        userCart.abandoned_emails_sent = 0;
+        await userCart.save({ transaction });
+      }
+    } catch (cartClearErr) {
+      console.error('[CartClearError] Error clearing cart on order creation:', cartClearErr);
+    }
+  }
 
   // Attach validatedItems and user to in-memory order instance for downstream consumers (e.g. paymentService)
   order.setDataValue('items', validatedItems);

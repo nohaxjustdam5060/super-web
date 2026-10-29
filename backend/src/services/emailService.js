@@ -1,6 +1,6 @@
 const { Resend } = require('resend');
 const logger = require('../config/logger');
-const { generateOrderConfirmationHTML, generateClaimConfirmationHTML } = require('../utils/emailTemplates');
+const { generateOrderConfirmationHTML, generateClaimConfirmationHTML, generateAbandonedCartHTML } = require('../utils/emailTemplates');
 
 // Local dev certificate fallback for Windows environments with SSL interception
 if (process.env.NODE_ENV !== 'production') {
@@ -16,7 +16,7 @@ class EmailService {
    */
   async sendEmail({ to, subject, html, text }) {
     try {
-      const fromAddress = process.env.EMAIL_FROM || 'SUPERLAPTOP Store <onboarding@resend.dev>';
+      const fromAddress = process.env.EMAIL_FROM || 'SUPERLAPTOP Store <ventas@superlaptop.pe>';
 
       logger.info(`[EmailService] Attempting to send email via Resend to: ${to}`);
 
@@ -119,7 +119,35 @@ class EmailService {
     const result = await this.sendEmail({ to: userEmail, subject, html });
     return result.success;
   }
+
+  /**
+   * Abandoned Cart Recovery Reminder Email
+   */
+  async sendAbandonedCartReminder(user, items, reminderNumber = 1) {
+    if (!user || !user.email) return false;
+
+    const baseUrl = process.env.CLIENT_URL || 'https://superlaptop.pe';
+    const checkoutUrl = `${baseUrl}/cart`;
+
+    const subject = reminderNumber >= 2
+      ? 'Último recordatorio: No te quedes sin stock en tu compra - SUPERLAPTOP'
+      : '¿Olvidaste algo? Tus productos te esperan en SUPERLAPTOP';
+
+    const html = generateAbandonedCartHTML({
+      user,
+      items,
+      reminderNumber,
+      checkoutUrl
+    });
+
+    const result = await this.sendEmail({
+      to: user.email,
+      subject,
+      html
+    });
+
+    return result.success;
+  }
 }
 
 module.exports = new EmailService();
-

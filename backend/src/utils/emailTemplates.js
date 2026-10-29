@@ -294,8 +294,142 @@ function generateClaimConfirmationHTML(claim) {
   `;
 }
 
+function generateAbandonedCartHTML({ user, items, reminderNumber = 1, checkoutUrl = 'https://superlaptop.pe/cart' }) {
+  const userName = user?.name || user?.first_name || 'Cliente';
+  const isSecondReminder = reminderNumber >= 2;
+
+  const headerTitle = isSecondReminder
+    ? 'ÚLTIMO RECORDATORIO'
+    : 'CARRITO PENDIENTE';
+
+  const headline = isSecondReminder
+    ? `¿Aún lo estás pensando, ${userName}?`
+    : `¿Olvidaste algo en tu carrito, ${userName}?`;
+
+  const subheadline = isSecondReminder
+    ? 'No queremos que te quedes sin stock. Hemos reservado temporalmente los componentes que seleccionaste, pero están sujetos a disponibilidad inmediata.'
+    : 'Notamos que dejaste algunos productos seleccionados. Te los guardamos para que puedas continuar con tu compra cuando estés listo.';
+
+  let subtotal = 0;
+  const itemsRows = (items || []).map((item) => {
+    const price = Number(item.price || item.unit_price || 0);
+    const qty = Number(item.quantity || 1);
+    const itemTotal = price * qty;
+    subtotal += itemTotal;
+
+    const imgUrl = item.image_url || 'https://via.placeholder.com/80?text=Producto';
+
+    return `
+      <tr style="border-bottom: 1px solid #f1f5f9;">
+        <td style="padding: 12px 8px; width: 64px; vertical-align: middle;">
+          <img src="${imgUrl}" alt="${item.name || 'Producto'}" style="width: 56px; height: 56px; object-fit: contain; border-radius: 8px; background-color: #f8fafc; border: 1px solid #e2e8f0; display: block;" />
+        </td>
+        <td style="padding: 12px 10px; vertical-align: middle;">
+          <div style="font-size: 14px; font-weight: 700; color: #0f172a; line-height: 1.3;">
+            ${item.name || 'Producto'}
+          </div>
+          <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+            Cantidad: <strong>${qty}</strong>
+          </div>
+        </td>
+        <td style="padding: 12px 8px; text-align: right; vertical-align: middle; white-space: nowrap;">
+          <div style="font-size: 14px; font-weight: 800; color: #dc2626;">
+            S/ ${itemTotal.toFixed(2)}
+          </div>
+          ${qty > 1 ? `<div style="font-size: 11px; color: #94a3b8;">(S/ ${price.toFixed(2)} c/u)</div>` : ''}
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8" />
+      <title>${headline}</title>
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #334155;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);">
+        
+        <!-- Header -->
+        <div style="background-color: #0f172a; padding: 24px 30px; text-align: center; border-bottom: 4px solid #dc2626;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -0.5px;">
+            SUPER <span style="color: #ef4444;">LAPTOP</span>
+          </h1>
+          <p style="color: #94a3b8; margin: 6px 0 0 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700;">
+            ${headerTitle}
+          </p>
+        </div>
+
+        <!-- Body Content -->
+        <div style="padding: 30px 24px;">
+          <!-- Notification Pill -->
+          <div style="background-color: ${isSecondReminder ? '#fef2f2' : '#f8fafc'}; border: 1px solid ${isSecondReminder ? '#fecaca' : '#e2e8f0'}; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; text-align: center;">
+            <h2 style="color: ${isSecondReminder ? '#991b1b' : '#0f172a'}; margin: 0 0 6px 0; font-size: 18px; font-weight: 800;">
+              ${headline}
+            </h2>
+            <p style="color: #475569; margin: 0; font-size: 13px; line-height: 1.5;">
+              ${subheadline}
+            </p>
+          </div>
+
+          <!-- Items Table -->
+          <div style="margin-bottom: 24px;">
+            <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #64748b; margin: 0 0 10px 0; font-weight: 700;">
+              Artículos en tu carrito:
+            </h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              ${itemsRows}
+              <tr>
+                <td colspan="2" style="padding: 14px 8px; text-align: right; font-size: 14px; font-weight: 700; color: #0f172a;">
+                  Subtotal estimado:
+                </td>
+                <td style="padding: 14px 8px; text-align: right; font-size: 18px; font-weight: 900; color: #0f172a; white-space: nowrap;">
+                  S/ ${subtotal.toFixed(2)}
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- CTA Button -->
+          <div style="text-align: center; margin: 30px 0 20px 0;">
+            <a href="${checkoutUrl}" style="display: inline-block; background-color: #dc2626; color: #ffffff; text-decoration: none; padding: 14px 36px; font-size: 15px; font-weight: 800; border-radius: 10px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35); text-transform: uppercase; letter-spacing: 0.5px;">
+              Completar mi compra ahora
+            </a>
+            <p style="font-size: 11px; color: #94a3b8; margin: 10px 0 0 0;">
+              Compra 100% segura • Envíos a todo el Perú
+            </p>
+          </div>
+
+          <!-- Benefits Badges -->
+          <div style="background-color: #f8fafc; border-radius: 10px; padding: 14px; margin-top: 24px; border: 1px solid #f1f5f9;">
+            <table style="width: 100%; border-collapse: collapse; text-align: center; font-size: 11px; color: #475569;">
+              <tr>
+                <td style="padding: 4px;">🚚 Envíos express en Lima y provincias</td>
+                <td style="padding: 4px;">🛡️ Garantía oficial de marca</td>
+                <td style="padding: 4px;">💳 Múltiples medios de pago</td>
+              </tr>
+            </table>
+          </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div style="background-color: #f1f5f9; padding: 18px 24px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #e2e8f0;">
+          <p style="margin: 0 0 6px 0; font-weight: 700; color: #475569;">SUPERLAPTOP Store</p>
+          <p style="margin: 0 0 4px 0;">WhatsApp de atención: +51 904 436 463 • Email: ventas@superlaptop.pe</p>
+          <p style="margin: 0; color: #94a3b8;">Si ya compraste o vaciaste tu carrito, puedes ignorar este mensaje.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
 module.exports = {
   generateOrderConfirmationHTML,
-  generateClaimConfirmationHTML
+  generateClaimConfirmationHTML,
+  generateAbandonedCartHTML
 };
 
