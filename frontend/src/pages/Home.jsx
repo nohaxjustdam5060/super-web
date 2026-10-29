@@ -160,7 +160,7 @@ export default function Home() {
 
       {/* 3. Productos Destacados (Carrusel 1 sola fila: 5 en Desktop, 2 en Móvil) */}
       <ProductCarousel
-        title="Productos Destacados"
+        title="Productos sin destacar"
         subtitle=""
         icon={Flame}
         iconClassName="w-6 h-6 text-brand-red fill-brand-red"
