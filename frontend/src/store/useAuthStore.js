@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import axiosClient from '../api/axiosClient';
+import { useCartStore } from './useCartStore';
 
 export const useAuthStore = create((set, get) => ({
   user: JSON.parse(localStorage.getItem('super_user')) || null,
@@ -18,6 +19,10 @@ export const useAuthStore = create((set, get) => ({
       localStorage.setItem('super_user', JSON.stringify(user));
 
       set({ user, accessToken, isAuthenticated: true, loading: false });
+
+      // Trigger automatic merge and fresh cart retrieval from backend
+      useCartStore.getState().syncWithBackendOnLogin().catch(() => {});
+
       return { success: true, user };
     } catch (error) {
       set({ loading: false });
@@ -39,6 +44,10 @@ export const useAuthStore = create((set, get) => ({
       localStorage.setItem('super_user', JSON.stringify(user));
 
       set({ user, accessToken, isAuthenticated: true, loading: false });
+
+      // Associate anonymous local cart items to this newly created account
+      useCartStore.getState().syncWithBackendOnLogin().catch(() => {});
+
       return { success: true, user };
     } catch (error) {
       set({ loading: false });
@@ -54,5 +63,8 @@ export const useAuthStore = create((set, get) => ({
     localStorage.removeItem('super_refresh_token');
     localStorage.removeItem('super_user');
     set({ user: null, accessToken: null, isAuthenticated: false });
+
+    // Clean up local browser cart on logout to ensure user privacy and fresh visitor state
+    useCartStore.getState().clearCart();
   }
 }));

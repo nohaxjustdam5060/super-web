@@ -4,14 +4,15 @@ import axiosClient from '../api/axiosClient';
 export const useCartStore = create((set, get) => ({
   items: JSON.parse(localStorage.getItem('super_local_cart')) || [],
   isOpen: false,
+  warnings: [], // Sutil notice array from stock/availability adjustments
 
   toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
   openCart: () => set({ isOpen: true }),
   closeCart: () => set({ isOpen: false }),
+  clearWarnings: () => set({ warnings: [] }),
 
   addItem: (product, quantity = 1) => {
     if (!product || Number(product.offer_price || product.price) <= 0) {
-      // No permitir agregar al carrito productos con precio 0 o inválido
       return;
     }
 
@@ -94,12 +95,64 @@ export const useCartStore = create((set, get) => ({
 
   clearCart: () => {
     localStorage.removeItem('super_local_cart');
-    set({ items: [] });
+    set({ items: [], warnings: [] });
 
     // Sync with backend if user is authenticated (fire-and-forget, zero latency)
     const token = localStorage.getItem('super_access_token');
     if (token) {
       axiosClient.delete('/cart/clear').catch(() => {});
+    }
+  },
+
+  /**
+   * Sync & Merge local items with DB upon Login or Register.
+   * Sends ONLY product_id and quantity (never client-sent prices).
+   * Overrides local state with authoritative DB response.
+   */
+  syncWithBackendOnLogin: async () => {
+    const token = localStorage.getItem('super_access_token');
+    if (!token) return;
+
+    try {
+      const { items } = get();
+      const localItemsPayload = (items || []).map((i) => ({
+        product_id: i.product_id || i.id,
+        quantity: i.quantity || 1
+      }));
+
+      const res = await axiosClient.post('/cart/sync-login', { localItems: localItemsPayload });
+      if (res.data?.success) {
+        const remoteItems = res.data.items || [];
+        localStorage.setItem('super_local_cart', JSON.stringify(remoteItems));
+        set({
+          items: remoteItems,
+          warnings: res.data.warnings || []
+        });
+      }
+    } catch (err) {
+      console.warn('[CartStore] Error merging cart on login:', err?.message || err);
+    }
+  },
+
+  /**
+   * Quietly refresh stock and active prices from backend on page load if authenticated
+   */
+  refreshCartQuietly: async () => {
+    const token = localStorage.getItem('super_access_token');
+    if (!token) return;
+
+    try {
+      const res = await axiosClient.get('/cart');
+      if (res.data?.success) {
+        const remoteItems = res.data.items || [];
+        localStorage.setItem('super_local_cart', JSON.stringify(remoteItems));
+        set({
+          items: remoteItems,
+          warnings: res.data.warnings || []
+        });
+      }
+    } catch (err) {
+      // Quiet background failure without blocking user UI
     }
   },
 

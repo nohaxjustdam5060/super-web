@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -25,6 +25,7 @@ import ComplaintsBookPage from './pages/ComplaintsBookPage';
 import PoliciesPage from './pages/PoliciesPage';
 
 import { useAuthStore } from './store/useAuthStore';
+import { useCartStore } from './store/useCartStore';
 
 function ProtectedAdminRoute({ children }) {
   const user = useAuthStore((state) => state.user);
@@ -35,6 +36,16 @@ function ProtectedAdminRoute({ children }) {
 }
 
 export default function App() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const refreshCartQuietly = useCartStore((state) => state.refreshCartQuietly);
+
+  // Quietly validate cart stock and prices against DB on initial app load if logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshCartQuietly();
+    }
+  }, [isAuthenticated, refreshCartQuietly]);
+
   return (
     <div className="min-h-screen flex flex-col justify-between bg-gray-50 text-slate-900 font-sans">
       <ScrollToTop />

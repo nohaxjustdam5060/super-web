@@ -4,6 +4,7 @@ const cartController = require('../controllers/cartController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
 router.get('/', authMiddleware, cartController.getCart);
+router.post('/sync-login', authMiddleware, cartController.syncAndMergeCart);
 router.post('/add', authMiddleware, cartController.addToCart);
 router.put('/item/:item_id', authMiddleware, cartController.updateQuantity);
 router.delete('/item/:item_id', authMiddleware, cartController.removeFromCart);

@@ -1,12 +1,12 @@
 import React, { memo, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, MessageSquare } from 'lucide-react';
+import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, MessageSquare, AlertCircle } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import { generateWhatsAppOrderUrl } from '../utils/whatsappMessage';
 import ProductImage from './ProductImage';
 
 const CartDrawer = memo(function CartDrawer() {
-  const { items, isOpen, closeCart, updateQuantity, removeItem, getSubtotal } = useCartStore();
+  const { items, isOpen, warnings, closeCart, updateQuantity, removeItem, getSubtotal, clearWarnings } = useCartStore();
   const navigate = useNavigate();
 
   // Lock body scroll when cart is open
@@ -91,6 +91,33 @@ const CartDrawer = memo(function CartDrawer() {
               <X className="w-6 h-6" />
             </button>
           </div>
+
+          {/* Sutil Warning Notice Banner if stock was adjusted or purged */}
+          {warnings && warnings.length > 0 && (
+            <div className="bg-amber-50 border-b border-amber-200 p-3 flex items-start justify-between text-xs text-amber-900 animate-fadeIn">
+              <div className="flex items-start space-x-2">
+                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-bold">Aviso de disponibilidad:</p>
+                  {warnings.slice(0, 2).map((w, idx) => (
+                    <p key={idx} className="text-amber-800 leading-tight">
+                      • {w.message}
+                    </p>
+                  ))}
+                  {warnings.length > 2 && (
+                    <p className="text-amber-700 italic">Y otros {warnings.length - 2} productos ajustados.</p>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={clearWarnings}
+                className="text-amber-500 hover:text-amber-800 p-0.5 ml-2"
+                title="Cerrar aviso"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
 
           {/* Item List */}
           <div className="flex-1 overflow-y-auto p-5 space-y-4">
