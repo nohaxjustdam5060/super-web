@@ -33,7 +33,7 @@ class CartReminderService {
           {
             model: User,
             as: 'user',
-            attributes: ['id', 'name', 'first_name', 'last_name', 'email', 'is_active']
+            attributes: ['id', 'name', 'email', 'is_active']
           },
           {
             model: CartItem,
