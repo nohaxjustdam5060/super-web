@@ -5,18 +5,14 @@ import ProductCard from './ProductCard';
 
 export default function CategoryBannerCarousel({
   title,
-  // subtitle,
   icon: Icon,
   iconClassName = 'w-6 h-6 text-brand-red',
   viewAllLink,
   viewAllText = 'Ver Todo',
   // Banner Props
   bannerTitle,
-  bannerSubtitle,
-  bannerTag,
   bannerImage,
   bannerLink,
-  bannerTagBg = 'bg-brand-red/20 border-brand-red/30 text-brand-red-accent',
   bannerBorderColor = 'border-slate-800/90 hover:border-brand-red/60',
   // Products & Carousel Props
   products = [],
@@ -151,44 +147,18 @@ export default function CategoryBannerCarousel({
 
       {/* Main Container: Left Banner + Right Product Carousel */}
       <div className="flex flex-col lg:flex-row gap-4 sm:gap-5 items-stretch">
-        {/* Left Column: Vertical Promotional Banner */}
+        {/* Left Column: Vertical Promotional Banner (Clean Full Image) */}
         <div className="w-full lg:w-[280px] xl:w-[320px] 2xl:w-[340px] flex-shrink-0 flex flex-col py-1.5">
           <Link
             to={bannerLink}
-            className={`relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl border ${bannerBorderColor} flex flex-col justify-end p-6 sm:p-7 text-white transition-all duration-300 ease-out cursor-pointer isolate transform-gpu w-full h-[220px] sm:h-[260px] lg:h-full lg:min-h-0 flex-1 group hover:scale-[1.01]`}
+            className={`relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl border ${bannerBorderColor} block transition-all duration-300 ease-out cursor-pointer isolate transform-gpu w-full aspect-[9/16] sm:aspect-[4/5] sm:max-h-[460px] lg:aspect-auto lg:h-full lg:min-h-0 flex-1 group hover:scale-[1.01]`}
           >
-            {/* Background Image */}
+            {/* Background Image: Clean, full visibility without dark overlays */}
             <img
               src={bannerImage}
               alt={bannerTitle || title}
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out z-0 transform-gpu will-change-transform"
             />
-            {/* Dark Gradient Overlay for Readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-slate-900/25 z-10 pointer-events-none" />
-            {/* Top Accent Stripe */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-red via-brand-red-accent to-transparent z-10" />
-
-            {/* Banner Overlay Content */}
-            <div className="space-y-2.5 z-20">
-              {bannerTag && (
-                <span className={`inline-block text-[10px] sm:text-[11px] font-black uppercase tracking-widest border px-2.5 py-0.5 rounded-md ${bannerTagBg}`}>
-                  {bannerTag}
-                </span>
-              )}
-              <h3 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight font-heading text-white group-hover:text-brand-red-accent transition-colors duration-200">
-                {bannerTitle || title}
-              </h3>
-              {bannerSubtitle && (
-                <p className="text-xs text-gray-200 line-clamp-2 font-medium">
-                  {bannerSubtitle}
-                </p>
-              )}
-
-              <div className="pt-2 flex items-center text-xs font-black uppercase tracking-wider text-white group-hover:text-brand-red transition-colors duration-200 space-x-1.5">
-                <span>VER CATÁLOGO</span>
-                <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1.5 transition-transform duration-300 ease-out" />
-              </div>
-            </div>
           </Link>
         </div>
 

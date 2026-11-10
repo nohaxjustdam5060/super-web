@@ -245,11 +245,8 @@ export default function Home() {
         viewAllLink="/catalog?category_id=laptops-gaming"
         viewAllText="Ver Todo Gaming"
         bannerTitle="Laptops Gaming"
-        bannerSubtitle=""
-        bannerTag="ALTO RENDIMIENTO"
-        bannerTagBg="bg-brand-red/20 border-brand-red/40 text-brand-red-accent"
         bannerBorderColor="border-brand-red/40 hover:border-brand-red/80"
-        bannerImage="/images/compressed-laptop-gaming.webp"
+        bannerImage="/images/banner-gaming-strix.jpg"
         bannerLink="/catalog?category_id=laptops-gaming"
         products={gamingProducts}
         loading={loadingGaming}
@@ -262,11 +259,8 @@ export default function Home() {
         viewAllLink="/catalog?category_id=laptops-consumo"
         viewAllText="Ver Todo Consumo"
         bannerTitle="Laptops de Consumo"
-        bannerSubtitle=""
-        bannerTag="USO DIARIO & ESTUDIO"
-        bannerTagBg="bg-sky-500/20 border-sky-500/40 text-sky-300"
         bannerBorderColor="border-slate-800/90 hover:border-sky-500/60"
-        bannerImage="/images/laptop_banner.jpg"
+        bannerImage="/images/banner-consumo-hp.jpg"
         bannerLink="/catalog?category_id=laptops-consumo"
         products={consumoProducts}
         loading={loadingConsumo}
@@ -279,11 +273,8 @@ export default function Home() {
         viewAllLink="/catalog?category_id=laptops"
         viewAllText="Ver Todas las Laptops"
         bannerTitle="Convertibles & ThinkBook"
-        bannerSubtitle=""
-        bannerTag="PRODUCTIVIDAD FLEXIBLE"
-        bannerTagBg="bg-purple-500/20 border-purple-500/40 text-purple-300"
         bannerBorderColor="border-slate-800/90 hover:border-purple-500/60"
-        bannerImage="https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&auto=format&fit=crop"
+        bannerImage="/images/banner-thinkpad-l16.jpg"
         bannerLink="/catalog?category_id=laptops"
         products={convertiblesProducts}
         loading={loadingConvertibles}
@@ -296,11 +287,8 @@ export default function Home() {
         viewAllLink="/catalog?category_id=computadoras-y-componentes"
         viewAllText="Ver Todo Hardware"
         bannerTitle="Computadoras y Componentes"
-        bannerSubtitle=""
-        bannerTag="HARDWARE & POTENCIA"
-        bannerTagBg="bg-amber-500/20 border-amber-500/40 text-amber-300"
         bannerBorderColor="border-slate-800/90 hover:border-amber-500/60"
-        bannerImage="/images/compressed-pc-gaming.webp"
+        bannerImage="/images/banner-computadoras-asus.jpg"
         bannerLink="/catalog?category_id=computadoras-y-componentes"
         products={computadorasProducts}
         loading={loadingComputadoras}
