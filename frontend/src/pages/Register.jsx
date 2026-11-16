@@ -34,19 +34,19 @@ export default function Register() {
           <div className="inline-flex bg-brand-red text-white p-3 rounded-2xl shadow-md mb-2">
             <UserPlus className="w-6 h-6" />
           </div>
-          <h2 className="text-2xl font-black text-gray-900">Crear Cuenta SUPERLAPTOP</h2>
+          <h2 className="text-2xl font-semibold text-gray-900">Crear Cuenta SUPERLAPTOP</h2>
           <p className="text-xs text-gray-500">Únete a la plataforma tecnológica líder</p>
         </div>
 
         {errorMsg && (
-          <div className="p-3 bg-red-50 text-red-700 text-xs font-bold rounded-xl border border-red-200">
+          <div className="p-3 bg-red-50 text-red-700 text-xs font-medium rounded-xl border border-red-200">
             {errorMsg}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Nombre Completo</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Nombre Completo</label>
             <div className="relative">
               <User className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" />
               <input
@@ -61,7 +61,7 @@ export default function Register() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Correo Electrónico</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Correo Electrónico</label>
             <div className="relative">
               <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" />
               <input
@@ -76,7 +76,7 @@ export default function Register() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Teléfono Móvil</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Móvil</label>
             <div className="relative">
               <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" />
               <input
@@ -91,7 +91,7 @@ export default function Register() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Contraseña</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Contraseña</label>
             <div className="relative">
               <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" />
               <input
@@ -108,7 +108,7 @@ export default function Register() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition-transform active:scale-95 text-sm cursor-pointer"
+            className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg transition-transform active:scale-95 text-sm cursor-pointer"
           >
             {loading ? 'Creando...' : 'Registrarme'}
           </button>
@@ -116,7 +116,7 @@ export default function Register() {
 
         <div className="text-center text-xs text-gray-500 pt-2 border-t border-gray-100">
           ¿Ya tienes cuenta?{' '}
-          <Link to="/login" state={location.state} className="text-brand-red font-bold hover:underline">
+          <Link to="/login" state={location.state} className="text-brand-red font-medium hover:underline">
             Inicia sesión
           </Link>
         </div>

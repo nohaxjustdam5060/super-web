@@ -72,7 +72,7 @@ export default function Footer() {
 
         {/* Col 2: Categorías Principales */}
         <div>
-          <h4 className="text-white font-bold text-base mb-4 border-b border-brand-red inline-block pb-1">Categorías Principales</h4>
+          <h4 className="text-white font-medium text-base mb-4 border-b border-brand-red inline-block pb-1">Categorías Principales</h4>
           <ul className="space-y-2.5 text-sm">
             <li><Link to="/catalog?category_id=laptops" className="hover:text-brand-red-accent transition-colors">Laptops</Link></li>
             <li><Link to="/catalog?category_id=computadoras-y-componentes" className="hover:text-brand-red-accent transition-colors">Computadoras y Componentes</Link></li>
@@ -85,7 +85,7 @@ export default function Footer() {
 
         {/* Col 3: Componentes de PC */}
         <div>
-          <h4 className="text-white font-bold text-base mb-4 border-b border-brand-red-accent inline-block pb-1">Componentes de PC</h4>
+          <h4 className="text-white font-medium text-base mb-4 border-b border-brand-red-accent inline-block pb-1">Componentes de PC</h4>
           <ul className="space-y-2.5 text-sm">
             <li><Link to="/catalog?category_id=procesadores" className="hover:text-brand-red-accent transition-colors">Procesadores</Link></li>
             <li><Link to="/catalog?category_id=tarjetas-de-video" className="hover:text-brand-red-accent transition-colors">Tarjetas de Video</Link></li>
@@ -97,7 +97,7 @@ export default function Footer() {
 
         {/* Col 4: Servicio al Cliente */}
         <div>
-          <h4 className="text-white font-bold text-base mb-4 border-b border-brand-red-accent inline-block pb-1">Servicio al Cliente</h4>
+          <h4 className="text-white font-medium text-base mb-4 border-b border-brand-red-accent inline-block pb-1">Servicio al Cliente</h4>
           <ul className="space-y-2.5 text-sm">
             <li><Link to="/profile" className="hover:text-white transition-colors">Estado de mi Pedido</Link></li>
             <li><Link to="/politicas?tab=envios" className="hover:text-white transition-colors">Envíos y Despacho</Link></li>
@@ -110,7 +110,7 @@ export default function Footer() {
 
         {/* Col 5: Medios de Pago & Libro de Reclamaciones */}
         <div>
-          <h4 className="text-white font-bold text-base mb-4 border-b border-brand-red-accent inline-block pb-1">Medios de Pago</h4>
+          <h4 className="text-white font-medium text-base mb-4 border-b border-brand-red-accent inline-block pb-1">Medios de Pago</h4>
           <p className="text-xs text-gray-400 mb-3">Aceptamos todas las tarjetas y pagos digitales:</p>
           <PaymentBadges />
 
@@ -124,7 +124,7 @@ export default function Footer() {
                 <BookOpen className="w-5 h-5 text-brand-red" />
               </div>
               <div>
-                <span className="text-xs font-bold text-white block group-hover:text-brand-red-accent transition-colors">
+                <span className="text-xs font-medium text-white block group-hover:text-brand-red-accent transition-colors">
                   Libro de Reclamaciones
                 </span>
                 <span className="text-[10px] text-gray-400 block">

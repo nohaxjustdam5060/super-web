@@ -12,7 +12,7 @@ const renderShippingBadge = (shippingMethodStr, shippingAddress) => {
 
   if (sm.includes('recojo') || sm.includes('pickup') || sm.includes('tienda')) {
     return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800 border border-purple-200">
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-purple-100 text-purple-800 border border-purple-200">
         Recojo en Tienda
       </span>
     );
@@ -20,14 +20,14 @@ const renderShippingBadge = (shippingMethodStr, shippingAddress) => {
 
   if (sm.includes('provincia') || sm.includes('agencia') || (dept && !dept.includes('lima') && !dept.includes('callao'))) {
     return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200">
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800 border border-amber-200">
         Envío a Provincia
       </span>
     );
   }
 
   return (
-    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800 border border-blue-200">
+    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-800 border border-blue-200">
       Envío a Lima y Callao
     </span>
   );
@@ -119,7 +119,7 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
         
         {/* Toast Notice Banner */}
         {toastNotice && (
-          <div className="bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold p-3 rounded-2xl flex items-center justify-between animate-fadeIn shadow-sm">
+          <div className="bg-blue-50 border border-blue-200 text-blue-900 text-xs font-medium p-3 rounded-2xl flex items-center justify-between animate-fadeIn shadow-sm">
             <div className="flex items-center space-x-2">
               <Info className="w-4 h-4 text-brand-blue flex-shrink-0" />
               <span>{toastNotice}</span>
@@ -127,7 +127,7 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
             <button 
               type="button" 
               onClick={() => setToastNotice(null)} 
-              className="text-blue-500 hover:text-blue-800 p-1 font-black"
+              className="text-blue-500 hover:text-blue-800 p-1 font-semibold"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -138,7 +138,7 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
         <div className="flex items-start justify-between border-b border-gray-100 pb-4">
           <div>
             <div className="flex items-center space-x-3 mb-1">
-              <h2 className="text-2xl font-black text-gray-900">Orden #{localOrder.order_number}</h2>
+              <h2 className="text-2xl font-semibold text-gray-900">Orden #{localOrder.order_number}</h2>
               {renderShippingBadge(localOrder.shipping_method, localOrder.shipping_address)}
             </div>
             <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 font-medium">
@@ -146,7 +146,7 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
                 <Calendar className="w-3.5 h-3.5 mr-1 text-gray-400" />
                 {new Date(localOrder.createdAt).toLocaleString('es-PE', { dateStyle: 'medium', timeStyle: 'short' })}
               </span>
-              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase border ${
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase border ${
                 localOrder.status === 'paid'
                   ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
                   : localOrder.status === 'payment_review'
@@ -158,7 +158,7 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
                 Estado: {localOrder.status === 'paid' ? 'Pagado' : localOrder.status === 'payment_review' ? 'En Revisión (4h)' : localOrder.status === 'cancelled' ? 'Cancelado' : localOrder.status}
               </span>
               {localOrder.status === 'payment_review' && localOrder.reservation_expires_at && (
-                <span className="text-[11px] text-amber-800 font-bold bg-amber-50 border border-amber-300 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <span className="text-[11px] text-amber-800 font-medium bg-amber-50 border border-amber-300 px-2.5 py-0.5 rounded-full flex items-center gap-1">
                   <Clock className="w-3 h-3 text-amber-600" />
                   Reserva válida hasta: {new Date(localOrder.reservation_expires_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}
                 </span>
@@ -181,7 +181,7 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
           <div className="bg-red-50 border-2 border-red-400 text-red-950 p-4 rounded-2xl flex items-start space-x-3 animate-fadeIn shadow-sm">
             <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div className="text-xs space-y-1">
-              <p className="font-black uppercase tracking-wider text-red-800">
+              <p className="font-semibold uppercase tracking-wider text-red-800">
                 ⚠️ Alerta: Stock de Proveedor Mayorista Insuficiente
               </p>
               <p className="text-red-700 font-semibold leading-relaxed">
@@ -196,21 +196,21 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
             <div className="flex items-center space-x-2">
               <Receipt className="w-4 h-4 text-brand-red" />
-              <h4 className="text-xs font-black uppercase tracking-wider text-slate-200">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-200">
                 Datos Tributarios para Emisión Manual (NubeFact / SUNAT)
               </h4>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-brand-blue/30 text-blue-300 border border-blue-500/30">
+              <span className="px-2 py-0.5 rounded text-[10px] font-medium uppercase bg-brand-blue/30 text-blue-300 border border-blue-500/30">
                 {invType}
               </span>
               {isInvoiceIssued ? (
-                <span className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center space-x-1">
+                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center space-x-1">
                   <CheckCircle2 className="w-3 h-3 mr-1" />
                   <span>Facturado ({localOrder.invoice_number})</span>
                 </span>
               ) : (
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/20 text-amber-300 border border-amber-500/40">
                   Pendiente de Emisión
                 </span>
               )}
@@ -222,14 +222,14 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
             {/* Document Number / RUC */}
             <div className="bg-slate-800/80 rounded-xl p-2.5 border border-slate-700/60 flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-slate-400 font-bold block">{invDocType}:</span>
-                <span className="font-mono font-black text-sm text-white select-all">{invDocNum || '—'}</span>
+                <span className="text-[10px] text-slate-400 font-medium block">{invDocType}:</span>
+                <span className="font-mono font-semibold text-sm text-white select-all">{invDocNum || '—'}</span>
               </div>
               <button
                 type="button"
                 onClick={() => copyToClipboard(invDocNum, 'doc')}
                 disabled={!invDocNum}
-                className="px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-[11px] font-bold flex items-center space-x-1 transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
+                className="px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-[11px] font-medium flex items-center space-x-1 transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
                 title="Copiar número de documento"
               >
                 {copiedKey === 'doc' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -240,14 +240,14 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
             {/* Business / Client Name */}
             <div className="bg-slate-800/80 rounded-xl p-2.5 border border-slate-700/60 flex items-center justify-between">
               <div className="min-w-0 pr-2">
-                <span className="text-[10px] text-slate-400 font-bold block">Razón Social / Nombre:</span>
-                <span className="font-bold text-xs text-white truncate block select-all" title={invName}>{invName || '—'}</span>
+                <span className="text-[10px] text-slate-400 font-medium block">Razón Social / Nombre:</span>
+                <span className="font-medium text-xs text-white truncate block select-all" title={invName}>{invName || '—'}</span>
               </div>
               <button
                 type="button"
                 onClick={() => copyToClipboard(invName, 'name')}
                 disabled={!invName}
-                className="px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-[11px] font-bold flex items-center space-x-1 transition-all active:scale-95 disabled:opacity-40 flex-shrink-0 cursor-pointer"
+                className="px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-[11px] font-medium flex items-center space-x-1 transition-all active:scale-95 disabled:opacity-40 flex-shrink-0 cursor-pointer"
                 title="Copiar nombre / razón social"
               >
                 {copiedKey === 'name' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -258,14 +258,14 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
             {/* Fiscal Address */}
             <div className="bg-slate-800/80 rounded-xl p-2.5 border border-slate-700/60 flex items-center justify-between sm:col-span-2">
               <div className="min-w-0 pr-2">
-                <span className="text-[10px] text-slate-400 font-bold block">Domicilio Fiscal:</span>
+                <span className="text-[10px] text-slate-400 font-medium block">Domicilio Fiscal:</span>
                 <span className="font-medium text-xs text-slate-300 truncate block select-all" title={invAddress}>{invAddress || '—'}</span>
               </div>
               <button
                 type="button"
                 onClick={() => copyToClipboard(invAddress, 'address')}
                 disabled={!invAddress}
-                className="px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-[11px] font-bold flex items-center space-x-1 transition-all active:scale-95 disabled:opacity-40 flex-shrink-0 cursor-pointer"
+                className="px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-[11px] font-medium flex items-center space-x-1 transition-all active:scale-95 disabled:opacity-40 flex-shrink-0 cursor-pointer"
                 title="Copiar dirección fiscal"
               >
                 {copiedKey === 'address' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -288,7 +288,7 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
             <button
               type="submit"
               disabled={isSavingInvoice}
-              className="w-full sm:w-auto bg-brand-red hover:bg-red-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center justify-center space-x-1.5 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex-shrink-0 shadow"
+              className="w-full sm:w-auto bg-brand-red hover:bg-red-700 text-white font-medium px-4 py-2 rounded-xl text-xs flex items-center justify-center space-x-1.5 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex-shrink-0 shadow"
             >
               <Save className="w-3.5 h-3.5" />
               <span>{isSavingInvoice ? 'Guardando...' : 'Guardar Comprobante'}</span>
@@ -298,7 +298,7 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
 
         {/* Modal Body: Products List */}
         <div className="space-y-3">
-          <h4 className="font-extrabold text-gray-900 text-xs uppercase tracking-wider flex items-center text-brand-blue">
+          <h4 className="font-semibold text-gray-900 text-xs uppercase tracking-wider flex items-center text-brand-blue">
             <Package className="w-4 h-4 mr-1.5 text-brand-red" /> Productos del Pedido ({(localOrder.items || []).length})
           </h4>
           <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200 divide-y divide-gray-200/60 max-h-56 overflow-y-auto space-y-2">
@@ -331,10 +331,10 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
                         />
                       </div>
                       <div>
-                        <p className="font-bold text-gray-900 line-clamp-1">{item.product_name || item.product?.name}</p>
+                        <p className="font-medium text-gray-900 line-clamp-1">{item.product_name || item.product?.name}</p>
                         <div className="flex items-center gap-1.5 my-0.5">
                           <span className="text-[10px] text-gray-500 font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200 inline-flex items-center">
-                            SKU: <strong className="text-gray-900 font-bold ml-1 select-all">{skuCode || 'N/A'}</strong>
+                            SKU: <strong className="text-gray-900 font-medium ml-1 select-all">{skuCode || 'N/A'}</strong>
                           </span>
                           {skuCode && skuCode !== 'N/A' && (
                             <button
@@ -346,7 +346,7 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
                               {isCopied ? (
                                 <>
                                   <Check className="w-2.5 h-2.5 text-emerald-600 flex-shrink-0" />
-                                  <span className="text-emerald-700 font-bold text-[9px]">¡Copiado!</span>
+                                  <span className="text-emerald-700 font-medium text-[9px]">¡Copiado!</span>
                                 </>
                               ) : (
                                 <>
@@ -360,7 +360,7 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
                         <p className="text-[11px] text-gray-600 font-semibold">S/ {unitPrice.toFixed(2)} × {item.quantity} {item.quantity === 1 ? 'unidad' : 'unidades'}</p>
                       </div>
                     </div>
-                    <p className="font-black text-gray-900 text-sm whitespace-nowrap">S/ {itemSubtotal.toFixed(2)}</p>
+                    <p className="font-semibold text-gray-900 text-sm whitespace-nowrap">S/ {itemSubtotal.toFixed(2)}</p>
                   </div>
                 );
               })
@@ -372,7 +372,7 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Customer & Document Information */}
           <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-2 text-xs">
-            <h4 className="font-extrabold text-gray-900 text-xs uppercase tracking-wider flex items-center text-brand-blue">
+            <h4 className="font-semibold text-gray-900 text-xs uppercase tracking-wider flex items-center text-brand-blue">
               <User className="w-3.5 h-3.5 mr-1.5 text-brand-red" /> Datos del Cliente & Comprobante
             </h4>
             <div className="space-y-1 text-gray-700">
@@ -385,28 +385,28 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
               
               <div className="pt-2 border-t border-gray-200 mt-2 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <p><strong>Tipo:</strong> <span className="uppercase font-bold text-brand-blue">{localOrder.invoice_info?.invoice_type || 'Boleta'}</span></p>
+                  <p><strong>Tipo:</strong> <span className="uppercase font-medium text-brand-blue">{localOrder.invoice_info?.invoice_type || 'Boleta'}</span></p>
                   {isInvoiceIssued ? (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
                       <CheckCircle2 className="w-2.5 h-2.5 mr-1 text-emerald-600" /> Facturado
                     </span>
                   ) : (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700 border border-amber-200">
                       Pendiente
                     </span>
                   )}
                 </div>
 
-                <p><strong>{localOrder.invoice_info?.document_type || 'DNI'}:</strong> <span className="font-mono font-bold text-gray-900">{localOrder.invoice_info?.document_number || '—'}</span></p>
+                <p><strong>{localOrder.invoice_info?.document_type || 'DNI'}:</strong> <span className="font-mono font-medium text-gray-900">{localOrder.invoice_info?.document_number || '—'}</span></p>
                 {localOrder.invoice_info?.company_name && <p><strong>Razón Social:</strong> {localOrder.invoice_info.company_name}</p>}
-                {seriesNum && <p><strong>N° Comprobante:</strong> <span className="font-mono font-bold text-emerald-700">{seriesNum}</span></p>}
+                {seriesNum && <p><strong>N° Comprobante:</strong> <span className="font-mono font-medium text-emerald-700">{seriesNum}</span></p>}
               </div>
             </div>
           </div>
 
           {/* Delivery Address */}
           <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-2 text-xs">
-            <h4 className="font-extrabold text-gray-900 text-xs uppercase tracking-wider flex items-center text-brand-blue">
+            <h4 className="font-semibold text-gray-900 text-xs uppercase tracking-wider flex items-center text-brand-blue">
               <MapPin className="w-3.5 h-3.5 mr-1.5 text-brand-red" /> Dirección de Entrega
             </h4>
             <div className="space-y-1 text-gray-700">
@@ -421,25 +421,25 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
 
         {/* Modal Body: Payment & Financial Summary */}
         <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2 text-xs">
-          <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider flex items-center">
+          <h4 className="font-semibold text-slate-900 text-xs uppercase tracking-wider flex items-center">
             <CreditCard className="w-3.5 h-3.5 mr-1.5 text-brand-blue" /> Resumen de Pago & Transacción
           </h4>
           <div className="space-y-1">
             <div className="flex justify-between text-gray-600">
               <span>Subtotal Productos:</span>
-              <span className="font-mono font-bold">S/ {Number(localOrder.subtotal).toFixed(2)}</span>
+              <span className="font-mono font-medium">S/ {Number(localOrder.subtotal).toFixed(2)}</span>
             </div>
             {Number(localOrder.discount_amount) > 0 && (
               <div className="flex justify-between text-emerald-600 font-semibold">
                 <span>Descuento ({localOrder.coupon_code || 'Cupón'}):</span>
-                <span className="font-mono font-bold">- S/ {Number(localOrder.discount_amount).toFixed(2)}</span>
+                <span className="font-mono font-medium">- S/ {Number(localOrder.discount_amount).toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between text-gray-600">
               <span>Costo de Envío:</span>
-              <span className="font-mono font-bold">S/ {Number(localOrder.shipping_cost).toFixed(2)}</span>
+              <span className="font-mono font-medium">S/ {Number(localOrder.shipping_cost).toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-sm font-black text-gray-900 pt-2 border-t border-slate-200">
+            <div className="flex justify-between text-sm font-semibold text-gray-900 pt-2 border-t border-slate-200">
               <span>Monto Total:</span>
               <span className="text-brand-red font-mono">S/ {Number(localOrder.total).toFixed(2)}</span>
             </div>
@@ -456,7 +456,7 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
                 ? 'Mercado Pago (Tarjeta de Débito)'
                 : 'Mercado Pago'}
             </p>
-            {localOrder.mp_payment_id && <p><strong>ID Pago Mercado Pago:</strong> <span className="font-mono text-gray-800 font-bold">{localOrder.mp_payment_id}</span></p>}
+            {localOrder.mp_payment_id && <p><strong>ID Pago Mercado Pago:</strong> <span className="font-mono text-gray-800 font-medium">{localOrder.mp_payment_id}</span></p>}
             {localOrder.preference_id && <p><strong>ID Preferencia MP:</strong> <span className="font-mono text-gray-400 text-[10px]">{localOrder.preference_id}</span></p>}
           </div>
         </div>
@@ -468,7 +468,7 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
               type="button"
               onClick={() => onCancelOrder(localOrder.id)}
               disabled={cancellingId === localOrder.id}
-              className="w-full sm:w-auto bg-red-50 hover:bg-red-100 text-red-700 font-extrabold px-4 py-2.5 rounded-xl text-xs border border-red-200 transition-all active:scale-95 disabled:opacity-50 inline-flex items-center justify-center space-x-1.5 cursor-pointer"
+              className="w-full sm:w-auto bg-red-50 hover:bg-red-100 text-red-700 font-semibold px-4 py-2.5 rounded-xl text-xs border border-red-200 transition-all active:scale-95 disabled:opacity-50 inline-flex items-center justify-center space-x-1.5 cursor-pointer"
             >
               <X className="w-4 h-4" />
               <span>{cancellingId === localOrder.id ? 'Cancelando...' : 'Cancelar Orden y Liberar Stock'}</span>
@@ -480,7 +480,7 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
               type="button"
               onClick={() => onVerifyBankTransfer(localOrder.id)}
               disabled={verifyingId === localOrder.id}
-              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs shadow transition-all active:scale-95 disabled:opacity-50 inline-flex items-center justify-center space-x-1.5 cursor-pointer"
+              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-2.5 rounded-xl text-xs shadow transition-all active:scale-95 disabled:opacity-50 inline-flex items-center justify-center space-x-1.5 cursor-pointer"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>{verifyingId === localOrder.id ? 'Verificando...' : 'Verificar Pago (Aprobar)'}</span>
@@ -490,7 +490,7 @@ const OrderDetailsModal = memo(function OrderDetailsModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto bg-brand-dark hover:bg-gray-800 text-white font-extrabold px-6 py-2.5 rounded-xl text-xs transition-all active:scale-95 shadow-md cursor-pointer"
+            className="w-full sm:w-auto bg-brand-dark hover:bg-gray-800 text-white font-semibold px-6 py-2.5 rounded-xl text-xs transition-all active:scale-95 shadow-md cursor-pointer"
           >
             Cerrar Detalle
           </button>

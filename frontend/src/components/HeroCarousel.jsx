@@ -134,21 +134,21 @@ export default function HeroCarousel() {
                 <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
                   <Truck className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
                 </div>
-                <span className="text-white font-bold text-xs whitespace-nowrap">Envío Express a Todo el Perú</span>
+                <span className="text-white font-medium text-xs whitespace-nowrap">Envío Express a Todo el Perú</span>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
                 <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
                   <ShieldCheck className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
                 </div>
-                <span className="text-white font-bold text-xs whitespace-nowrap">Garantía Oficial E-Commerce</span>
+                <span className="text-white font-medium text-xs whitespace-nowrap">Garantía Oficial E-Commerce</span>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
                 <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
                   <CreditCard className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
                 </div>
-                <span className="text-white font-bold text-xs whitespace-nowrap">Medios de Pago Seguros</span>
+                <span className="text-white font-medium text-xs whitespace-nowrap">Medios de Pago Seguros</span>
               </div>
             </div>
 
@@ -158,21 +158,21 @@ export default function HeroCarousel() {
                 <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
                   <Truck className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
                 </div>
-                <span className="text-white font-bold text-xs whitespace-nowrap">Envío Express a Todo el Perú</span>
+                <span className="text-white font-medium text-xs whitespace-nowrap">Envío Express a Todo el Perú</span>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
                 <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
                   <ShieldCheck className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
                 </div>
-                <span className="text-white font-bold text-xs whitespace-nowrap">Garantía Oficial E-Commerce</span>
+                <span className="text-white font-medium text-xs whitespace-nowrap">Garantía Oficial E-Commerce</span>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
                 <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
                   <CreditCard className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
                 </div>
-                <span className="text-white font-bold text-xs whitespace-nowrap">Medios de Pago Seguros</span>
+                <span className="text-white font-medium text-xs whitespace-nowrap">Medios de Pago Seguros</span>
               </div>
             </div>
           </div>
@@ -184,7 +184,7 @@ export default function HeroCarousel() {
             <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
               <Truck className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
             </div>
-            <span className="text-white font-bold text-xs sm:text-xs md:text-sm whitespace-nowrap">Envío Express a Todo el Perú</span>
+            <span className="text-white font-medium text-xs sm:text-xs md:text-sm whitespace-nowrap">Envío Express a Todo el Perú</span>
           </div>
 
           <div className="w-px h-4 bg-slate-800 shrink-0" />
@@ -193,7 +193,7 @@ export default function HeroCarousel() {
             <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
               <ShieldCheck className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
             </div>
-            <span className="text-white font-bold text-xs sm:text-xs md:text-sm whitespace-nowrap">Garantía Oficial E-Commerce</span>
+            <span className="text-white font-medium text-xs sm:text-xs md:text-sm whitespace-nowrap">Garantía Oficial E-Commerce</span>
           </div>
 
           <div className="w-px h-4 bg-slate-800 shrink-0" />
@@ -202,7 +202,7 @@ export default function HeroCarousel() {
             <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
               <CreditCard className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
             </div>
-            <span className="text-white font-bold text-xs sm:text-xs md:text-sm whitespace-nowrap">Medios de Pago Seguros</span>
+            <span className="text-white font-medium text-xs sm:text-xs md:text-sm whitespace-nowrap">Medios de Pago Seguros</span>
           </div>
         </div>
       </div>

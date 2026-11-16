@@ -14,11 +14,11 @@ export default function LocationMap() {
     <section className="max-w-[1440px] mx-auto px-4">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <span className="text-brand-red font-black text-xs uppercase tracking-widest flex items-center space-x-1">
+          <span className="text-brand-red font-semibold text-xs uppercase tracking-widest flex items-center space-x-1">
             <MapPin className="w-3.5 h-3.5 mr-1" />
             Tienda Física
           </span>
-          <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mt-0.5">Visítanos en Lima</h2>
+          <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 mt-0.5">Visítanos en Lima</h2>
           <p className="text-sm text-gray-500">Encuentra asesoría personalizada y recojo inmediato de pedidos</p>
         </div>
       </div>
@@ -40,7 +40,7 @@ export default function LocationMap() {
           href={mapsSearchUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="absolute top-4 left-4 z-10 bg-slate-900/90 hover:bg-brand-red text-white backdrop-blur-md border border-slate-700/80 px-4 py-2.5 rounded-xl font-extrabold text-xs flex items-center space-x-2 shadow-2xl transition-all duration-300 active:scale-95"
+          className="absolute top-4 left-4 z-10 bg-slate-900/90 hover:bg-brand-red text-white backdrop-blur-md border border-slate-700/80 px-4 py-2.5 rounded-xl font-semibold text-xs flex items-center space-x-2 shadow-2xl transition-all duration-300 active:scale-95"
         >
           <span>Abrir en Maps</span>
           <ExternalLink className="w-4 h-4 text-brand-red-accent group-hover:text-white" />
@@ -58,7 +58,7 @@ export default function LocationMap() {
               <MapPin className="w-5 h-5" />
             </div>
             <div className="space-y-1 min-w-0">
-              <h3 className="font-black text-sm sm:text-base text-white group-hover/card:text-brand-red-accent transition-colors truncate">
+              <h3 className="font-semibold text-sm sm:text-base text-white group-hover/card:text-brand-red-accent transition-colors truncate">
                 {address}
               </h3>
               <div className="flex items-center text-xs text-gray-300 space-x-1.5 pt-0.5">

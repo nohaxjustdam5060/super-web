@@ -280,7 +280,7 @@ export default function AdminDashboard() {
 
     if (sm.includes('recojo') || sm.includes('pickup') || sm.includes('tienda')) {
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800 border border-purple-200">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-purple-100 text-purple-800 border border-purple-200">
           Recojo en Tienda
         </span>
       );
@@ -288,7 +288,7 @@ export default function AdminDashboard() {
 
     if (sm.includes('provincia') || sm.includes('agencia') || (dept && !dept.includes('lima') && !dept.includes('callao'))) {
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800 border border-amber-200">
           Envío a Provincia
         </span>
       );
@@ -296,7 +296,7 @@ export default function AdminDashboard() {
 
     // Default: Envío a Lima y Callao / Express
     return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800 border border-blue-200">
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-800 border border-blue-200">
         Envío a Lima y Callao
       </span>
     );
@@ -310,7 +310,7 @@ export default function AdminDashboard() {
     if (status === 'issued') {
       return (
         <span 
-          className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 whitespace-nowrap"
+          className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 whitespace-nowrap"
           title={seriesNum ? `Comprobante emitido: ${seriesNum}` : 'Comprobante emitido y aceptado por SUNAT'}
         >
           <CheckCircle2 className="w-2.5 h-2.5 mr-1 text-emerald-600 flex-shrink-0" />
@@ -322,7 +322,7 @@ export default function AdminDashboard() {
     if (status === 'rejected' || status === 'failed') {
       return (
         <span 
-          className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-100 text-red-800 border border-red-300 whitespace-nowrap cursor-help shadow-sm"
+          className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-800 border border-red-300 whitespace-nowrap cursor-help shadow-sm"
           title={ord.invoice_error_message || 'Comprobante rechazado por SUNAT'}
         >
           <AlertTriangle className="w-2.5 h-2.5 mr-1 text-red-600 flex-shrink-0" />
@@ -332,7 +332,7 @@ export default function AdminDashboard() {
     }
 
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-600 border border-gray-200 whitespace-nowrap">
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-600 border border-gray-200 whitespace-nowrap">
         Comprobante: Pendiente
       </span>
     );
@@ -343,13 +343,13 @@ export default function AdminDashboard() {
       {/* Header Bar */}
       <div className="bg-brand-dark text-white p-6 rounded-3xl border border-slate-800 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <span className="text-brand-red-accent font-black text-xs uppercase tracking-widest">[ PANEL ADMINISTRATIVO SUPER ]</span>
-          <h1 className="text-2xl font-black mt-1">Dashboard & Gestión de Pedidos</h1>
+          <span className="text-brand-red-accent font-semibold text-xs uppercase tracking-widest">[ PANEL ADMINISTRATIVO SUPER ]</span>
+          <h1 className="text-2xl font-semibold mt-1">Dashboard & Gestión de Pedidos</h1>
         </div>
-        <div className="flex space-x-3 text-xs font-bold w-full sm:w-auto">
+        <div className="flex space-x-3 text-xs font-medium w-full sm:w-auto">
           <Link
             to="/admin/products"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-brand-red hover:bg-brand-red-hover text-white font-extrabold text-xs px-5 py-3 rounded-2xl shadow-lg transition-transform active:scale-95 cursor-pointer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-brand-red hover:bg-brand-red-hover text-white font-semibold text-xs px-5 py-3 rounded-2xl shadow-lg transition-transform active:scale-95 cursor-pointer"
           >
             <Package className="w-4 h-4" />
             <span>Gestionar Productos</span>
@@ -361,34 +361,34 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-emerald-600">
-            <span className="text-xs font-black uppercase tracking-wider text-gray-500">Ventas Totales</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Ventas Totales</span>
             <DollarSign className="w-6 h-6 bg-emerald-50 p-1 rounded-lg" />
           </div>
-          <p className="text-3xl font-black text-gray-900">S/ {metrics?.totalRevenue || '0.00'}</p>
+          <p className="text-3xl font-semibold text-gray-900">S/ {metrics?.totalRevenue || '0.00'}</p>
         </div>
 
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-brand-blue">
-            <span className="text-xs font-black uppercase tracking-wider text-gray-500">Órdenes Generadas</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Órdenes Generadas</span>
             <ShoppingBag className="w-6 h-6 bg-blue-50 p-1 rounded-lg" />
           </div>
-          <p className="text-3xl font-black text-gray-900">{metrics?.ordersCount || 0}</p>
+          <p className="text-3xl font-semibold text-gray-900">{metrics?.ordersCount || 0}</p>
         </div>
 
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-indigo-600">
-            <span className="text-xs font-black uppercase tracking-wider text-gray-500">Clientes Registrados</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Clientes Registrados</span>
             <Users className="w-6 h-6 bg-indigo-50 p-1 rounded-lg" />
           </div>
-          <p className="text-3xl font-black text-gray-900">{metrics?.totalUsers || 0}</p>
+          <p className="text-3xl font-semibold text-gray-900">{metrics?.totalUsers || 0}</p>
         </div>
 
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-amber-500">
-            <span className="text-xs font-black uppercase tracking-wider text-gray-500">Alerta Stock Bajo</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Alerta Stock Bajo</span>
             <AlertTriangle className="w-6 h-6 bg-amber-50 p-1 rounded-lg" />
           </div>
-          <p className="text-3xl font-black text-amber-600">{metrics?.lowStockProducts || 0}</p>
+          <p className="text-3xl font-semibold text-amber-600">{metrics?.lowStockProducts || 0}</p>
         </div>
       </div>
 
@@ -401,7 +401,7 @@ export default function AdminDashboard() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-extrabold text-gray-900 text-lg">
+                <h3 className="font-semibold text-gray-900 text-lg">
                   Margen Comercial sobre Precios de ERP
                 </h3>
                 
@@ -414,7 +414,7 @@ export default function AdminDashboard() {
 
           <form onSubmit={handleSaveMarkup} className="flex flex-wrap items-center gap-3 w-full md:w-auto">
             <div className="flex items-center bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-brand-red">
-              <span className="text-xs font-bold text-gray-500 mr-2">Margen:</span>
+              <span className="text-xs font-medium text-gray-500 mr-2">Margen:</span>
               <input
                 type="number"
                 step="0.1"
@@ -423,16 +423,16 @@ export default function AdminDashboard() {
                 value={markupInput}
                 onChange={(e) => setMarkupInput(e.target.value)}
                 placeholder="3"
-                className="w-16 bg-transparent font-black text-gray-900 text-sm outline-none text-right"
+                className="w-16 bg-transparent font-semibold text-gray-900 text-sm outline-none text-right"
                 disabled={savingMarkup || markupLoading}
               />
-              <span className="font-black text-gray-700 text-sm ml-1">%</span>
+              <span className="font-semibold text-gray-700 text-sm ml-1">%</span>
             </div>
 
             <button
               type="submit"
               disabled={savingMarkup || markupLoading}
-              className="inline-flex items-center justify-center gap-2 bg-brand-dark hover:bg-slate-800 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-sm transition-transform active:scale-95 disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 bg-brand-dark hover:bg-slate-800 text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-sm transition-transform active:scale-95 disabled:opacity-50 cursor-pointer"
             >
               {savingMarkup ? (
                 <>
@@ -461,7 +461,7 @@ export default function AdminDashboard() {
       <div ref={tableRef} className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 space-y-4">
         <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 border-b border-gray-100 pb-4">
           <div>
-            <h3 className="font-extrabold text-gray-900 text-lg flex items-center">
+            <h3 className="font-semibold text-gray-900 text-lg flex items-center">
               <ShoppingBag className="w-5 h-5 mr-2 text-brand-red" /> Gestión de Pedidos & Verificación de Pagos
             </h3>
             <p className="text-xs text-gray-500">Revisa órdenes recibidas, datos de envío, comprobantes y valida transferencias bancarias</p>
@@ -474,7 +474,7 @@ export default function AdminDashboard() {
               <select
                 value={shippingFilter}
                 onChange={handleShippingFilterChange}
-                className="bg-transparent text-gray-800 text-xs font-bold focus:outline-none cursor-pointer"
+                className="bg-transparent text-gray-800 text-xs font-medium focus:outline-none cursor-pointer"
                 title="Filtrar por tipo de envío"
               >
                 <option value="all">Todos los envíos</option>
@@ -490,7 +490,7 @@ export default function AdminDashboard() {
               <select
                 value={paymentMethodFilter}
                 onChange={handlePaymentMethodFilterChange}
-                className="bg-transparent text-gray-800 text-xs font-bold focus:outline-none cursor-pointer"
+                className="bg-transparent text-gray-800 text-xs font-medium focus:outline-none cursor-pointer"
                 title="Filtrar por método de pago"
               >
                 <option value="all">Todos los métodos</option>
@@ -507,7 +507,7 @@ export default function AdminDashboard() {
               <select
                 value={datePreset}
                 onChange={handleDatePresetChange}
-                className="bg-transparent text-gray-800 text-xs font-bold focus:outline-none cursor-pointer"
+                className="bg-transparent text-gray-800 text-xs font-medium focus:outline-none cursor-pointer"
                 title="Filtrar por fecha"
               >
                 <option value="all">Todas las fechas</option>
@@ -531,7 +531,7 @@ export default function AdminDashboard() {
                     title="Fecha de inicio (Desde)"
                   />
                 </label>
-                <span className="text-gray-300 font-bold text-xs select-none">-</span>
+                <span className="text-gray-300 font-medium text-xs select-none">-</span>
                 <label className="flex items-center gap-1.5 cursor-pointer">
                   <span className="text-xs font-semibold text-gray-500 select-none">Hasta:</span>
                   <input
@@ -550,7 +550,7 @@ export default function AdminDashboard() {
               <button
                 type="button"
                 onClick={handleClearFilters}
-                className="inline-flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold px-2.5 py-1.5 rounded-xl border border-red-200 transition-colors cursor-pointer active:scale-95"
+                className="inline-flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-medium px-2.5 py-1.5 rounded-xl border border-red-200 transition-colors cursor-pointer active:scale-95"
                 title="Limpiar todos los filtros"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -558,7 +558,7 @@ export default function AdminDashboard() {
               </button>
             )}
             
-            <span className="text-xs font-extrabold text-brand-blue bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 whitespace-nowrap">
+            <span className="text-xs font-semibold text-brand-blue bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 whitespace-nowrap">
               Total: {totalOrdersCount} órdenes
             </span>
           </div>
@@ -567,7 +567,7 @@ export default function AdminDashboard() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 font-black text-gray-400 uppercase tracking-wider text-[11px]">
+              <tr className="bg-gray-50 border-b border-gray-200 font-semibold text-gray-400 uppercase tracking-wider text-[11px]">
                 <th className="p-3 whitespace-nowrap">N° Orden</th>
                 <th className="p-3 whitespace-nowrap">Fecha y Hora</th>
                 <th className="p-3 whitespace-nowrap">Cliente</th>
@@ -608,12 +608,12 @@ export default function AdminDashboard() {
 
                   return (
                     <tr key={ord.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="p-3 font-mono font-bold text-gray-900 whitespace-nowrap">
+                      <td className="p-3 font-mono font-medium text-gray-900 whitespace-nowrap">
                         #{ord.order_number}
                       </td>
                       <td className="p-3 whitespace-nowrap">
                         <div className="space-y-0.5">
-                          <div className="flex items-center gap-1.5 font-bold text-gray-900 text-xs">
+                          <div className="flex items-center gap-1.5 font-medium text-gray-900 text-xs">
                             <Calendar className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
                             <span>{limaDate}</span>
                           </div>
@@ -624,7 +624,7 @@ export default function AdminDashboard() {
                         </div>
                       </td>
                       <td className="p-3 whitespace-nowrap">
-                        <p className="font-bold text-gray-900">{addr.recipient_name || ord.user?.name || 'Cliente'}</p>
+                        <p className="font-medium text-gray-900">{addr.recipient_name || ord.user?.name || 'Cliente'}</p>
                         {ord.user?.name && addr.recipient_name && ord.user.name.trim().toLowerCase() !== addr.recipient_name.trim().toLowerCase() && (
                           <span className="text-[10px] text-gray-500 block">Cuenta: {ord.user.name}</span>
                         )}
@@ -642,7 +642,7 @@ export default function AdminDashboard() {
                       </td>
                       <td className="p-3 whitespace-nowrap space-y-1">
                         <div className="flex items-center space-x-1.5">
-                          <span className="font-bold text-gray-900 uppercase">
+                          <span className="font-medium text-gray-900 uppercase">
                             {inv.invoice_type || 'Boleta'}
                           </span>
                           <span className="text-[10px] text-gray-500 font-mono">
@@ -657,7 +657,7 @@ export default function AdminDashboard() {
                         {(() => {
                           if (isBankTransfer) {
                             return (
-                              <span className="inline-flex items-center text-[10px] font-extrabold px-2.5 py-1 rounded-full border bg-amber-50 text-amber-800 border-amber-300">
+                              <span className="inline-flex items-center text-[10px] font-semibold px-2.5 py-1 rounded-full border bg-amber-50 text-amber-800 border-amber-300">
                                 <Building2 className="w-3 h-3 mr-1 flex-shrink-0" />
                                 <span>Transferencia Bancaria</span>
                               </span>
@@ -666,7 +666,7 @@ export default function AdminDashboard() {
                           const detail = (ord.payment_method_detail || '').toLowerCase();
                           if (detail === 'credit_card') {
                             return (
-                              <span className="inline-flex items-center text-[10px] font-extrabold px-2.5 py-1 rounded-full border bg-indigo-50 text-indigo-800 border-indigo-300" title="Mercado Pago - Tarjeta de Crédito">
+                              <span className="inline-flex items-center text-[10px] font-semibold px-2.5 py-1 rounded-full border bg-indigo-50 text-indigo-800 border-indigo-300" title="Mercado Pago - Tarjeta de Crédito">
                                 <CreditCard className="w-3 h-3 mr-1 flex-shrink-0 text-indigo-600" />
                                 <span>T. Crédito</span>
                               </span>
@@ -674,25 +674,25 @@ export default function AdminDashboard() {
                           }
                           if (detail === 'debit_card') {
                             return (
-                              <span className="inline-flex items-center text-[10px] font-extrabold px-2.5 py-1 rounded-full border bg-sky-50 text-sky-800 border-sky-300" title="Mercado Pago - Tarjeta de Débito">
+                              <span className="inline-flex items-center text-[10px] font-semibold px-2.5 py-1 rounded-full border bg-sky-50 text-sky-800 border-sky-300" title="Mercado Pago - Tarjeta de Débito">
                                 <CreditCard className="w-3 h-3 mr-1 flex-shrink-0 text-sky-600" />
                                 <span>T. Débito</span>
                               </span>
                             );
                           }
                           return (
-                            <span className="inline-flex items-center text-[10px] font-extrabold px-2.5 py-1 rounded-full border bg-blue-50 text-blue-800 border-blue-300">
+                            <span className="inline-flex items-center text-[10px] font-semibold px-2.5 py-1 rounded-full border bg-blue-50 text-blue-800 border-blue-300">
                               <CreditCard className="w-3 h-3 mr-1 flex-shrink-0" />
                               <span>Mercado Pago</span>
                             </span>
                           );
                         })()}
                       </td>
-                      <td className="p-3 font-black text-brand-red whitespace-nowrap text-sm">
+                      <td className="p-3 font-semibold text-brand-red whitespace-nowrap text-sm">
                         S/ {Number(ord.total).toFixed(2)}
                       </td>
                       <td className="p-3 text-center whitespace-nowrap">
-                        <span className={`px-2.5 py-1 rounded-full font-black text-[10px] uppercase border ${
+                        <span className={`px-2.5 py-1 rounded-full font-semibold text-[10px] uppercase border ${
                           isPaid
                             ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
                             : isReview
@@ -711,7 +711,7 @@ export default function AdminDashboard() {
                         {ord.supplier_stock_shortage && (
                           <div className="mt-1">
                             <span 
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black bg-red-100 text-red-800 border border-red-300 animate-pulse cursor-help"
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-800 border border-red-300 animate-pulse cursor-help"
                               title="¡Atención! El stock en almacén físico de Cuadrado ERP es menor a la cantidad solicitada. Verifica con el mayorista antes de validar."
                             >
                               <AlertTriangle className="w-3 h-3 text-red-600 flex-shrink-0" />
@@ -725,7 +725,7 @@ export default function AdminDashboard() {
                           <button
                             type="button"
                             onClick={() => handleOpenDetail(ord)}
-                            className="w-full bg-slate-100 hover:bg-slate-200 text-gray-800 font-extrabold px-2 py-1 rounded-lg text-[11px] inline-flex items-center justify-center space-x-1 transition-all active:scale-95 border border-slate-200 cursor-pointer"
+                            className="w-full bg-slate-100 hover:bg-slate-200 text-gray-800 font-semibold px-2 py-1 rounded-lg text-[11px] inline-flex items-center justify-center space-x-1 transition-all active:scale-95 border border-slate-200 cursor-pointer"
                             title="Ver detalle completo de la orden"
                           >
                             <Eye className="w-3.5 h-3.5 text-brand-blue flex-shrink-0" />
@@ -737,7 +737,7 @@ export default function AdminDashboard() {
                               type="button"
                               onClick={() => handleVerifyBankTransfer(ord.id)}
                               disabled={verifyingId === ord.id}
-                              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-2 py-1 rounded-lg text-[11px] inline-flex items-center justify-center space-x-1 shadow-xs transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2 py-1 rounded-lg text-[11px] inline-flex items-center justify-center space-x-1 shadow-xs transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
                               title="Verificar y aprobar pago por transferencia"
                             >
                               <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
@@ -750,7 +750,7 @@ export default function AdminDashboard() {
                               type="button"
                               onClick={() => handleCancelOrder(ord.id)}
                               disabled={cancellingId === ord.id}
-                              className="w-full bg-red-50 hover:bg-red-100 text-red-700 font-extrabold px-2 py-1 rounded-lg text-[11px] inline-flex items-center justify-center space-x-1 border border-red-200 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                              className="w-full bg-red-50 hover:bg-red-100 text-red-700 font-semibold px-2 py-1 rounded-lg text-[11px] inline-flex items-center justify-center space-x-1 border border-red-200 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
                               title="Cancelar orden y liberar stock reservado"
                             >
                               <X className="w-3.5 h-3.5 flex-shrink-0" />
@@ -775,7 +775,7 @@ export default function AdminDashboard() {
               <select
                 value={limit}
                 onChange={handleLimitChange}
-                className="bg-white border border-gray-300 rounded-xl px-2.5 py-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-blue cursor-pointer"
+                className="bg-white border border-gray-300 rounded-xl px-2.5 py-1 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand-blue cursor-pointer"
               >
                 <option value={10}>10 por pág.</option>
                 <option value={20}>20 por pág.</option>
@@ -794,7 +794,7 @@ export default function AdminDashboard() {
                 type="button"
                 onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed font-bold transition-all cursor-pointer flex items-center"
+                className="px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-all cursor-pointer flex items-center"
               >
                 <ChevronLeft className="w-4 h-4 mr-0.5" />
                 <span>Anterior</span>
@@ -806,7 +806,7 @@ export default function AdminDashboard() {
                   type="button"
                   onClick={() => typeof p === 'number' && handlePageChange(p)}
                   disabled={p === '...'}
-                  className={`w-8 h-8 rounded-xl font-black transition-all flex items-center justify-center cursor-pointer ${
+                  className={`w-8 h-8 rounded-xl font-semibold transition-all flex items-center justify-center cursor-pointer ${
                     p === currentPage
                       ? 'bg-brand-red text-white shadow-md'
                       : p === '...'
@@ -822,7 +822,7 @@ export default function AdminDashboard() {
                 type="button"
                 onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
-                className="px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed font-bold transition-all cursor-pointer flex items-center"
+                className="px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-all cursor-pointer flex items-center"
               >
                 <span>Siguiente</span>
                 <ChevronRight className="w-4 h-4 ml-0.5" />
@@ -834,17 +834,17 @@ export default function AdminDashboard() {
 
       {/* Low Stock Alert List */}
       <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4">
-        <h3 className="font-extrabold text-gray-900 text-base text-amber-600 flex items-center">
+        <h3 className="font-semibold text-gray-900 text-base text-amber-600 flex items-center">
           <AlertTriangle className="w-4 h-4 mr-2" /> Productos con Stock Crítico
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
           {lowStock.map((prod) => (
             <div key={prod.id} className="p-3 bg-amber-50/50 rounded-2xl flex justify-between items-center border border-amber-100">
               <div>
-                <p className="font-bold text-gray-900 line-clamp-1">{prod.name}</p>
+                <p className="font-medium text-gray-900 line-clamp-1">{prod.name}</p>
                 <p className="text-gray-500">SKU: {prod.sku}</p>
               </div>
-              <span className="bg-amber-200 text-amber-900 font-black px-2.5 py-1 rounded-lg flex-shrink-0">
+              <span className="bg-amber-200 text-amber-900 font-semibold px-2.5 py-1 rounded-lg flex-shrink-0">
                 {prod.stock} unids restantes
               </span>
             </div>

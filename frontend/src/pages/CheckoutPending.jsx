@@ -12,10 +12,10 @@ export default function CheckoutPending() {
         <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
           <Clock className="w-12 h-12" />
         </div>
-        <span className="text-xs font-black text-amber-600 uppercase tracking-widest bg-amber-50 px-3 py-1 rounded-full">
+        <span className="text-xs font-semibold text-amber-600 uppercase tracking-widest bg-amber-50 px-3 py-1 rounded-full">
           Pago Pendiente de Acreditación
         </span>
-        <h1 className="text-3xl font-black text-gray-900">
+        <h1 className="text-3xl font-semibold text-gray-900">
           TU PAGO ESTÁ EN PROCESO
         </h1>
         <p className="text-sm text-gray-600 max-w-md mx-auto">
@@ -25,14 +25,14 @@ export default function CheckoutPending() {
         <div className="flex flex-col sm:flex-row justify-center items-center gap-3 pt-4">
           <button
             onClick={() => navigate('/profile')}
-            className="w-full sm:w-auto bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3.5 px-8 rounded-xl shadow-lg transition-transform active:scale-95 text-sm flex items-center justify-center space-x-2"
+            className="w-full sm:w-auto bg-brand-red hover:bg-brand-red-hover text-white font-semibold py-3.5 px-8 rounded-xl shadow-lg transition-transform active:scale-95 text-sm flex items-center justify-center space-x-2"
           >
             <span>Ver Mis Pedidos</span>
             <ArrowRight className="w-4 h-4" />
           </button>
           <button
             onClick={() => navigate('/catalog')}
-            className="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-gray-800 font-bold py-3.5 px-8 rounded-xl text-sm flex items-center justify-center space-x-2"
+            className="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-gray-800 font-medium py-3.5 px-8 rounded-xl text-sm flex items-center justify-center space-x-2"
           >
             <ShoppingBag className="w-4 h-4" />
             <span>Ir al Catálogo</span>

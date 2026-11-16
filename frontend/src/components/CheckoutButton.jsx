@@ -69,7 +69,7 @@ export default function CheckoutButton({
         type="button"
         onClick={handlePayWithMercadoPago}
         disabled={loading || disabled}
-        className={`w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg hover:shadow-red-600/20 transition-all active:scale-95 text-base disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+        className={`w-full bg-brand-red hover:bg-brand-red-hover text-white font-semibold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg hover:shadow-red-600/20 transition-all active:scale-95 text-base disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
       >
         {loading ? (
           <>

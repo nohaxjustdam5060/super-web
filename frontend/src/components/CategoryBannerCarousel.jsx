@@ -99,7 +99,7 @@ export default function CategoryBannerCarousel({
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-3">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-black text-gray-900">
+          <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900">
             {title}
           </h2>
         </div>
@@ -108,7 +108,7 @@ export default function CategoryBannerCarousel({
           {finalViewAllLink && (
             <Link
               to={finalViewAllLink}
-              className="text-brand-red font-bold text-sm flex items-center hover:underline whitespace-nowrap mr-1"
+              className="text-brand-red font-medium text-sm flex items-center hover:underline whitespace-nowrap mr-1"
             >
               <span>{viewAllText}</span>
               <ChevronRight className="w-4 h-4 ml-0.5" />

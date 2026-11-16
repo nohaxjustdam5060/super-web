@@ -78,8 +78,8 @@ const CartDrawer = memo(function CartDrawer() {
           <div className="p-5 bg-brand-dark text-white flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <ShoppingBag className="w-5 h-5 text-brand-red-accent" />
-              <h2 className="font-bold text-lg">Tu Carrito SUPER</h2>
-              <span className="bg-brand-red text-white text-xs font-black px-2 py-0.5 rounded-full">
+              <h2 className="font-medium text-lg">Tu Carrito SUPER</h2>
+              <span className="bg-brand-red text-white text-xs font-semibold px-2 py-0.5 rounded-full">
                 {totalItemsCount}
               </span>
             </div>
@@ -98,7 +98,7 @@ const CartDrawer = memo(function CartDrawer() {
               <div className="flex items-start space-x-2">
                 <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div className="space-y-1">
-                  <p className="font-bold">Aviso de disponibilidad:</p>
+                  <p className="font-medium">Aviso de disponibilidad:</p>
                   {warnings.slice(0, 2).map((w, idx) => (
                     <p key={idx} className="text-amber-800 leading-tight">
                       • {w.message}
@@ -128,7 +128,7 @@ const CartDrawer = memo(function CartDrawer() {
                 <p className="text-sm text-gray-400 mt-1">Explora nuestro catálogo de componentes informáticos.</p>
                 <button
                   onClick={() => { closeCart(); navigate('/catalog'); }}
-                  className="mt-6 bg-brand-red text-white font-bold px-6 py-2.5 rounded-xl text-sm hover:bg-brand-red-hover transition-colors"
+                  className="mt-6 bg-brand-red text-white font-medium px-6 py-2.5 rounded-xl text-sm hover:bg-brand-red-hover transition-colors"
                 >
                   Ir al Catálogo
                 </button>
@@ -146,8 +146,8 @@ const CartDrawer = memo(function CartDrawer() {
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-xs text-gray-900 line-clamp-2">{item.name}</h4>
-                    <p className="text-xs text-brand-red font-black mt-1">
+                    <h4 className="font-medium text-xs text-gray-900 line-clamp-2">{item.name}</h4>
+                    <p className="text-xs text-brand-red font-semibold mt-1">
                       S/ {Number(item.price).toFixed(2)}
                     </p>
                     <div className="flex items-center space-x-3 mt-2">
@@ -158,7 +158,7 @@ const CartDrawer = memo(function CartDrawer() {
                         >
                           <Minus className="w-3 h-3" />
                         </button>
-                        <span className="px-2.5 text-xs font-bold text-gray-800">{item.quantity}</span>
+                        <span className="px-2.5 text-xs font-medium text-gray-800">{item.quantity}</span>
                         <button
                           onClick={() => updateQuantity(item.product_id || item.id, item.quantity + 1)}
                           className="p-1 hover:bg-gray-100 text-gray-600 rounded-r-lg"
@@ -185,14 +185,14 @@ const CartDrawer = memo(function CartDrawer() {
             <div className="p-5 border-t border-gray-200 bg-gray-50 space-y-3">
               <div className="flex justify-between items-center text-sm font-medium text-gray-600">
                 <span>Subtotal Estimado:</span>
-                <span className="text-lg font-black text-gray-900">S/ {subtotal.toFixed(2)}</span>
+                <span className="text-lg font-semibold text-gray-900">S/ {subtotal.toFixed(2)}</span>
               </div>
               <p className="text-xs text-gray-500">Impuestos y costo de envío express calculados en el checkout.</p>
               
               <div className="space-y-2 pt-1">
                 <button
                   onClick={() => { closeCart(); navigate('/checkout'); }}
-                  className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-sm"
+                  className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-medium py-3 px-4 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-sm"
                 >
                   <span>Proceder al Checkout</span>
                   <ArrowRight className="w-4 h-4" />
@@ -203,7 +203,7 @@ const CartDrawer = memo(function CartDrawer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={closeCart}
-                  className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center space-x-2 shadow transition-transform active:scale-95 text-sm"
+                  className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-medium py-3 px-4 rounded-xl flex items-center justify-center space-x-2 shadow transition-transform active:scale-95 text-sm"
                 >
                   <MessageSquare className="w-4 h-4" />
                   <span>Comprar por WhatsApp</span>

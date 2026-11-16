@@ -93,7 +93,7 @@ export default function ProductCarousel({
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-black text-gray-900 flex items-center space-x-2">
+          <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 flex items-center space-x-2">
             <span>{title}</span>
             {Icon && <Icon className={iconClassName} />}
           </h2>
@@ -104,7 +104,7 @@ export default function ProductCarousel({
           {viewAllLink && (
             <Link
               to={viewAllLink}
-              className="text-brand-red font-bold text-sm flex items-center hover:underline mr-1"
+              className="text-brand-red font-medium text-sm flex items-center hover:underline mr-1"
             >
               <span>{viewAllText}</span>
               <ChevronRight className="w-4 h-4 ml-0.5" />

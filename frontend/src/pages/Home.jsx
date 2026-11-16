@@ -95,10 +95,10 @@ export default function Home() {
       <section className="max-w-[1440px] mx-auto px-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-2">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-black text-gray-900">Categorías Principales</h2>
+            <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900">Categorías Principales</h2>
             
           </div>
-          <Link to="/catalog?category_id=laptops" className="text-brand-red font-bold text-sm flex items-center hover:underline">
+          <Link to="/catalog?category_id=laptops" className="text-brand-red font-medium text-sm flex items-center hover:underline">
             Ver todas las laptops <ChevronRight className="w-4 h-4 ml-1" />
           </Link>
         </div>
@@ -146,7 +146,7 @@ export default function Home() {
 
               {/* Title & Badge Underneath */}
               <div className="mt-4 text-center space-y-1">
-                <h3 className="font-extrabold text-sm sm:text-base text-slate-800 group-hover:text-brand-red transition-colors duration-200 leading-tight">
+                <h3 className="font-semibold text-sm sm:text-base text-slate-800 group-hover:text-brand-red transition-colors duration-200 leading-tight">
                   {cat.name}
                 </h3>
                 <span className="text-[11px] font-semibold text-gray-400 block">
@@ -192,14 +192,14 @@ export default function Home() {
 
             {/* Content */}
             <div className="space-y-3 max-w-md z-20">
-              <span className="inline-block text-[11px] font-black text-brand-red-accent uppercase tracking-widest bg-brand-red/20 border border-brand-red/30 px-3 py-1 rounded-md">
+              <span className="inline-block text-[11px] font-semibold text-brand-red-accent uppercase tracking-widest bg-brand-red/20 border border-brand-red/30 px-3 py-1 rounded-md">
                 LO MÁS NUEVO EN
               </span>
-              <h3 className="text-3xl sm:text-4xl font-black tracking-tight leading-none font-heading text-white group-hover:text-brand-red-accent transition-colors duration-200">
+              <h3 className="text-3xl sm:text-4xl font-semibold tracking-tight leading-none font-heading text-white group-hover:text-brand-red-accent transition-colors duration-200">
                 Tablets & Móviles
               </h3>
 
-              <div className="pt-2 flex items-center text-xs font-black uppercase tracking-wider text-white group-hover:text-brand-red transition-colors duration-200 space-x-1.5">
+              <div className="pt-2 flex items-center text-xs font-semibold uppercase tracking-wider text-white group-hover:text-brand-red transition-colors duration-200 space-x-1.5">
                 <span>VER TODO</span>
                 <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1.5 transition-transform duration-300 ease-out" />
               </div>
@@ -224,13 +224,13 @@ export default function Home() {
 
             {/* Content */}
             <div className="space-y-3 max-w-md z-20">
-              <span className="inline-block text-[11px] font-black text-amber-400 uppercase tracking-widest bg-amber-500/20 border border-amber-500/30 px-3 py-1 rounded-md">
+              <span className="inline-block text-[11px] font-semibold text-amber-400 uppercase tracking-widest bg-amber-500/20 border border-amber-500/30 px-3 py-1 rounded-md">
                 EQUIPAMIENTO PROFESIONAL
               </span>
-              <h3 className="text-3xl sm:text-4xl font-black tracking-tight leading-none font-heading text-white group-hover:text-amber-300 transition-colors duration-200">
+              <h3 className="text-3xl sm:text-4xl font-semibold tracking-tight leading-none font-heading text-white group-hover:text-amber-300 transition-colors duration-200">
                 Workstations & All in One
               </h3>
-              <div className="pt-2 flex items-center text-xs font-black uppercase tracking-wider text-white group-hover:text-amber-400 transition-colors duration-200 space-x-1.5">
+              <div className="pt-2 flex items-center text-xs font-semibold uppercase tracking-wider text-white group-hover:text-amber-400 transition-colors duration-200 space-x-1.5">
                 <span>VER TODO</span>
                 <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1.5 transition-transform duration-300 ease-out" />
               </div>

@@ -295,10 +295,10 @@ export default function ComplaintsBookPage() {
                 <BookOpen className="w-8 h-8 text-brand-red" />
               </div>
               <div>
-                <span className="text-xs font-bold text-brand-red uppercase tracking-wider block">
+                <span className="text-xs font-medium text-brand-red uppercase tracking-wider block">
                   Conforme a Ley N° 29571 y D.S. N° 011-2011-PCM
                 </span>
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white print:text-black">
+                <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-white print:text-black">
                   LIBRO DE RECLAMACIONES VIRTUAL
                 </h1>
               </div>
@@ -306,7 +306,7 @@ export default function ComplaintsBookPage() {
 
             {/* Provider Data Badge */}
             <div className="text-left sm:text-right text-xs text-gray-400 print:text-gray-700 bg-gray-900/60 print:bg-gray-100 p-3 rounded-lg border border-gray-800 print:border-gray-300">
-              <p className="font-bold text-white print:text-black">SUPERLAPTOP S.A.C</p>
+              <p className="font-medium text-white print:text-black">SUPERLAPTOP S.A.C</p>
               <p>RUC: 20609242575</p>
               <p>Jr.Velarde 172, Lima</p>
             </div>
@@ -332,10 +332,10 @@ export default function ComplaintsBookPage() {
               <div className="border-b-2 border-gray-900 pb-5">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="space-y-1">
-                    <span className="text-[11px] font-black text-brand-red uppercase tracking-widest block">
+                    <span className="text-[11px] font-semibold text-brand-red uppercase tracking-widest block">
                       SUPERLAPTOP S.A.C &bull; RUC: 20609242575
                     </span>
-                    <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
+                    <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 tracking-tight">
                       LIBRO DE RECLAMACIONES VIRTUAL
                     </h2>
                     <p className="text-xs text-gray-500">
@@ -344,10 +344,10 @@ export default function ComplaintsBookPage() {
                   </div>
                   
                   <div className="bg-gray-100 border border-gray-300 rounded-xl p-3 text-left sm:text-right flex-shrink-0">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
+                    <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider block">
                       Hoja de Reclamación N°
                     </span>
-                    <span className="text-base sm:text-lg font-black text-gray-900 font-mono block">
+                    <span className="text-base sm:text-lg font-semibold text-gray-900 font-mono block">
                       {successClaim.claim_code}
                     </span>
                     <span className="text-[11px] text-gray-500 block">
@@ -359,7 +359,7 @@ export default function ComplaintsBookPage() {
 
               {/* Status & Plazo Notice */}
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-xs text-blue-900 leading-relaxed space-y-1">
-                <div className="flex items-center space-x-2 font-bold text-blue-950">
+                <div className="flex items-center space-x-2 font-medium text-blue-950">
                   <Clock className="w-4 h-4 text-blue-600 flex-shrink-0" />
                   <span>Plazo Legal de Atención: Máximo 15 días hábiles</span>
                 </div>
@@ -373,7 +373,7 @@ export default function ComplaintsBookPage() {
                 
                 {/* 1. Consumidor */}
                 <div className="border border-gray-300 rounded-xl p-4 sm:p-5 bg-gray-50/70">
-                  <h3 className="font-extrabold text-gray-900 text-xs sm:text-sm uppercase tracking-wider border-b border-gray-200 pb-2 mb-3 flex items-center">
+                  <h3 className="font-semibold text-gray-900 text-xs sm:text-sm uppercase tracking-wider border-b border-gray-200 pb-2 mb-3 flex items-center">
                     <User className="w-4 h-4 mr-2 text-brand-red flex-shrink-0" />
                     1. Identificación del Consumidor Reclamante
                   </h3>
@@ -391,7 +391,7 @@ export default function ComplaintsBookPage() {
 
                     {successClaim.is_minor && successClaim.guardian_name && (
                       <div className="sm:col-span-2 pt-2 border-t border-gray-200 mt-1">
-                        <span className="text-[11px] font-bold text-gray-700 uppercase block mb-1">Padre, Madre o Tutor (Menor de edad):</span>
+                        <span className="text-[11px] font-medium text-gray-700 uppercase block mb-1">Padre, Madre o Tutor (Menor de edad):</span>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                           <p><span className="text-gray-500">Nombre del Tutor:</span> <strong className="text-gray-900">{successClaim.guardian_name}</strong></p>
                           <p><span className="text-gray-500">Documento Tutor:</span> <strong className="text-gray-900">{successClaim.guardian_doc_type || 'DNI'} {successClaim.guardian_doc_number}</strong></p>
@@ -403,7 +403,7 @@ export default function ComplaintsBookPage() {
 
                 {/* 2. Bien Contratado */}
                 <div className="border border-gray-300 rounded-xl p-4 sm:p-5 bg-gray-50/70">
-                  <h3 className="font-extrabold text-gray-900 text-xs sm:text-sm uppercase tracking-wider border-b border-gray-200 pb-2 mb-3 flex items-center">
+                  <h3 className="font-semibold text-gray-900 text-xs sm:text-sm uppercase tracking-wider border-b border-gray-200 pb-2 mb-3 flex items-center">
                     <ShoppingBag className="w-4 h-4 mr-2 text-brand-red flex-shrink-0" />
                     2. Identificación del Bien Contratado
                   </h3>
@@ -416,14 +416,14 @@ export default function ComplaintsBookPage() {
 
                 {/* 3. Reclamación y Pedido */}
                 <div className="border border-gray-300 rounded-xl p-4 sm:p-5 bg-gray-50/70">
-                  <h3 className="font-extrabold text-gray-900 text-xs sm:text-sm uppercase tracking-wider border-b border-gray-200 pb-2 mb-3 flex items-center">
+                  <h3 className="font-semibold text-gray-900 text-xs sm:text-sm uppercase tracking-wider border-b border-gray-200 pb-2 mb-3 flex items-center">
                     <AlertCircle className="w-4 h-4 mr-2 text-brand-red flex-shrink-0" />
                     3. Detalle de la Reclamación y Pedido del Consumidor
                   </h3>
                   <div className="space-y-3 text-xs sm:text-sm">
                     <p>
                       <span className="text-gray-500">Naturaleza de la Reclamación:</span>{' '}
-                      <span className="inline-block px-2.5 py-0.5 rounded-full font-bold bg-red-100 text-brand-red uppercase text-xs">
+                      <span className="inline-block px-2.5 py-0.5 rounded-full font-medium bg-red-100 text-brand-red uppercase text-xs">
                         {successClaim.claim_type}
                       </span>
                     </p>
@@ -457,7 +457,7 @@ export default function ComplaintsBookPage() {
                 type="button"
                 onClick={handleDownloadPDF}
                 disabled={downloadingPDF}
-                className="w-full sm:w-auto px-6 py-3.5 bg-brand-red text-white rounded-xl font-bold text-sm hover:bg-brand-red-accent transition-all duration-200 flex items-center justify-center space-x-2 shadow-md hover:shadow-red-600/30 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99]"
+                className="w-full sm:w-auto px-6 py-3.5 bg-brand-red text-white rounded-xl font-medium text-sm hover:bg-brand-red-accent transition-all duration-200 flex items-center justify-center space-x-2 shadow-md hover:shadow-red-600/30 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99]"
               >
                 {downloadingPDF ? (
                   <>
@@ -475,7 +475,7 @@ export default function ComplaintsBookPage() {
               <button
                 type="button"
                 onClick={resetForm}
-                className="w-full sm:w-auto px-6 py-3.5 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+                className="w-full sm:w-auto px-6 py-3.5 bg-gray-100 text-gray-700 rounded-xl font-medium text-sm hover:bg-gray-200 transition-colors cursor-pointer"
               >
                 Registrar otra reclamación
               </button>
@@ -492,11 +492,11 @@ export default function ComplaintsBookPage() {
             {/* ------------------------------------------------------------- */}
             <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-8">
               <div className="flex items-center space-x-3 pb-4 border-b border-gray-200 mb-6">
-                <div className="w-8 h-8 rounded-lg bg-brand-red/10 text-brand-red font-black flex items-center justify-center text-sm">
+                <div className="w-8 h-8 rounded-lg bg-brand-red/10 text-brand-red font-semibold flex items-center justify-center text-sm">
                   1
                 </div>
                 <div>
-                  <h2 className="text-base sm:text-lg font-black text-gray-900 uppercase tracking-tight">
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 uppercase tracking-tight">
                     Identificación del Consumidor Reclamante
                   </h2>
                   <p className="text-xs text-gray-500">Datos personales del titular que formula la reclamación</p>
@@ -507,7 +507,7 @@ export default function ComplaintsBookPage() {
                 
                 {/* Tipo de Documento */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-2">
                     Tipo de Documento *
                   </label>
                   <select
@@ -526,7 +526,7 @@ export default function ComplaintsBookPage() {
                 {/* Número de Documento (Validación Dinámica) */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider">
                       Número de Documento *
                     </label>
                     <span className="text-[11px] font-mono text-gray-400">
@@ -552,7 +552,7 @@ export default function ComplaintsBookPage() {
 
                 {/* Nombres */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-2">
                     Nombres *
                   </label>
                   <input
@@ -568,7 +568,7 @@ export default function ComplaintsBookPage() {
 
                 {/* Apellidos */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-2">
                     Apellidos o Razón Social *
                   </label>
                   <input
@@ -584,7 +584,7 @@ export default function ComplaintsBookPage() {
 
                 {/* Correo Electrónico */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-2">
                     Correo Electrónico (Para envío de constancia y respuesta) *
                   </label>
                   <input
@@ -600,7 +600,7 @@ export default function ComplaintsBookPage() {
 
                 {/* Teléfono / Celular */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-2">
                     Teléfono / Celular *
                   </label>
                   <input
@@ -616,7 +616,7 @@ export default function ComplaintsBookPage() {
 
                 {/* Domicilio */}
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-2">
                     Domicilio (Dirección Completa) *
                   </label>
                   <input
@@ -632,7 +632,7 @@ export default function ComplaintsBookPage() {
 
                 {/* Departamento, Provincia, Distrito */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-2">
                     Departamento
                   </label>
                   <input
@@ -645,7 +645,7 @@ export default function ComplaintsBookPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-2">
                     Distrito / Provincia
                   </label>
                   <input
@@ -678,7 +678,7 @@ export default function ComplaintsBookPage() {
                 {formData.is_minor && (
                   <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-xl grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                      <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-1.5">
                         Nombre completo del Tutor *
                       </label>
                       <input
@@ -692,7 +692,7 @@ export default function ComplaintsBookPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                      <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-1.5">
                         Tipo Doc. Tutor *
                       </label>
                       <select
@@ -709,7 +709,7 @@ export default function ComplaintsBookPage() {
                     </div>
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider">
                           N° Doc. Tutor *
                         </label>
                         <span className="text-[10px] font-mono text-gray-400">
@@ -738,11 +738,11 @@ export default function ComplaintsBookPage() {
             {/* ------------------------------------------------------------- */}
             <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-8">
               <div className="flex items-center space-x-3 pb-4 border-b border-gray-200 mb-6">
-                <div className="w-8 h-8 rounded-lg bg-brand-red/10 text-brand-red font-black flex items-center justify-center text-sm">
+                <div className="w-8 h-8 rounded-lg bg-brand-red/10 text-brand-red font-semibold flex items-center justify-center text-sm">
                   2
                 </div>
                 <div>
-                  <h2 className="text-base sm:text-lg font-black text-gray-900 uppercase tracking-tight">
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 uppercase tracking-tight">
                     Identificación del Bien Contratado
                   </h2>
                   <p className="text-xs text-gray-500">Detalle del producto o servicio objeto de la reclamación</p>
@@ -753,14 +753,14 @@ export default function ComplaintsBookPage() {
                 
                 {/* Selector Producto vs Servicio */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-2">
                     Tipo de Bien Contratado *
                   </label>
                   <div className="grid grid-cols-2 gap-4">
                     <button
                       type="button"
                       onClick={() => setFormData(p => ({ ...p, contracted_good_type: 'PRODUCTO' }))}
-                      className={`py-3.5 px-4 rounded-xl border-2 font-black text-sm flex items-center justify-center space-x-2 transition-all cursor-pointer ${
+                      className={`py-3.5 px-4 rounded-xl border-2 font-semibold text-sm flex items-center justify-center space-x-2 transition-all cursor-pointer ${
                         formData.contracted_good_type === 'PRODUCTO'
                           ? 'border-brand-red bg-brand-red text-white shadow-sm'
                           : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
@@ -773,7 +773,7 @@ export default function ComplaintsBookPage() {
                     <button
                       type="button"
                       onClick={() => setFormData(p => ({ ...p, contracted_good_type: 'SERVICIO' }))}
-                      className={`py-3.5 px-4 rounded-xl border-2 font-black text-sm flex items-center justify-center space-x-2 transition-all cursor-pointer ${
+                      className={`py-3.5 px-4 rounded-xl border-2 font-semibold text-sm flex items-center justify-center space-x-2 transition-all cursor-pointer ${
                         formData.contracted_good_type === 'SERVICIO'
                           ? 'border-brand-red bg-brand-red text-white shadow-sm'
                           : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
@@ -787,11 +787,11 @@ export default function ComplaintsBookPage() {
 
                 {/* Monto Reclamado */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-2">
                     Monto Reclamado en Soles (S/.)
                   </label>
                   <div className="relative max-w-xs">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 font-bold text-gray-500 text-sm">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 font-medium text-gray-500 text-sm">
                       S/
                     </span>
                     <input
@@ -809,7 +809,7 @@ export default function ComplaintsBookPage() {
 
                 {/* Descripción del Bien */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-2">
                     Descripción del Producto / Servicio (N° de Pedido, Modelo, SKU) *
                   </label>
                   <textarea
@@ -831,11 +831,11 @@ export default function ComplaintsBookPage() {
             {/* ------------------------------------------------------------- */}
             <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-8">
               <div className="flex items-center space-x-3 pb-4 border-b border-gray-200 mb-6">
-                <div className="w-8 h-8 rounded-lg bg-brand-red/10 text-brand-red font-black flex items-center justify-center text-sm">
+                <div className="w-8 h-8 rounded-lg bg-brand-red/10 text-brand-red font-semibold flex items-center justify-center text-sm">
                   3
                 </div>
                 <div>
-                  <h2 className="text-base sm:text-lg font-black text-gray-900 uppercase tracking-tight">
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 uppercase tracking-tight">
                     Detalle de la Reclamación y Pedido del Consumidor
                   </h2>
                   <p className="text-xs text-gray-500">Defina la naturaleza de su insatisfacción y la solución requerida</p>
@@ -844,7 +844,7 @@ export default function ComplaintsBookPage() {
 
               {/* Selector Reclamo vs Queja con Explicación INDECOPI */}
               <div className="mb-6">
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-2">
                   Tipo de Reclamación (Seleccione una opción) *
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -859,13 +859,13 @@ export default function ComplaintsBookPage() {
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-black text-sm text-gray-900 flex items-center">
+                      <span className="font-semibold text-sm text-gray-900 flex items-center">
                         <span className={`w-3.5 h-3.5 rounded-full mr-2 border-2 ${
                           formData.claim_type === 'RECLAMO' ? 'bg-brand-red border-brand-red' : 'border-gray-400 bg-white'
                         }`} />
                         RECLAMO
                       </span>
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-red-100 text-brand-red">
+                      <span className="text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-md bg-red-100 text-brand-red">
                         Bienes / Servicios
                       </span>
                     </div>
@@ -884,13 +884,13 @@ export default function ComplaintsBookPage() {
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-black text-sm text-gray-900 flex items-center">
+                      <span className="font-semibold text-sm text-gray-900 flex items-center">
                         <span className={`w-3.5 h-3.5 rounded-full mr-2 border-2 ${
                           formData.claim_type === 'QUEJA' ? 'bg-brand-red border-brand-red' : 'border-gray-400 bg-white'
                         }`} />
                         QUEJA
                       </span>
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-gray-100 text-gray-700">
+                      <span className="text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-md bg-gray-100 text-gray-700">
                         Atención al Público
                       </span>
                     </div>
@@ -904,7 +904,7 @@ export default function ComplaintsBookPage() {
 
               {/* Detalle de los hechos */}
               <div className="mb-6">
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-2">
                   Detalle de los Hechos (Explicación clara del motivo de su {formData.claim_type.toLowerCase()}) *
                 </label>
                 <textarea
@@ -920,7 +920,7 @@ export default function ComplaintsBookPage() {
 
               {/* Pedido Concreto */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-2">
                   Pedido Concreto del Consumidor (Solución solicitada) *
                 </label>
                 <textarea
@@ -978,7 +978,7 @@ export default function ComplaintsBookPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-4 px-8 bg-brand-red text-white rounded-xl font-black text-base hover:bg-brand-red-accent transition-all duration-200 flex items-center justify-center space-x-3 shadow-lg hover:shadow-red-600/30 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="w-full py-4 px-8 bg-brand-red text-white rounded-xl font-semibold text-base hover:bg-brand-red-accent transition-all duration-200 flex items-center justify-center space-x-3 shadow-lg hover:shadow-red-600/30 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {loading ? (
                     <span>Generando Hoja de Reclamación...</span>

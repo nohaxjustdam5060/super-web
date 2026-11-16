@@ -257,7 +257,7 @@ const ProductFormModal = memo(function ProductFormModal({
       <div className="bg-white rounded-3xl p-6 max-w-xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto border border-gray-100 my-8">
         {/* Header */}
         <div className="flex justify-between items-center border-b border-gray-100 pb-3">
-          <h3 className="font-black text-lg text-gray-900 flex items-center">
+          <h3 className="font-semibold text-lg text-gray-900 flex items-center">
             {isEditing ? (
               <>
                 <Edit2 className="w-5 h-5 mr-2 text-brand-red" />
@@ -290,7 +290,7 @@ const ProductFormModal = memo(function ProductFormModal({
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div>
-            <label className="block font-bold text-gray-700 mb-1">Nombre del Producto</label>
+            <label className="block font-medium text-gray-700 mb-1">Nombre del Producto</label>
             <input
               type="text"
               required
@@ -303,7 +303,7 @@ const ProductFormModal = memo(function ProductFormModal({
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block font-bold text-gray-700 mb-1">SKU</label>
+              <label className="block font-medium text-gray-700 mb-1">SKU</label>
               <input
                 type="text"
                 required
@@ -314,7 +314,7 @@ const ProductFormModal = memo(function ProductFormModal({
               />
             </div>
             <div>
-              <label className="block font-bold text-gray-700 mb-1">Stock</label>
+              <label className="block font-medium text-gray-700 mb-1">Stock</label>
               <input
                 type="number"
                 required
@@ -328,7 +328,7 @@ const ProductFormModal = memo(function ProductFormModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-gray-50/80 p-3 rounded-2xl border border-gray-200/80">
             <div>
-              <label className="block font-bold text-gray-700 mb-1">Precio Real de Venta (S/) *</label>
+              <label className="block font-medium text-gray-700 mb-1">Precio Real de Venta (S/) *</label>
               <input
                 type="number"
                 step="0.01"
@@ -341,7 +341,7 @@ const ProductFormModal = memo(function ProductFormModal({
               <span className="text-[10px] text-gray-400 block mt-0.5">Precio que se cobra al cliente en carrito y pasarela</span>
             </div>
             <div>
-              <label className="block font-bold text-gray-700 mb-1">Precio Antes / Lista (Tachado) (S/)</label>
+              <label className="block font-medium text-gray-700 mb-1">Precio Antes / Lista (Tachado) (S/)</label>
               <input
                 type="number"
                 step="0.01"
@@ -358,7 +358,7 @@ const ProductFormModal = memo(function ProductFormModal({
           <div className="grid grid-cols-2 gap-2">
             {/* Dropdown 1: Categoría Principal */}
             <div>
-              <label className="block font-bold text-gray-700 mb-1">Categoría Principal</label>
+              <label className="block font-medium text-gray-700 mb-1">Categoría Principal</label>
               <select
                 required
                 value={selectedParentCatId}
@@ -374,7 +374,7 @@ const ProductFormModal = memo(function ProductFormModal({
 
             {/* Dropdown 2: Subcategoría Específica */}
             <div>
-              <label className="block font-bold text-gray-700 mb-1">Subcategoría Específica</label>
+              <label className="block font-medium text-gray-700 mb-1">Subcategoría Específica</label>
               <select
                 required={hasSubcats}
                 disabled={!selectedParentCatId || !hasSubcats}
@@ -399,7 +399,7 @@ const ProductFormModal = memo(function ProductFormModal({
           </div>
 
           <div>
-            <label className="block font-bold text-gray-700 mb-1">Marca</label>
+            <label className="block font-medium text-gray-700 mb-1">Marca</label>
             <select
               required
               value={formData.brand_id}
@@ -416,8 +416,8 @@ const ProductFormModal = memo(function ProductFormModal({
           {/* Multi-Image Upload Component (Max 3 Images) */}
           <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-2">
             <div className="flex justify-between items-center">
-              <label className="block font-bold text-gray-800">Imágenes del Producto (Máximo 3)</label>
-              <span className="text-[11px] font-extrabold text-brand-blue">
+              <label className="block font-medium text-gray-800">Imágenes del Producto (Máximo 3)</label>
+              <span className="text-[11px] font-semibold text-brand-blue">
                 {imageItems.length}/3 agregadas
               </span>
             </div>
@@ -440,7 +440,7 @@ const ProductFormModal = memo(function ProductFormModal({
                       className="w-full h-full object-contain p-1"
                     />
                     {item.is_primary ? (
-                      <span className="absolute top-1.5 left-1.5 bg-brand-red text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-md flex items-center space-x-1">
+                      <span className="absolute top-1.5 left-1.5 bg-brand-red text-white text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-md flex items-center space-x-1">
                         <Star className="w-3 h-3 fill-amber-300 text-amber-300" />
                         <span>Principal</span>
                       </span>
@@ -466,7 +466,7 @@ const ProductFormModal = memo(function ProductFormModal({
 
                   <div className="w-full pt-2">
                     {item.is_primary ? (
-                      <div className="w-full py-1 text-[10px] font-black text-brand-red bg-red-50 rounded-xl border border-red-200 flex items-center justify-center space-x-1 shadow-sm">
+                      <div className="w-full py-1 text-[10px] font-semibold text-brand-red bg-red-50 rounded-xl border border-red-200 flex items-center justify-center space-x-1 shadow-sm">
                         <Star className="w-3 h-3 fill-brand-red" />
                         <span>Principal</span>
                       </div>
@@ -474,7 +474,7 @@ const ProductFormModal = memo(function ProductFormModal({
                       <button
                         type="button"
                         onClick={() => handleSetPrimaryImage(idx)}
-                        className="w-full py-1 text-[10px] font-bold text-gray-600 hover:text-brand-red bg-gray-50 hover:bg-red-50 rounded-xl border border-gray-200 hover:border-red-200 transition-all flex items-center justify-center space-x-1"
+                        className="w-full py-1 text-[10px] font-medium text-gray-600 hover:text-brand-red bg-gray-50 hover:bg-red-50 rounded-xl border border-gray-200 hover:border-red-200 transition-all flex items-center justify-center space-x-1"
                       >
                         <Star className="w-3 h-3 text-gray-400" />
                         <span>Hacer Principal</span>
@@ -488,7 +488,7 @@ const ProductFormModal = memo(function ProductFormModal({
               {imageItems.length < 3 && (
                 <label className="border-2 border-dashed border-gray-300 hover:border-brand-red bg-white hover:bg-red-50/20 rounded-2xl h-32 flex flex-col items-center justify-center cursor-pointer transition-colors p-2 text-center shadow-sm">
                   <UploadCloud className="w-6 h-6 text-brand-red mb-1 animate-pulse" />
-                  <span className="text-[11px] font-bold text-gray-800">Subir Imagen</span>
+                  <span className="text-[11px] font-medium text-gray-800">Subir Imagen</span>
                   <span className="text-[9px] text-gray-400">JPG, PNG, WEBP (Máx 5MB)</span>
                   <input
                     type="file"
@@ -509,7 +509,7 @@ const ProductFormModal = memo(function ProductFormModal({
           </div>
 
           <div>
-            <label className="block font-bold text-gray-700 mb-1">Descripción</label>
+            <label className="block font-medium text-gray-700 mb-1">Descripción</label>
             <textarea
               rows={3}
               placeholder="Descripción detallada del producto..."
@@ -523,7 +523,7 @@ const ProductFormModal = memo(function ProductFormModal({
             <button
               type="submit"
               disabled={uploadingImages}
-              className="w-full bg-brand-red text-white font-extrabold py-3 rounded-xl hover:bg-brand-red-hover text-sm shadow-md transition-transform active:scale-95 disabled:opacity-50 cursor-pointer"
+              className="w-full bg-brand-red text-white font-semibold py-3 rounded-xl hover:bg-brand-red-hover text-sm shadow-md transition-transform active:scale-95 disabled:opacity-50 cursor-pointer"
             >
               {uploadingImages
                 ? 'Subiendo imágenes y guardando...'

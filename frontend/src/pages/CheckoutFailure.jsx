@@ -12,10 +12,10 @@ export default function CheckoutFailure() {
         <div className="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
           <XCircle className="w-12 h-12" />
         </div>
-        <span className="text-xs font-black text-red-600 uppercase tracking-widest bg-red-50 px-3 py-1 rounded-full">
+        <span className="text-xs font-semibold text-red-600 uppercase tracking-widest bg-red-50 px-3 py-1 rounded-full">
           Pago No Completado
         </span>
-        <h1 className="text-3xl font-black text-gray-900">
+        <h1 className="text-3xl font-semibold text-gray-900">
           EL PAGO FUE RECHAZADO O CANCELADO
         </h1>
         <p className="text-sm text-gray-600 max-w-md mx-auto">
@@ -25,14 +25,14 @@ export default function CheckoutFailure() {
         <div className="flex flex-col sm:flex-row justify-center items-center gap-3 pt-4">
           <button
             onClick={() => navigate('/checkout')}
-            className="w-full sm:w-auto bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3.5 px-8 rounded-xl shadow-lg transition-transform active:scale-95 text-sm flex items-center justify-center space-x-2"
+            className="w-full sm:w-auto bg-brand-red hover:bg-brand-red-hover text-white font-semibold py-3.5 px-8 rounded-xl shadow-lg transition-transform active:scale-95 text-sm flex items-center justify-center space-x-2"
           >
             <RefreshCw className="w-4 h-4" />
             <span>Reintentar Pago</span>
           </button>
           <button
             onClick={() => navigate('/catalog')}
-            className="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-gray-800 font-bold py-3.5 px-8 rounded-xl text-sm flex items-center justify-center space-x-2"
+            className="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-gray-800 font-medium py-3.5 px-8 rounded-xl text-sm flex items-center justify-center space-x-2"
           >
             <ShoppingBag className="w-4 h-4" />
             <span>Volver al Catálogo</span>

@@ -24,7 +24,7 @@ export default function WhatsAppButton() {
       </div>
 
       {/* Desktop Tooltip */}
-      <span className="hidden sm:block absolute right-16 bg-slate-900 text-white text-xs font-extrabold py-1.5 px-3 rounded-xl shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none border border-slate-700">
+      <span className="hidden sm:block absolute right-16 bg-slate-900 text-white text-xs font-semibold py-1.5 px-3 rounded-xl shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none border border-slate-700">
         ¿Necesitas ayuda? Escríbenos
       </span>
     </a>

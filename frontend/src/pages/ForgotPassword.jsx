@@ -32,7 +32,7 @@ export default function ForgotPassword() {
           <div className="inline-flex bg-brand-red/10 text-brand-red p-3.5 rounded-2xl border border-brand-red/20 shadow-sm mb-2">
             <KeyRound className="w-7 h-7" />
           </div>
-          <h2 className="text-2xl font-black text-gray-900">¿Olvidaste tu contraseña?</h2>
+          <h2 className="text-2xl font-semibold text-gray-900">¿Olvidaste tu contraseña?</h2>
           <p className="text-xs text-gray-500 max-w-xs mx-auto">
             Ingresa tu correo electrónico registrado y te enviaremos un enlace seguro para restablecerla.
           </p>
@@ -41,13 +41,13 @@ export default function ForgotPassword() {
         {submitted ? (
           <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-3">
             <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
-            <p className="text-xs font-bold text-emerald-900 leading-relaxed">
+            <p className="text-xs font-medium text-emerald-900 leading-relaxed">
               {message}
             </p>
             <div className="pt-2">
               <Link
                 to="/login"
-                className="inline-flex items-center text-xs font-bold text-brand-red hover:underline"
+                className="inline-flex items-center text-xs font-medium text-brand-red hover:underline"
               >
                 <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Volver a Iniciar Sesión
               </Link>
@@ -56,7 +56,7 @@ export default function ForgotPassword() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">Correo Electrónico</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Correo Electrónico</label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" />
                 <input
@@ -73,7 +73,7 @@ export default function ForgotPassword() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition-transform active:scale-95 text-sm"
+              className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg transition-transform active:scale-95 text-sm"
             >
               {loading ? 'Enviando...' : 'Enviar Instrucciones'}
             </button>
@@ -82,7 +82,7 @@ export default function ForgotPassword() {
 
         {!submitted && (
           <div className="text-center text-xs text-gray-500 pt-2 border-t border-gray-100">
-            <Link to="/login" className="text-brand-red font-bold hover:underline flex items-center justify-center">
+            <Link to="/login" className="text-brand-red font-medium hover:underline flex items-center justify-center">
               <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Volver a Iniciar Sesión
             </Link>
           </div>

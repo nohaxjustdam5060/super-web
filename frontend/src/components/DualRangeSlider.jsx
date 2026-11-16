@@ -73,7 +73,7 @@ export default function DualRangeSlider({
         />
       </div>
 
-      <div className="flex justify-between items-center text-[10px] font-extrabold text-gray-400 px-0.5">
+      <div className="flex justify-between items-center text-[10px] font-semibold text-gray-400 px-0.5">
         <span>S/ {min.toLocaleString()}</span>
         <span>S/ {max.toLocaleString()}</span>
       </div>

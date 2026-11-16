@@ -12,9 +12,9 @@ export default function Compare() {
     return (
       <div className="max-w-[1440px] mx-auto px-4 py-16 text-center space-y-4">
         <Scale className="w-16 h-16 mx-auto text-gray-300 stroke-1" />
-        <h2 className="text-2xl font-black text-gray-900">No hay productos en comparación</h2>
+        <h2 className="text-2xl font-semibold text-gray-900">No hay productos en comparación</h2>
         <p className="text-gray-500 text-sm">Selecciona productos desde el catálogo para comparar sus especificaciones frente a frente.</p>
-        <Link to="/catalog" className="inline-block bg-brand-red text-white font-bold px-6 py-2.5 rounded-xl text-sm hover:bg-brand-red-hover">
+        <Link to="/catalog" className="inline-block bg-brand-red text-white font-medium px-6 py-2.5 rounded-xl text-sm hover:bg-brand-red-hover">
           Ir al Catálogo
         </Link>
       </div>
@@ -30,14 +30,14 @@ export default function Compare() {
     <div className="max-w-[1440px] mx-auto px-4 py-8 space-y-6">
       <div className="flex justify-between items-center bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 flex items-center">
+          <h1 className="text-2xl font-semibold text-gray-900 flex items-center">
             <Scale className="w-6 h-6 mr-2 text-brand-red" /> Comparador de Componentes
           </h1>
           <p className="text-xs text-gray-500">Matriz de comparación de especificaciones técnicas</p>
         </div>
         <button
           onClick={clearCompare}
-          className="text-xs font-bold text-red-600 hover:underline flex items-center"
+          className="text-xs font-medium text-red-600 hover:underline flex items-center"
         >
           <Trash2 className="w-4 h-4 mr-1" /> Limpiar todo
         </button>
@@ -48,7 +48,7 @@ export default function Compare() {
         <table className="w-full text-left border-collapse min-w-[600px]">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="p-4 text-xs font-black uppercase text-gray-400 w-1/4">Característica</th>
+              <th className="p-4 text-xs font-semibold uppercase text-gray-400 w-1/4">Característica</th>
               {comparedProducts.map((p) => (
                 <th key={p.id} className="p-4 text-center border-l border-gray-200 relative">
                   <button
@@ -62,13 +62,13 @@ export default function Compare() {
                     alt=""
                     className="w-24 h-24 object-contain mx-auto mb-2"
                   />
-                  <p className="text-sm font-black text-brand-red mt-1">
+                  <p className="text-sm font-semibold text-brand-red mt-1">
                     {Number(p.offer_price || p.price) > 0 ? `S/ ${Number(p.offer_price || p.price).toFixed(2)}` : 'Consultar precio'}
                   </p>
                   <button
                     onClick={() => addItem(p, 1)}
                     disabled={Number(p.offer_price || p.price) <= 0}
-                    className={`mt-2 text-xs font-bold py-1.5 px-3 rounded-lg flex items-center justify-center space-x-1 mx-auto ${
+                    className={`mt-2 text-xs font-medium py-1.5 px-3 rounded-lg flex items-center justify-center space-x-1 mx-auto ${
                       Number(p.offer_price || p.price) > 0
                         ? 'bg-brand-red text-white hover:bg-brand-red-hover'
                         : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60 pointer-events-none'
@@ -82,26 +82,26 @@ export default function Compare() {
           </thead>
           <tbody className="divide-y divide-gray-100 text-xs text-gray-800 font-semibold">
             <tr>
-              <td className="p-4 font-bold text-gray-500 bg-gray-50/50">Marca</td>
+              <td className="p-4 font-medium text-gray-500 bg-gray-50/50">Marca</td>
               {comparedProducts.map((p) => (
                 <td key={p.id} className="p-4 text-center border-l border-gray-200">{p.brand?.name || 'SUPER'}</td>
               ))}
             </tr>
             <tr>
-              <td className="p-4 font-bold text-gray-500 bg-gray-50/50">SKU</td>
+              <td className="p-4 font-medium text-gray-500 bg-gray-50/50">SKU</td>
               {comparedProducts.map((p) => (
                 <td key={p.id} className="p-4 text-center border-l border-gray-200 font-mono">{p.sku}</td>
               ))}
             </tr>
             <tr>
-              <td className="p-4 font-bold text-gray-500 bg-gray-50/50">Stock</td>
+              <td className="p-4 font-medium text-gray-500 bg-gray-50/50">Stock</td>
               {comparedProducts.map((p) => (
-                <td key={p.id} className="p-4 text-center border-l border-gray-200 text-emerald-600 font-bold">{p.stock} unids</td>
+                <td key={p.id} className="p-4 text-center border-l border-gray-200 text-emerald-600 font-medium">{p.stock} unids</td>
               ))}
             </tr>
             {allSpecKeys.map((key, idx) => (
               <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}>
-                <td className="p-4 font-bold text-gray-500 bg-gray-50/50">{key}</td>
+                <td className="p-4 font-medium text-gray-500 bg-gray-50/50">{key}</td>
                 {comparedProducts.map((p) => (
                   <td key={p.id} className="p-4 text-center border-l border-gray-200">
                     {p.technical_specs?.[key] || '—'}

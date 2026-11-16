@@ -48,7 +48,7 @@ export default function CheckoutSuccess() {
     return (
       <div className="max-w-3xl mx-auto px-4 py-20 text-center space-y-4">
         <Loader2 className="w-12 h-12 animate-spin mx-auto text-brand-red" />
-        <h2 className="text-xl font-bold text-gray-900">Verificando el estado de tu pago con Mercado Pago...</h2>
+        <h2 className="text-xl font-medium text-gray-900">Verificando el estado de tu pago con Mercado Pago...</h2>
         <p className="text-sm text-gray-500">Estamos confirmando la transacción y generando tu comprobante.</p>
       </div>
     );
@@ -65,10 +65,10 @@ export default function CheckoutSuccess() {
             <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
               <CheckCircle2 className="w-12 h-12" />
             </div>
-            <span className="text-xs font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-full">
+            <span className="text-xs font-semibold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-full">
               Pago Acreditado
             </span>
-            <h1 className="text-3xl font-black text-gray-900">
+            <h1 className="text-3xl font-semibold text-gray-900">
               ¡PAGO CONFIRMADO Y PEDIDO REGISTRADO!
             </h1>
             <p className="text-sm text-gray-600 max-w-md mx-auto">
@@ -80,10 +80,10 @@ export default function CheckoutSuccess() {
             <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
               <Clock className="w-12 h-12" />
             </div>
-            <span className="text-xs font-black text-amber-600 uppercase tracking-widest bg-amber-50 px-3 py-1 rounded-full">
+            <span className="text-xs font-semibold text-amber-600 uppercase tracking-widest bg-amber-50 px-3 py-1 rounded-full">
               En Revisión
             </span>
-            <h1 className="text-3xl font-black text-gray-900">
+            <h1 className="text-3xl font-semibold text-gray-900">
               PAGO EN PROCESO DE VERIFICACIÓN
             </h1>
             <p className="text-sm text-gray-600 max-w-md mx-auto">
@@ -95,7 +95,7 @@ export default function CheckoutSuccess() {
             <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
               <ShoppingBag className="w-12 h-12" />
             </div>
-            <h1 className="text-3xl font-black text-gray-900">
+            <h1 className="text-3xl font-semibold text-gray-900">
               PEDIDO REGISTRADO
             </h1>
           </>
@@ -105,19 +105,19 @@ export default function CheckoutSuccess() {
           <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 text-left space-y-3 text-sm max-w-xl mx-auto">
             <div className="flex justify-between border-b border-gray-200 pb-2">
               <span className="text-gray-500 font-medium">Número de Orden:</span>
-              <span className="font-extrabold text-gray-900">#{order.order_number}</span>
+              <span className="font-semibold text-gray-900">#{order.order_number}</span>
             </div>
             <div className="flex justify-between border-b border-gray-200 pb-2">
               <span className="text-gray-500 font-medium">Monto Total:</span>
-              <span className="font-black text-brand-red text-base">S/ {Number(order.total).toFixed(2)}</span>
+              <span className="font-semibold text-brand-red text-base">S/ {Number(order.total).toFixed(2)}</span>
             </div>
             <div className="flex justify-between border-b border-gray-200 pb-2">
               <span className="text-gray-500 font-medium">Método de Envío:</span>
-              <span className="font-bold text-gray-800">{order.shipping_method}</span>
+              <span className="font-medium text-gray-800">{order.shipping_method}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500 font-medium">Comprobante Solicitarlo:</span>
-              <span className="font-bold uppercase text-brand-blue">
+              <span className="font-medium uppercase text-brand-blue">
                 {order.invoice_info?.invoice_type === 'factura' ? 'Factura Electrónica' : 'Boleta de Venta'}
               </span>
             </div>
@@ -127,14 +127,14 @@ export default function CheckoutSuccess() {
         <div className="flex flex-col sm:flex-row justify-center items-center gap-3 pt-4">
           <button
             onClick={() => navigate('/profile')}
-            className="w-full sm:w-auto bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3.5 px-8 rounded-xl shadow-lg transition-transform active:scale-95 text-sm flex items-center justify-center space-x-2"
+            className="w-full sm:w-auto bg-brand-red hover:bg-brand-red-hover text-white font-semibold py-3.5 px-8 rounded-xl shadow-lg transition-transform active:scale-95 text-sm flex items-center justify-center space-x-2"
           >
             <span>Ver Estado de Mis Pedidos</span>
             <ArrowRight className="w-4 h-4" />
           </button>
           <button
             onClick={() => navigate('/catalog')}
-            className="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-gray-800 font-bold py-3.5 px-8 rounded-xl text-sm"
+            className="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-gray-800 font-medium py-3.5 px-8 rounded-xl text-sm"
           >
             Seguir Comprando
           </button>

@@ -163,8 +163,8 @@ export default function AdminProducts() {
       {/* Header Bar */}
       <div className="bg-brand-dark text-white p-6 rounded-3xl border border-slate-800 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <span className="text-brand-red-accent font-black text-xs uppercase tracking-widest">[ PANEL ADMINISTRATIVO SUPER ]</span>
-          <h1 className="text-2xl font-black mt-1 flex items-center">
+          <span className="text-brand-red-accent font-semibold text-xs uppercase tracking-widest">[ PANEL ADMINISTRATIVO SUPER ]</span>
+          <h1 className="text-2xl font-semibold mt-1 flex items-center">
             <Package className="w-6 h-6 mr-2 text-brand-red" /> Gestión de Productos e Inventario
           </h1>
           <p className="text-xs text-gray-400 mt-0.5">Administración de catálogo, edición de precios y control de visibilidad</p>
@@ -172,14 +172,14 @@ export default function AdminProducts() {
         <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
           <Link
             to="/admin"
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-extrabold text-xs px-5 py-3 rounded-2xl transition-all active:scale-95 shadow-md cursor-pointer"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-semibold text-xs px-5 py-3 rounded-2xl transition-all active:scale-95 shadow-md cursor-pointer"
           >
             <LayoutDashboard className="w-4 h-4 text-brand-red-accent" />
             <span>Volver al Dashboard</span>
           </Link>
           <button
             onClick={openCreateModal}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 bg-brand-red hover:bg-brand-red-hover text-white font-extrabold text-xs px-5 py-3 rounded-2xl shadow-lg transition-transform active:scale-95 cursor-pointer"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 bg-brand-red hover:bg-brand-red-hover text-white font-semibold text-xs px-5 py-3 rounded-2xl shadow-lg transition-transform active:scale-95 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Nuevo Producto</span>
@@ -193,7 +193,7 @@ export default function AdminProducts() {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => handleStatusFilterChange('all')}
-            className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
               statusFilter === 'all'
                 ? 'bg-slate-900 text-white shadow-sm'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -203,7 +203,7 @@ export default function AdminProducts() {
           </button>
           <button
             onClick={() => handleStatusFilterChange('active')}
-            className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
               statusFilter === 'active'
                 ? 'bg-emerald-600 text-white shadow-sm'
                 : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
@@ -213,7 +213,7 @@ export default function AdminProducts() {
           </button>
           <button
             onClick={() => handleStatusFilterChange('inactive')}
-            className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
               statusFilter === 'inactive'
                 ? 'bg-slate-600 text-white shadow-sm'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -240,7 +240,7 @@ export default function AdminProducts() {
       <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="bg-gray-50/80 border-b border-gray-200 font-black text-gray-400 uppercase tracking-wider text-[11px]">
+            <tr className="bg-gray-50/80 border-b border-gray-200 font-semibold text-gray-400 uppercase tracking-wider text-[11px]">
               <th className="p-4 whitespace-nowrap">Producto</th>
               <th className="p-4 whitespace-nowrap">SKU</th>
               <th className="p-4 whitespace-nowrap">Categoría / Subcategoría</th>
@@ -280,18 +280,18 @@ export default function AdminProducts() {
                         />
                       </div>
                       <div>
-                        <span className="font-bold text-gray-900 line-clamp-1 max-w-xs">{p.name}</span>
+                        <span className="font-medium text-gray-900 line-clamp-1 max-w-xs">{p.name}</span>
                         <span className="text-[10px] text-gray-400 block">{p.brand?.name || 'SUPERLAPTOP'}</span>
                       </div>
                     </td>
                   <td className="p-4 font-mono text-gray-500 whitespace-nowrap">{p.sku}</td>
                   <td className="p-4 text-gray-600 whitespace-nowrap">{p.category?.name || '—'}</td>
-                  <td className="p-4 font-bold text-gray-900 whitespace-nowrap">S/ {Number(p.price).toFixed(2)}</td>
-                  <td className="p-4 text-brand-red font-black whitespace-nowrap">
+                  <td className="p-4 font-medium text-gray-900 whitespace-nowrap">S/ {Number(p.price).toFixed(2)}</td>
+                  <td className="p-4 text-brand-red font-semibold whitespace-nowrap">
                     {p.offer_price ? `S/ ${Number(p.offer_price).toFixed(2)}` : '—'}
                   </td>
                   <td className="p-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-full font-black text-[10px] sm:text-[11px] ${p.stock <= 5 ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}`}>
+                    <span className={`inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-full font-semibold text-[10px] sm:text-[11px] ${p.stock <= 5 ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}`}>
                       {p.stock} unids
                     </span>
                   </td>
@@ -300,7 +300,7 @@ export default function AdminProducts() {
                     <button
                       onClick={() => handleToggleStatus(p)}
                       title={p.is_active ? 'Desactivar producto (Ocultar del catálogo)' : 'Activar producto (Mostrar en catálogo)'}
-                      className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full font-black text-[10px] sm:text-[11px] border transition-all shadow-sm active:scale-95 whitespace-nowrap ${
+                      className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full font-semibold text-[10px] sm:text-[11px] border transition-all shadow-sm active:scale-95 whitespace-nowrap ${
                         p.is_active
                           ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
                           : 'bg-slate-200 text-slate-600 border-slate-300 hover:bg-slate-300'
@@ -314,7 +314,7 @@ export default function AdminProducts() {
                     {/* Edit Button */}
                     <button
                       onClick={() => openEditModal(p)}
-                      className="bg-brand-blue/10 hover:bg-brand-blue/20 text-brand-blue border border-brand-blue/20 font-bold px-3 py-1.5 rounded-xl text-xs inline-flex items-center space-x-1 transition-colors whitespace-nowrap"
+                      className="bg-brand-blue/10 hover:bg-brand-blue/20 text-brand-blue border border-brand-blue/20 font-medium px-3 py-1.5 rounded-xl text-xs inline-flex items-center space-x-1 transition-colors whitespace-nowrap"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                       <span>Editar</span>
@@ -336,7 +336,7 @@ export default function AdminProducts() {
             <select
               value={itemsPerPage}
               onChange={handleItemsPerPageChange}
-              className="bg-gray-100 border border-gray-300 rounded-xl px-2.5 py-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-red cursor-pointer"
+              className="bg-gray-100 border border-gray-300 rounded-xl px-2.5 py-1 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand-red cursor-pointer"
             >
               <option value={10}>10 por pág.</option>
               <option value={20}>20 por pág.</option>
@@ -354,7 +354,7 @@ export default function AdminProducts() {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed font-bold transition-all cursor-pointer flex items-center"
+              className="px-3 py-1.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-all cursor-pointer flex items-center"
             >
               <ChevronLeft className="w-4 h-4 mr-0.5" />
               <span>Anterior</span>
@@ -365,7 +365,7 @@ export default function AdminProducts() {
                 key={idx}
                 onClick={() => typeof page === 'number' && setCurrentPage(page)}
                 disabled={page === '...'}
-                className={`w-8 h-8 rounded-xl font-black transition-all flex items-center justify-center cursor-pointer ${
+                className={`w-8 h-8 rounded-xl font-semibold transition-all flex items-center justify-center cursor-pointer ${
                   page === currentPage
                     ? 'bg-brand-red text-white shadow-md'
                     : page === '...'
@@ -380,7 +380,7 @@ export default function AdminProducts() {
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="px-3 py-1.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed font-bold transition-all cursor-pointer flex items-center"
+              className="px-3 py-1.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-all cursor-pointer flex items-center"
             >
               <span>Siguiente</span>
               <ChevronRight className="w-4 h-4 ml-0.5" />

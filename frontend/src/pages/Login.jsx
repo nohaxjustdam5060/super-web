@@ -37,19 +37,19 @@ export default function Login() {
           <div className="inline-flex bg-brand-red text-white p-3 rounded-2xl shadow-md mb-2">
             <LogIn className="w-6 h-6" />
           </div>
-          <h2 className="text-2xl font-black text-gray-900">Iniciar Sesión</h2>
+          <h2 className="text-2xl font-semibold text-gray-900">Iniciar Sesión</h2>
           <p className="text-xs text-gray-500">Accede a tu cuenta para realizar compras y consultar tus pedidos en SUPERLAPTOP</p>
         </div>
 
         {errorMsg && (
-          <div className="p-3 bg-red-50 text-red-700 text-xs font-bold rounded-xl border border-red-200">
+          <div className="p-3 bg-red-50 text-red-700 text-xs font-medium rounded-xl border border-red-200">
             {errorMsg}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Correo Electrónico</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Correo Electrónico</label>
             <div className="relative">
               <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" />
               <input
@@ -64,8 +64,8 @@ export default function Login() {
 
           <div>
             <div className="flex justify-between items-center mb-1">
-              <label className="block text-xs font-bold text-gray-700">Contraseña</label>
-              <Link to="/forgot-password" className="text-xs font-bold text-brand-red hover:underline">
+              <label className="block text-xs font-medium text-gray-700">Contraseña</label>
+              <Link to="/forgot-password" className="text-xs font-medium text-brand-red hover:underline">
                 ¿Olvidaste tu contraseña?
               </Link>
             </div>
@@ -84,7 +84,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition-transform active:scale-95 text-sm"
+            className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg transition-transform active:scale-95 text-sm"
           >
             {loading ? 'Ingresando...' : 'Iniciar Sesión'}
           </button>
@@ -93,7 +93,7 @@ export default function Login() {
 
         <div className="text-center text-xs text-gray-500 pt-2 border-t border-gray-100">
           ¿No tienes una cuenta aún?{' '}
-          <Link to="/register" state={location.state} className="text-brand-red font-bold hover:underline">
+          <Link to="/register" state={location.state} className="text-brand-red font-medium hover:underline">
             Regístrate aquí
           </Link>
         </div>

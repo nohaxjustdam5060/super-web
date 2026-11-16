@@ -197,8 +197,8 @@ export default function ProductDetail() {
   if (!product) {
     return (
       <div className="max-w-[1440px] mx-auto px-4 py-16 text-center space-y-4">
-        <h2 className="text-2xl font-black text-gray-900">Producto no encontrado</h2>
-        <Link to="/catalog" className="text-brand-red font-bold hover:underline">Volver al Catálogo</Link>
+        <h2 className="text-2xl font-semibold text-gray-900">Producto no encontrado</h2>
+        <Link to="/catalog" className="text-brand-red font-medium hover:underline">Volver al Catálogo</Link>
       </div>
     );
   }
@@ -254,9 +254,9 @@ export default function ProductDetail() {
     const intPart = Math.floor(num);
     const decPart = (num % 1).toFixed(2).slice(2);
     return (
-      <span className={`inline-flex items-baseline font-black ${colorClass}`}>
+      <span className={`inline-flex items-baseline font-semibold ${colorClass}`}>
         <span>S/ {intPart.toLocaleString('es-PE')}</span>
-        <sup className="text-xs sm:text-sm ml-0.5 font-bold leading-none">{decPart}</sup>
+        <sup className="text-xs sm:text-sm ml-0.5 font-medium leading-none">{decPart}</sup>
       </span>
     );
   };
@@ -340,7 +340,7 @@ export default function ProductDetail() {
                 </button>
 
                 {/* Counter indicator */}
-                <span className="absolute bottom-3 right-3 bg-slate-900/70 text-white text-[10px] font-bold px-2.5 py-1 rounded-full backdrop-blur-sm z-20 shadow-sm pointer-events-none tracking-wider">
+                <span className="absolute bottom-3 right-3 bg-slate-900/70 text-white text-[10px] font-medium px-2.5 py-1 rounded-full backdrop-blur-sm z-20 shadow-sm pointer-events-none tracking-wider">
                   {currentImageIndex + 1} / {imagesList.length}
                 </span>
               </>
@@ -374,7 +374,7 @@ export default function ProductDetail() {
                     />
                     {img.is_primary && (
                       <span
-                        className="absolute top-1.5 left-1.5 w-4 h-4 bg-brand-red text-white rounded-full flex items-center justify-center text-[9px] z-10 shadow-xs leading-none font-bold pointer-events-none"
+                        className="absolute top-1.5 left-1.5 w-4 h-4 bg-brand-red text-white rounded-full flex items-center justify-center text-[9px] z-10 shadow-xs leading-none font-medium pointer-events-none"
                         title="Imagen Principal"
                       >
                         ★
@@ -393,23 +393,23 @@ export default function ProductDetail() {
             {/* Header Meta: Brand, SKU & Stock Status Badge */}
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center flex-wrap gap-2">
-                <span className="text-xs font-bold text-brand-blue uppercase bg-brand-blue-light px-3 py-1 rounded-md border border-brand-blue/20">
+                <span className="text-xs font-medium text-brand-blue uppercase bg-brand-blue-light px-3 py-1 rounded-md border border-brand-blue/20">
                   {product.brand?.name || 'SUPERLAPTOP'}
                 </span>
 
                 {/* DYNAMIC STOCK BADGE */}
                 {stockCount > 3 ? (
-                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-md text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm">
+                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm">
                     <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
                     <span>Disponible en Stock ({stockCount} unids)</span>
                   </span>
                 ) : stockCount > 0 ? (
-                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-md text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-200 shadow-sm">
+                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200 shadow-sm">
                     <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
                     <span>¡Últimas {stockCount} unidades disponibles!</span>
                   </span>
                 ) : (
-                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-md text-xs font-extrabold bg-red-100 text-red-800 border border-red-200 shadow-sm">
+                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-red-100 text-red-800 border border-red-200 shadow-sm">
                     <XCircle className="w-3.5 h-3.5 text-red-600" />
                     <span>Agotado / Sin Stock</span>
                   </span>
@@ -422,14 +422,14 @@ export default function ProductDetail() {
             {/* Discount Badge above title (when visual offer is active) */}
             {hasVisualOffer && (
               <div className="flex items-center pt-1">
-                <span className="inline-flex items-center gap-1.5 bg-red-50 text-brand-red border border-red-200 text-xs sm:text-sm font-black px-3 py-1 rounded-md shadow-2xs">
+                <span className="inline-flex items-center gap-1.5 bg-red-50 text-brand-red border border-red-200 text-xs sm:text-sm font-semibold px-3 py-1 rounded-md shadow-2xs">
                   <Tag className="w-4 h-4 text-brand-red flex-shrink-0" />
                   <span>{discountPercent}% de descuento</span>
                 </span>
               </div>
             )}
 
-            <h1 className="text-xl sm:text-3xl font-black text-gray-900 leading-tight">
+            <h1 className="text-xl sm:text-3xl font-semibold text-gray-900 leading-tight">
               {product.name}
             </h1>
 
@@ -437,13 +437,13 @@ export default function ProductDetail() {
             <div className="bg-gray-50 p-4 sm:p-5 rounded-lg border border-gray-100 flex flex-wrap items-baseline justify-between gap-3">
               <div className="flex flex-wrap items-baseline gap-3 sm:gap-4">
                 {!isPriceValid ? (
-                  <div className="text-2xl sm:text-3xl font-black text-gray-900">
+                  <div className="text-2xl sm:text-3xl font-semibold text-gray-900">
                     Consultar precio
                   </div>
                 ) : (
                   <>
                     {/* Real Selling Price (Charged in Cart & Checkout) */}
-                    <div className="text-2xl sm:text-3xl font-black">
+                    <div className="text-2xl sm:text-3xl font-semibold">
                       {formatPriceWithSup(price, hasVisualOffer ? "text-brand-red" : "text-gray-900")}
                     </div>
 
@@ -459,14 +459,14 @@ export default function ProductDetail() {
               </div>
 
               <div className="text-right">
-                <span className="text-[11px] font-bold text-gray-500 block">
+                <span className="text-[11px] font-medium text-gray-500 block">
                   {!isPriceValid
                     ? 'Cotización personalizada'
                     : isAvailable
                     ? `Disponibilidad: ${stockCount} unidades`
                     : 'Sin unidades en almacén'}
                 </span>
-                <span className="text-[10px] text-emerald-600 font-extrabold flex items-center justify-end">
+                <span className="text-[10px] text-emerald-600 font-semibold flex items-center justify-end">
                   <Check className="w-3 h-3 mr-0.5" /> Entrega Inmediata
                 </span>
               </div>
@@ -487,10 +487,10 @@ export default function ProductDetail() {
                           <IconComp className="w-3.5 h-3.5" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <span className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider block truncate leading-none mb-0.5">
+                          <span className="text-[9px] sm:text-[10px] font-medium text-gray-400 uppercase tracking-wider block truncate leading-none mb-0.5">
                             {sp.key}
                           </span>
-                          <span className="text-[11px] sm:text-xs font-extrabold text-gray-900 block truncate leading-tight">
+                          <span className="text-[11px] sm:text-xs font-semibold text-gray-900 block truncate leading-tight">
                             {sp.val}
                           </span>
                         </div>
@@ -528,7 +528,7 @@ export default function ProductDetail() {
                 >
                   <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
-                <span className="px-2.5 sm:px-3.5 font-extrabold text-xs sm:text-sm text-gray-900">{quantity}</span>
+                <span className="px-2.5 sm:px-3.5 font-semibold text-xs sm:text-sm text-gray-900">{quantity}</span>
                 <button
                   onClick={() => setQuantity(Math.min(stockCount, quantity + 1))}
                   disabled={!canPurchase || quantity >= stockCount}
@@ -543,7 +543,7 @@ export default function ProductDetail() {
               <button
                 onClick={() => addItem(product, quantity)}
                 disabled={!canPurchase}
-                className={`flex-1 font-extrabold py-2.5 sm:py-3.5 px-3 sm:px-6 rounded-md flex items-center justify-center space-x-1.5 sm:space-x-2 shadow-lg transition-transform text-[11px] sm:text-xs md:text-sm text-center leading-tight whitespace-normal break-words min-h-[44px] ${
+                className={`flex-1 font-semibold py-2.5 sm:py-3.5 px-3 sm:px-6 rounded-md flex items-center justify-center space-x-1.5 sm:space-x-2 shadow-lg transition-transform text-[11px] sm:text-xs md:text-sm text-center leading-tight whitespace-normal break-words min-h-[44px] ${
                   canPurchase
                     ? 'bg-brand-red hover:bg-brand-red-hover text-white cursor-pointer active:scale-95'
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60 pointer-events-none shadow-none'
@@ -566,7 +566,7 @@ export default function ProductDetail() {
               }])}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold py-2.5 sm:py-3.5 px-3 sm:px-6 rounded-md flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-[11px] sm:text-xs md:text-sm text-center leading-tight whitespace-normal break-words min-h-[44px] cursor-pointer"
+              className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-semibold py-2.5 sm:py-3.5 px-3 sm:px-6 rounded-md flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-[11px] sm:text-xs md:text-sm text-center leading-tight whitespace-normal break-words min-h-[44px] cursor-pointer"
             >
               <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
               <span className="break-words">
@@ -593,14 +593,14 @@ export default function ProductDetail() {
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
         <div className="border-b border-gray-200 bg-gray-50/80 px-6 py-4 flex items-center space-x-2">
           <FileText className="w-5 h-5 text-brand-red" />
-          <h3 className="text-base sm:text-lg font-extrabold text-gray-900">Especificaciones Técnicas</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900">Especificaciones Técnicas</h3>
         </div>
 
         <div className="p-6 sm:p-8 space-y-8">
           {/* High-level Feature Cards (Processor, RAM, Storage, Screen) */}
           {highlightedSpecs.length > 0 && (
             <div className="space-y-3">
-              <h4 className="text-xs font-black text-gray-400 uppercase tracking-wider">
+              <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 Características Destacadas
               </h4>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
@@ -612,8 +612,8 @@ export default function ProductDetail() {
                         <IconComp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[9px] sm:text-[10px] font-extrabold text-gray-400 uppercase block truncate">{sp.key}</span>
-                        <span className="text-xs sm:text-sm font-black break-words leading-tight block">{sp.val}</span>
+                        <span className="text-[9px] sm:text-[10px] font-semibold text-gray-400 uppercase block truncate">{sp.key}</span>
+                        <span className="text-xs sm:text-sm font-semibold break-words leading-tight block">{sp.val}</span>
                       </div>
                     </div>
                   );
@@ -624,7 +624,7 @@ export default function ProductDetail() {
 
           {/* Complete Specifications Key-Value Responsive Container */}
           <div className="space-y-4">
-            <h4 className="text-sm font-black text-gray-900 flex items-center">
+            <h4 className="text-sm font-semibold text-gray-900 flex items-center">
               <Layers className="w-4 h-4 mr-2 text-brand-red" /> Ficha Técnica Detallada
             </h4>
 
@@ -640,13 +640,13 @@ export default function ProductDetail() {
                       } hover:bg-red-50/30`}
                     >
                       {/* Property Key Label */}
-                      <div className="font-bold text-gray-600 w-full sm:w-1/3 flex items-center space-x-1.5 flex-shrink-0 text-[11px] sm:text-xs md:text-sm">
+                      <div className="font-medium text-gray-600 w-full sm:w-1/3 flex items-center space-x-1.5 flex-shrink-0 text-[11px] sm:text-xs md:text-sm">
                         <IconC className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-red flex-shrink-0" />
                         <span className="break-words leading-tight">{item.key}</span>
                       </div>
 
                       {/* Property Value (Auto-wrapping text with responsive sizing) */}
-                      <div className="font-extrabold text-gray-900 w-full sm:w-2/3 break-words leading-snug text-[11px] sm:text-xs md:text-sm min-w-0 pl-5 sm:pl-0">
+                      <div className="font-semibold text-gray-900 w-full sm:w-2/3 break-words leading-snug text-[11px] sm:text-xs md:text-sm min-w-0 pl-5 sm:pl-0">
                         {item.val}
                       </div>
                     </div>
@@ -663,7 +663,7 @@ export default function ProductDetail() {
       {/* Related Products Section */}
       {relatedProducts.length > 0 && (
         <div className="space-y-6">
-          <h3 className="text-xl font-black text-gray-900 flex items-center">
+          <h3 className="text-xl font-semibold text-gray-900 flex items-center">
             <RefreshCw className="w-5 h-5 mr-2 text-brand-red" /> Productos Relacionados
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">

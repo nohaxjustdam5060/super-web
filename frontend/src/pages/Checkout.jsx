@@ -296,8 +296,8 @@ export default function Checkout() {
   if (items.length === 0 && !createdOrder) {
     return (
       <div className="max-w-[1440px] mx-auto px-4 py-16 text-center space-y-4">
-        <h2 className="text-2xl font-black text-gray-900">No hay productos en el carrito para procesar</h2>
-        <button onClick={() => navigate('/catalog')} className="bg-brand-red text-white font-bold px-6 py-2.5 rounded-xl text-sm hover:bg-brand-red-hover shadow">
+        <h2 className="text-2xl font-semibold text-gray-900">No hay productos en el carrito para procesar</h2>
+        <button onClick={() => navigate('/catalog')} className="bg-brand-red text-white font-medium px-6 py-2.5 rounded-xl text-sm hover:bg-brand-red-hover shadow">
           Ir al Catálogo
         </button>
       </div>
@@ -314,10 +314,10 @@ export default function Checkout() {
           </div>
 
           <div className="space-y-2">
-            <span className="text-xs font-black text-brand-red uppercase tracking-widest bg-red-50 px-3 py-1 rounded-full border border-red-100">
+            <span className="text-xs font-semibold text-brand-red uppercase tracking-widest bg-red-50 px-3 py-1 rounded-full border border-red-100">
               Paso Requerido
             </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 pt-1">
+            <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 pt-1">
               Inicia sesión para continuar con tu compra
             </h2>
             <p className="text-sm text-gray-600 max-w-md mx-auto leading-relaxed">
@@ -328,14 +328,14 @@ export default function Checkout() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 max-w-md mx-auto">
             <button
               onClick={() => navigate('/login', { state: { from: '/checkout' } })}
-              className="bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-sm"
+              className="bg-brand-red hover:bg-brand-red-hover text-white font-semibold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-sm"
             >
               <span>Iniciar Sesión</span>
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
               onClick={() => navigate('/register', { state: { from: '/checkout' } })}
-              className="bg-brand-dark hover:bg-slate-800 text-white font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 border border-slate-700 shadow transition-transform active:scale-95 text-sm"
+              className="bg-brand-dark hover:bg-slate-800 text-white font-semibold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 border border-slate-700 shadow transition-transform active:scale-95 text-sm"
             >
               <span>Crear Cuenta</span>
             </button>
@@ -592,12 +592,12 @@ export default function Checkout() {
     <div className="max-w-[1440px] mx-auto px-4 py-8 space-y-8">
       {/* Step Indicators */}
       <div className="flex items-center justify-center space-x-4 max-w-xl mx-auto">
-        <div className={`flex items-center space-x-2 text-sm font-extrabold ${step === 1 ? 'text-brand-red' : 'text-gray-400'}`}>
+        <div className={`flex items-center space-x-2 text-sm font-semibold ${step === 1 ? 'text-brand-red' : 'text-gray-400'}`}>
           <span className="w-7 h-7 rounded-full bg-brand-red text-white flex items-center justify-center text-xs">1</span>
           <span>Envío & Método</span>
         </div>
         <div className="w-12 h-0.5 bg-gray-300" />
-        <div className={`flex items-center space-x-2 text-sm font-extrabold ${step === 2 ? 'text-brand-red' : 'text-gray-400'}`}>
+        <div className={`flex items-center space-x-2 text-sm font-semibold ${step === 2 ? 'text-brand-red' : 'text-gray-400'}`}>
           <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs ${step === 2 ? 'bg-brand-red text-white' : 'bg-gray-300 text-gray-700'}`}>2</span>
           <span>Comprobante & Pago</span>
         </div>
@@ -607,14 +607,14 @@ export default function Checkout() {
       {paymentSuccess ? (
         <div className="max-w-xl mx-auto bg-white p-8 rounded-3xl border border-gray-200 shadow-xl text-center space-y-4">
           <CheckCircle2 className="w-20 h-20 text-emerald-500 mx-auto animate-bounce" />
-          <h2 className="text-3xl font-black text-gray-900">¡PAGO APROBADO CON ÉXITO!</h2>
+          <h2 className="text-3xl font-semibold text-gray-900">¡PAGO APROBADO CON ÉXITO!</h2>
           <p className="text-gray-600 text-sm">
             Tu pedido <strong className="text-brand-blue">#{createdOrder?.order_number}</strong> ha sido confirmado y está en preparación. Te enviamos el comprobante a tu correo electrónico.
           </p>
           <div className="pt-4">
             <button
               onClick={() => navigate('/profile')}
-              className="bg-brand-red text-white font-bold py-3 px-8 rounded-xl text-sm hover:bg-brand-red-hover shadow-lg"
+              className="bg-brand-red text-white font-medium py-3 px-8 rounded-xl text-sm hover:bg-brand-red-hover shadow-lg"
             >
               Ver Mis Pedidos
             </button>
@@ -627,10 +627,10 @@ export default function Checkout() {
             <Clock className="w-9 h-9" />
           </div>
           <div>
-            <span className="bg-amber-100 text-amber-800 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider">
+            <span className="bg-amber-100 text-amber-800 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">
               Reserva Activa (4h)
             </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 pt-2">
+            <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 pt-2">
               ¡PEDIDO #{createdOrder?.order_number} RESERVADO CON ÉXITO!
             </h2>
             <p className="text-sm text-gray-600 max-w-md mx-auto pt-1">
@@ -642,14 +642,14 @@ export default function Checkout() {
           <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 text-left space-y-4 text-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
               <div>
-                <p className="font-black text-slate-900 text-sm flex items-center">
+                <p className="font-semibold text-slate-900 text-sm flex items-center">
                   <Building2 className="w-4 h-4 mr-2 text-brand-red" /> Cuentas Bancarias Oficiales
                 </p>
                 <p className="text-[11px] text-gray-500 mt-0.5">
-                  Titular: <strong className="text-gray-800 font-bold">SUPERLAPTOP S.A.C</strong> · RUC: <strong className="text-gray-800 font-bold">20609242575</strong>
+                  Titular: <strong className="text-gray-800 font-medium">SUPERLAPTOP S.A.C</strong> · RUC: <strong className="text-gray-800 font-medium">20609242575</strong>
                 </p>
               </div>
-              <div className="bg-red-50 border border-red-200 text-brand-red px-3 py-1.5 rounded-xl font-black text-xs text-right whitespace-nowrap">
+              <div className="bg-red-50 border border-red-200 text-brand-red px-3 py-1.5 rounded-xl font-semibold text-xs text-right whitespace-nowrap">
                 Monto Exacto: S/ {Number(createdOrder?.total || total).toFixed(2)}
               </div>
             </div>
@@ -658,8 +658,8 @@ export default function Checkout() {
               {/* BCP Soles */}
               <div className="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="font-black text-brand-blue text-xs">BCP Soles</span>
-                  <span className="text-[10px] font-bold uppercase bg-blue-50 text-brand-blue px-2 py-0.5 rounded-md">Cuenta Corriente</span>
+                  <span className="font-semibold text-brand-blue text-xs">BCP Soles</span>
+                  <span className="text-[10px] font-medium uppercase bg-blue-50 text-brand-blue px-2 py-0.5 rounded-md">Cuenta Corriente</span>
                 </div>
                 <div className="space-y-1 font-mono text-[11px] text-gray-800">
                   <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
@@ -690,8 +690,8 @@ export default function Checkout() {
               {/* BBVA Soles */}
               <div className="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="font-black text-blue-800 text-xs">BBVA Soles</span>
-                  <span className="text-[10px] font-bold uppercase bg-blue-50 text-blue-800 px-2 py-0.5 rounded-md">Cuenta Corriente</span>
+                  <span className="font-semibold text-blue-800 text-xs">BBVA Soles</span>
+                  <span className="text-[10px] font-medium uppercase bg-blue-50 text-blue-800 px-2 py-0.5 rounded-md">Cuenta Corriente</span>
                 </div>
                 <div className="space-y-1 font-mono text-[11px] text-gray-800">
                   <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
@@ -722,8 +722,8 @@ export default function Checkout() {
               {/* Interbank Soles */}
               <div className="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="font-black text-emerald-700 text-xs">Interbank Soles</span>
-                  <span className="text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md">Cuenta Corriente</span>
+                  <span className="font-semibold text-emerald-700 text-xs">Interbank Soles</span>
+                  <span className="text-[10px] font-medium uppercase bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md">Cuenta Corriente</span>
                 </div>
                 <div className="space-y-1 font-mono text-[11px] text-gray-800">
                   <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
@@ -754,8 +754,8 @@ export default function Checkout() {
               {/* BCP Dólares */}
               <div className="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="font-black text-brand-blue text-xs">BCP Dólares</span>
-                  <span className="text-[10px] font-bold uppercase bg-blue-50 text-brand-blue px-2 py-0.5 rounded-md">Cuenta USD</span>
+                  <span className="font-semibold text-brand-blue text-xs">BCP Dólares</span>
+                  <span className="text-[10px] font-medium uppercase bg-blue-50 text-brand-blue px-2 py-0.5 rounded-md">Cuenta USD</span>
                 </div>
                 <div className="space-y-1 font-mono text-[11px] text-gray-800">
                   <div className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded-lg">
@@ -786,7 +786,7 @@ export default function Checkout() {
 
             <div className="bg-amber-50/80 border border-amber-200/80 p-3 rounded-xl text-amber-800 text-xs flex items-center justify-between flex-wrap gap-2">
               <span className="font-medium">
-                ¿Prefieres enviar por correo? Escríbenos a <strong className="font-bold">ventas@cuadrado.pe</strong>
+                ¿Prefieres enviar por correo? Escríbenos a <strong className="font-medium">ventas@cuadrado.pe</strong>
               </span>
             </div>
           </div>
@@ -796,14 +796,14 @@ export default function Checkout() {
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-sm w-full sm:w-auto cursor-pointer"
+              className="bg-[#25D366] hover:bg-[#20ba5a] text-white font-semibold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition-transform active:scale-95 text-sm w-full sm:w-auto cursor-pointer"
             >
               <MessageSquare className="w-4 h-4" />
               <span>Enviar Constancia por WhatsApp</span>
             </a>
             <button
               onClick={() => navigate('/profile')}
-              className="bg-brand-dark hover:bg-slate-800 text-white font-bold py-3.5 px-6 rounded-xl text-sm w-full sm:w-auto cursor-pointer"
+              className="bg-brand-dark hover:bg-slate-800 text-white font-medium py-3.5 px-6 rounded-xl text-sm w-full sm:w-auto cursor-pointer"
             >
               Ver Mis Pedidos
             </button>
@@ -818,7 +818,7 @@ export default function Checkout() {
               /* STEP 1: SHIPPING METHOD (TOP) & CONDITIONAL ADDRESS FORM */
               <form onSubmit={handleProceedToPaymentStep} className="bg-white p-4 sm:p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
                 <div className="border-b border-gray-100 pb-2.5">
-                  <h3 className="text-lg sm:text-xl font-black text-gray-900 flex items-center">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center">
                     <Truck className="w-5 h-5 mr-2 text-brand-red shrink-0" /> 1. Método de Entrega y Datos de Despacho
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5">
@@ -828,7 +828,7 @@ export default function Checkout() {
 
                 {/* 1.1 SHIPPING METHOD SELECTION (PLACED AT THE TOP) */}
                 <div className="space-y-2">
-                  <label className="block text-[11px] font-black uppercase tracking-wider text-brand-red">
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-brand-red">
                     Selecciona el Método de Entrega *
                   </label>
 
@@ -881,12 +881,12 @@ export default function Checkout() {
                                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-brand-red bg-brand-red' : 'border-gray-300'}`}>
                                   {isSelected && <Check className="w-2.5 h-2.5 text-white stroke-[3]" />}
                                 </div>
-                                <span className={`font-black text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full ${methodIsPickup ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-50 text-blue-800'}`}>
+                                <span className={`font-semibold text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full ${methodIsPickup ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-50 text-blue-800'}`}>
                                   {methodIsPickup ? '¡Gratis!' : `S/ ${Number(method.cost).toFixed(2)}`}
                                 </span>
                               </div>
 
-                              <p className="font-extrabold text-gray-900 text-xs sm:text-sm flex items-center pt-0.5">
+                              <p className="font-semibold text-gray-900 text-xs sm:text-sm flex items-center pt-0.5">
                                 {renderShippingMethodIcon(method, isSelected)}
                                 <span>{displayName}</span>
                               </p>
@@ -961,12 +961,12 @@ export default function Checkout() {
                   <div className="space-y-3.5 pt-1">
                     {/* Store Physical Info Card */}
                     <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-3.5 space-y-2.5 shadow-xs">
-                      <div className="flex items-center space-x-2 text-emerald-900 font-black text-sm">
+                      <div className="flex items-center space-x-2 text-emerald-900 font-semibold text-sm">
                         <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0">
                           <Store className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="text-xs sm:text-sm font-black text-emerald-900 leading-tight">Punto Oficial de Retiro en Tienda Física</p>
+                          <p className="text-xs sm:text-sm font-semibold text-emerald-900 leading-tight">Punto Oficial de Retiro en Tienda Física</p>
                           <p className="text-[11px] text-emerald-700 font-medium">SUPERLAPTOP — Centro de Lima</p>
                         </div>
                       </div>
@@ -977,8 +977,8 @@ export default function Checkout() {
                             <MapPin className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" strokeWidth={2} />
                           </div>
                           <div>
-                            <span className="text-[10.5px] font-bold text-emerald-800 block">Dirección:</span>
-                            <span className="font-black text-gray-900 text-xs">Jr. Velarde 172, Lima</span>
+                            <span className="text-[10.5px] font-medium text-emerald-800 block">Dirección:</span>
+                            <span className="font-semibold text-gray-900 text-xs">Jr. Velarde 172, Lima</span>
                             <span className="text-[10px] text-gray-500 block">(Ref: Altura Wilson y Av. Bolivia, Cercado)</span>
                           </div>
                         </div>
@@ -988,8 +988,8 @@ export default function Checkout() {
                             <Clock className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" strokeWidth={2} />
                           </div>
                           <div>
-                            <span className="text-[10.5px] font-bold text-emerald-800 block">Horarios de Atención:</span>
-                            <span className="font-black text-gray-900 text-xs">Lun a Sáb: 9:30 AM – 7:30 PM</span>
+                            <span className="text-[10.5px] font-medium text-emerald-800 block">Horarios de Atención:</span>
+                            <span className="font-semibold text-gray-900 text-xs">Lun a Sáb: 9:30 AM – 7:30 PM</span>
                           </div>
                         </div>
                       </div>
@@ -1006,13 +1006,13 @@ export default function Checkout() {
 
                     {/* Store Pickup Form Fields */}
                     <div className="space-y-3">
-                      <h4 className="font-black text-gray-900 text-xs sm:text-sm flex items-center">
+                      <h4 className="font-semibold text-gray-900 text-xs sm:text-sm flex items-center">
                         <ShieldCheck className="w-4 h-4 mr-1.5 text-brand-red shrink-0" /> Datos de la Persona que Recoge en Tienda
                       </h4>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                         <div>
-                          <label className="block text-xs font-bold text-gray-700 mb-1">Nombre y Apellidos de quien recoge *</label>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Nombre y Apellidos de quien recoge *</label>
                           <input
                             id="recipient_name"
                             name="recipient_name"
@@ -1038,7 +1038,7 @@ export default function Checkout() {
                         </div>
 
                         <div>
-                          <label className="block text-xs font-bold text-gray-700 mb-1">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
                             DNI o Carné de Extranjería *
                           </label>
                           <input
@@ -1072,7 +1072,7 @@ export default function Checkout() {
                       </div>
 
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
                           Teléfono de contacto celular *
                         </label>
                         <input
@@ -1108,13 +1108,13 @@ export default function Checkout() {
                 ) : (
                   /* CASE B: HOME / PROVINCE DELIVERY */
                   <div className="space-y-3 pt-1">
-                    <h4 className="font-black text-gray-900 text-xs sm:text-sm flex items-center">
+                    <h4 className="font-semibold text-gray-900 text-xs sm:text-sm flex items-center">
                       <Truck className="w-4 h-4 mr-1.5 text-brand-red shrink-0" /> Datos de Envío y Destinatario
                     </h4>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">Nombre de quien recibe *</label>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Nombre de quien recibe *</label>
                         <input
                           id="recipient_name"
                           name="recipient_name"
@@ -1139,7 +1139,7 @@ export default function Checkout() {
                         )}
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
                           Teléfono de contacto celular *
                         </label>
                         <input
@@ -1170,7 +1170,7 @@ export default function Checkout() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
                           DNI o Carné de Extranjería (Opcional)
                         </label>
                         <input
@@ -1202,7 +1202,7 @@ export default function Checkout() {
                         )}
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">Dirección (Calle, Avenida y Número) *</label>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Dirección (Calle, Avenida y Número) *</label>
                         <input
                           id="address_line1"
                           name="address_line1"
@@ -1231,7 +1231,7 @@ export default function Checkout() {
                     {/* Peruvian Political Division: Departamento, Provincia, Distrito */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">Departamento *</label>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Departamento *</label>
                         <input
                           id="department"
                           name="department"
@@ -1256,7 +1256,7 @@ export default function Checkout() {
                         )}
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">Provincia *</label>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Provincia *</label>
                         <input
                           id="province"
                           name="province"
@@ -1281,7 +1281,7 @@ export default function Checkout() {
                         )}
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">Distrito *</label>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Distrito *</label>
                         <input
                           id="district"
                           name="district"
@@ -1309,7 +1309,7 @@ export default function Checkout() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">Dpto / Interior (Opcional)</label>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Dpto / Interior (Opcional)</label>
                         <input
                           id="apartment_notes"
                           name="apartment_notes"
@@ -1321,7 +1321,7 @@ export default function Checkout() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">Referencia de ubicación (Opcional)</label>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Referencia de ubicación (Opcional)</label>
                         <input
                           id="reference"
                           name="reference"
@@ -1342,7 +1342,7 @@ export default function Checkout() {
                         onChange={(e) => setShippingAddress({ ...shippingAddress, save_info: e.target.checked })}
                         className="w-4 h-4 text-brand-red rounded border-gray-300 focus:ring-brand-red cursor-pointer"
                       />
-                      <label htmlFor="save_info" className="text-xs font-bold text-gray-700 cursor-pointer select-none">
+                      <label htmlFor="save_info" className="text-xs font-medium text-gray-700 cursor-pointer select-none">
                         Guardar esta información como mi dirección por defecto para futuras compras
                       </label>
                     </div>
@@ -1352,7 +1352,7 @@ export default function Checkout() {
                 <button
                   type="submit"
                   disabled={loading || (loadingShippingMethods && shippingMethods.length === 0)}
-                  className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-md transition-transform active:scale-95 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-md transition-transform active:scale-95 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   <span>Continuar al Paso 2: Comprobante & Pago</span>
                   <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -1362,13 +1362,13 @@ export default function Checkout() {
               /* STEP 2: INVOICE SELECTOR & PAYMENT METHOD */
               <div className="bg-white p-4 sm:p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
-                  <h3 className="text-lg sm:text-xl font-black text-gray-900 flex items-center">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center">
                     <CreditCard className="w-5 h-5 mr-2 text-brand-red shrink-0" /> 2. Comprobante & Método de Pago
                   </h3>
                   <button
                     type="button"
                     onClick={() => setStep(1)}
-                    className="text-xs text-brand-red font-bold hover:underline flex items-center bg-red-50 px-2.5 py-1.5 rounded-xl border border-red-100 transition-colors hover:bg-red-100 cursor-pointer"
+                    className="text-xs text-brand-red font-medium hover:underline flex items-center bg-red-50 px-2.5 py-1.5 rounded-xl border border-red-100 transition-colors hover:bg-red-100 cursor-pointer"
                   >
                     <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Volver a Envío
                   </button>
@@ -1376,7 +1376,7 @@ export default function Checkout() {
 
                 {/* RECEIPT / INVOICE TYPE SELECTOR (BOLETA vs FACTURA) */}
                 <div className="bg-gray-50 p-3 sm:p-3.5 rounded-xl border border-gray-200 space-y-2.5">
-                  <h4 className="font-extrabold text-gray-900 text-[11px] sm:text-xs flex items-center uppercase tracking-wider text-brand-red">
+                  <h4 className="font-semibold text-gray-900 text-[11px] sm:text-xs flex items-center uppercase tracking-wider text-brand-red">
                     <FileText className="w-3.5 h-3.5 mr-1.5" /> Selección de Comprobante Electrónico (SUNAT)
                   </h4>
 
@@ -1407,7 +1407,7 @@ export default function Checkout() {
                             : targetDoc.toUpperCase().slice(0, 12)
                         }));
                       }}
-                      className={`py-2 px-3 rounded-xl font-extrabold text-xs border text-center transition-all cursor-pointer ${
+                      className={`py-2 px-3 rounded-xl font-semibold text-xs border text-center transition-all cursor-pointer ${
                         invoiceInfo.invoice_type === 'boleta'
                           ? 'bg-brand-red hover:bg-brand-red-hover text-white border-brand-red shadow-sm'
                           : 'bg-white text-gray-700 border-gray-300 hover:border-brand-red/60 hover:bg-red-50/40 hover:text-brand-red'
@@ -1433,7 +1433,7 @@ export default function Checkout() {
                           document_number: documentDrafts.RUC || ''
                         }));
                       }}
-                      className={`py-2 px-3 rounded-xl font-extrabold text-xs border text-center transition-all cursor-pointer ${
+                      className={`py-2 px-3 rounded-xl font-semibold text-xs border text-center transition-all cursor-pointer ${
                         invoiceInfo.invoice_type === 'factura'
                           ? 'bg-brand-red hover:bg-brand-red-hover text-white border-brand-red shadow-sm'
                           : 'bg-white text-gray-700 border-gray-300 hover:border-brand-red/60 hover:bg-red-50/40 hover:text-brand-red'
@@ -1447,7 +1447,7 @@ export default function Checkout() {
                   {invoiceInfo.invoice_type === 'boleta' ? (
                     <div className="space-y-2.5 pt-0.5">
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
                           Tipo de Documento de Identidad *
                         </label>
                         <div className="flex gap-2">
@@ -1475,7 +1475,7 @@ export default function Checkout() {
                                 document_number: targetDNI
                               }));
                             }}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                            className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer ${
                               invoiceInfo.document_type === 'DNI'
                                 ? 'bg-brand-red hover:bg-brand-red-hover text-white border-brand-red shadow-xs'
                                 : 'bg-white text-gray-700 border-gray-300 hover:border-brand-red/60 hover:bg-red-50/40 hover:text-brand-red'
@@ -1507,7 +1507,7 @@ export default function Checkout() {
                                 document_number: targetCE
                               }));
                             }}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                            className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer ${
                               invoiceInfo.document_type === 'CE'
                                 ? 'bg-brand-red hover:bg-brand-red-hover text-white border-brand-red shadow-xs'
                                 : 'bg-white text-gray-700 border-gray-300 hover:border-brand-red/60 hover:bg-red-50/40 hover:text-brand-red'
@@ -1519,7 +1519,7 @@ export default function Checkout() {
                       </div>
 
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
                           {invoiceInfo.document_type === 'DNI' ? 'DNI (exactamente 8 dígitos numéricos) *' : 'Carné de Extranjería (8 a 12 caracteres alfanuméricos) *'}
                         </label>
                         <input
@@ -1583,7 +1583,7 @@ export default function Checkout() {
                     <div className="space-y-2.5 pt-0.5">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                         <div>
-                          <label className="block text-xs font-bold text-gray-700 mb-1">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
                             Número de RUC (11 dígitos, inicia con 10, 20, 15 o 17) *
                           </label>
                           <input
@@ -1614,7 +1614,7 @@ export default function Checkout() {
                         </div>
 
                         <div>
-                          <label className="block text-xs font-bold text-gray-700 mb-1">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
                             Razón Social (Empresa) *
                           </label>
                           <input
@@ -1644,11 +1644,11 @@ export default function Checkout() {
 
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <label className="block text-xs font-bold text-gray-700">
+                          <label className="block text-xs font-medium text-gray-700">
                             Domicilio Fiscal de la Empresa *
                           </label>
                           {!isPickup && shippingAddress.address_line1 && (
-                            <label className="flex items-center space-x-1 text-[11px] font-bold text-brand-blue cursor-pointer select-none">
+                            <label className="flex items-center space-x-1 text-[11px] font-medium text-brand-blue cursor-pointer select-none">
                               <input
                                 type="checkbox"
                                 checked={useDeliveryAsFiscalAddress}
@@ -1689,7 +1689,7 @@ export default function Checkout() {
 
                 {/* PAYMENT METHOD SELECTOR */}
                 <div className="space-y-2">
-                  <h4 className="font-extrabold text-gray-900 text-xs sm:text-sm">Elegir Forma de Pago</h4>
+                  <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">Elegir Forma de Pago</h4>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <button
@@ -1704,7 +1704,7 @@ export default function Checkout() {
                       <div className="flex items-start space-x-2.5">
                         <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 text-brand-red shrink-0" />
                         <div>
-                          <span className="font-black text-xs block text-gray-900 leading-tight">Mercado Pago (Tarjetas, Yape y saldo)</span>
+                          <span className="font-semibold text-xs block text-gray-900 leading-tight">Mercado Pago (Tarjetas, Yape y saldo)</span>
                           <span className="text-[11px] font-medium text-amber-700 block mt-0.5 leading-tight">Recargo de pasarela: 5%</span>
                         </div>
                       </div>
@@ -1723,7 +1723,7 @@ export default function Checkout() {
                       <div className="flex items-start space-x-2.5">
                         <Building2 className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 text-emerald-600 shrink-0" />
                         <div>
-                          <span className="font-black text-xs block text-gray-900 leading-tight">Transferencia Bancaria</span>
+                          <span className="font-semibold text-xs block text-gray-900 leading-tight">Transferencia Bancaria</span>
                           <span className="text-[11px] font-medium text-emerald-600 block mt-0.5 leading-tight">Sin recargo adicional (0%)</span>
                         </div>
                       </div>
@@ -1747,7 +1747,7 @@ export default function Checkout() {
                       }}
                       className="mt-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-red rounded border-gray-300 focus:ring-brand-red cursor-pointer"
                     />
-                    <label htmlFor="terms_agree" className="text-xs text-gray-700 font-bold cursor-pointer select-none leading-snug">
+                    <label htmlFor="terms_agree" className="text-xs text-gray-700 font-medium cursor-pointer select-none leading-snug">
                       He leído y acepto los{' '}
                       <Link to="/politicas?tab=terminos" target="_blank" rel="noopener noreferrer" className="text-brand-red underline hover:text-brand-red-hover">
                         Términos y Condiciones de Compra
@@ -1788,7 +1788,7 @@ export default function Checkout() {
                   <div className="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-3">
                     <div className="flex items-center space-x-2 text-brand-red">
                       <Building2 className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-                      <h4 className="font-black text-xs sm:text-sm">Cuentas Bancarias Oficiales</h4>
+                      <h4 className="font-semibold text-xs sm:text-sm">Cuentas Bancarias Oficiales</h4>
                     </div>
 
                     <div className="bg-white p-2.5 sm:p-3 rounded-xl border border-gray-200 text-[11px] text-gray-600 space-y-0.5">
@@ -1797,34 +1797,34 @@ export default function Checkout() {
                     </div>
 
                     <p className="text-xs text-gray-600">
-                      Realiza la transferencia por el monto exacto de <strong className="text-brand-red font-black">S/ {total.toFixed(2)}</strong> a cualquiera de nuestras cuentas oficiales:
+                      Realiza la transferencia por el monto exacto de <strong className="text-brand-red font-semibold">S/ {total.toFixed(2)}</strong> a cualquiera de nuestras cuentas oficiales:
                     </p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                       <div className="bg-white p-2.5 rounded-xl border border-gray-200 shadow-xs space-y-0.5">
-                        <p className="font-black text-brand-blue">BCP Soles</p>
+                        <p className="font-semibold text-brand-blue">BCP Soles</p>
                         <p className="font-mono text-gray-800 text-[11px]">Cta: 191-9899662-0-83</p>
                         <p className="text-[10px] text-gray-400 font-mono">CCI: 00219100989966208351</p>
                       </div>
                       <div className="bg-white p-2.5 rounded-xl border border-gray-200 shadow-xs space-y-0.5">
-                        <p className="font-black text-blue-800">BBVA Soles</p>
+                        <p className="font-semibold text-blue-800">BBVA Soles</p>
                         <p className="font-mono text-gray-800 text-[11px]">Cta: 0011-0175-0100082392</p>
                         <p className="text-[10px] text-gray-400 font-mono">CCI: 01117500010008239270</p>
                       </div>
                       <div className="bg-white p-2.5 rounded-xl border border-gray-200 shadow-xs space-y-0.5">
-                        <p className="font-black text-emerald-700">Interbank Soles</p>
+                        <p className="font-semibold text-emerald-700">Interbank Soles</p>
                         <p className="font-mono text-gray-800 text-[11px]">Cta: 200-3004056157</p>
                         <p className="text-[10px] text-gray-400 font-mono">CCI: 003-200-003004056157-30</p>
                       </div>
                       <div className="bg-white p-2.5 rounded-xl border border-gray-200 shadow-xs space-y-0.5">
-                        <p className="font-black text-brand-blue">BCP Dólares</p>
+                        <p className="font-semibold text-brand-blue">BCP Dólares</p>
                         <p className="font-mono text-gray-800 text-[11px]">Cta: 1919944889131</p>
                         <p className="text-[10px] text-gray-400 font-mono">CCI: 00219100994488913159</p>
                       </div>
                     </div>
 
                     <div className="bg-amber-50 border border-amber-200 p-2.5 sm:p-3 rounded-xl text-xs text-amber-800 space-y-1">
-                      <p className="font-bold flex items-center">
+                      <p className="font-medium flex items-center">
                         <Clock className="w-3.5 h-3.5 mr-1 text-amber-600 shrink-0" /> Reserva garantizada por 4 horas
                       </p>
                       <p className="text-[11px] text-amber-700 leading-snug">
@@ -1843,7 +1843,7 @@ export default function Checkout() {
                       type="button"
                       onClick={handleConfirmBankTransfer}
                       disabled={loading}
-                      className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-extrabold py-3 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-md transition-transform active:scale-95 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-md transition-transform active:scale-95 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                       <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
                       <span>Confirmar Pedido por Transferencia</span>
@@ -1856,7 +1856,7 @@ export default function Checkout() {
 
           {/* Right Column: Order Summary Panel */}
           <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4 h-fit">
-            <h3 className="font-extrabold text-gray-900 text-base border-b border-gray-200 pb-3">
+            <h3 className="font-semibold text-gray-900 text-base border-b border-gray-200 pb-3">
               Resumen de la Orden
             </h3>
 
@@ -1864,10 +1864,10 @@ export default function Checkout() {
               {items.map((item) => (
                 <div key={item.id} className="flex justify-between items-center text-xs">
                   <div className="truncate pr-2">
-                    <p className="font-bold text-gray-900 truncate">{item.name}</p>
+                    <p className="font-medium text-gray-900 truncate">{item.name}</p>
                     <p className="text-gray-500">Cant: {item.quantity} x S/ {Number(item.price).toFixed(2)}</p>
                   </div>
-                  <span className="font-black text-gray-900">S/ {(item.quantity * item.price).toFixed(2)}</span>
+                  <span className="font-semibold text-gray-900">S/ {(item.quantity * item.price).toFixed(2)}</span>
                 </div>
               ))}
             </div>
@@ -1888,7 +1888,7 @@ export default function Checkout() {
                 <button
                   type="button"
                   onClick={applyCoupon}
-                  className="bg-brand-dark text-white text-xs font-bold px-3.5 py-2.5 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="bg-brand-dark text-white text-xs font-medium px-3.5 py-2.5 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
                 >
                   Aplicar
                 </button>
@@ -1904,17 +1904,17 @@ export default function Checkout() {
             <div className="pt-3 border-t border-gray-100 space-y-2 text-xs font-medium text-gray-600">
               <div className="flex justify-between">
                 <span>Subtotal:</span>
-                <span className="font-bold text-gray-900">S/ {subtotal.toFixed(2)}</span>
+                <span className="font-medium text-gray-900">S/ {subtotal.toFixed(2)}</span>
               </div>
               {discountAmount > 0 && (
-                <div className="flex justify-between text-emerald-600 font-bold">
+                <div className="flex justify-between text-emerald-600 font-medium">
                   <span>Descuento Cupón:</span>
                   <span>- S/ {discountAmount.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between">
                 <span>Método de Envío:</span>
-                <span className="font-bold text-gray-900">
+                <span className="font-medium text-gray-900">
                   {selectedShippingMethod
                     ? Number(selectedShippingMethod.cost) === 0
                       ? 'Gratis'
@@ -1925,10 +1925,10 @@ export default function Checkout() {
               {paymentMethod === 'mercadopago' && gatewaySurcharge > 0 && (
                 <div className="flex justify-between text-amber-800 font-semibold bg-amber-50/90 px-2.5 py-1.5 rounded-xl border border-amber-200/70">
                   <span>Recargo por pasarela (5%):</span>
-                  <span className="font-bold text-amber-900">+ S/ {gatewaySurcharge.toFixed(2)}</span>
+                  <span className="font-medium text-amber-900">+ S/ {gatewaySurcharge.toFixed(2)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-base font-black text-gray-900 pt-2 border-t border-gray-200">
+              <div className="flex justify-between text-base font-semibold text-gray-900 pt-2 border-t border-gray-200">
                 <span>Monto Total:</span>
                 <span className="text-brand-red">S/ {total.toFixed(2)}</span>
               </div>
