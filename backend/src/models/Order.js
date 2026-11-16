@@ -105,6 +105,19 @@ const Order = sequelize.define('Order', {
   reservation_expires_at: {
     type: DataTypes.DATE,
     allowNull: true
+  },
+  erp_synced: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false
+  },
+  erp_synced_at: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+  erp_sale_id: {
+    type: DataTypes.STRING(100),
+    allowNull: true
   }
 }, {
   tableName: 'orders',
@@ -116,7 +129,8 @@ const Order = sequelize.define('Order', {
     { fields: ['reservation_expires_at'] },
     { fields: ['invoice_status'] },
     { fields: ['preference_id'] },
-    { fields: ['mp_payment_id'] }
+    { fields: ['mp_payment_id'] },
+    { fields: ['status', 'erp_synced', 'createdAt'] }
   ]
 });
 
