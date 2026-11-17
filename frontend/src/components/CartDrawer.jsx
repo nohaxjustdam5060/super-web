@@ -78,7 +78,7 @@ const CartDrawer = memo(function CartDrawer() {
           <div className="p-5 bg-brand-dark text-white flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <ShoppingBag className="w-5 h-5 text-brand-red-accent" />
-              <h2 className="font-medium text-lg">Tu Carrito SUPER</h2>
+              <h2 className="font-medium text-lg">Tu Carrito</h2>
               <span className="bg-brand-red text-white text-xs font-semibold px-2 py-0.5 rounded-full">
                 {totalItemsCount}
               </span>

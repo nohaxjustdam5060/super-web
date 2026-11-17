@@ -93,17 +93,9 @@ export default function Home() {
 
       {/* 2. Categorías Principales (Estilo Circular con Imagen de Producto - Estado Original Exacto) */}
       <section className="max-w-[1440px] mx-auto px-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-2">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900">Categorías Principales</h2>
-            
-          </div>
-          <Link to="/catalog?category_id=laptops" className="text-brand-red font-medium text-sm flex items-center hover:underline">
-            Ver todas las laptops <ChevronRight className="w-4 h-4 ml-1" />
-          </Link>
-        </div>
+        
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 justify-items-center max-w-5xl mx-auto">
+        <div className="grid grid-cols-4 gap-2 sm:gap-5 md:gap-8 justify-items-center max-w-5xl mx-auto">
           {[
             {
               name: 'Laptops Gaming',
@@ -133,10 +125,10 @@ export default function Home() {
             <Link
               key={idx}
               to={`/catalog?category_id=${cat.slug}`}
-              className="group flex flex-col items-center cursor-pointer w-full max-w-[200px]"
+              className="group flex flex-col items-center cursor-pointer w-full max-w-[176px] min-w-0"
             >
-              {/* Circular Product Image Container (Fixed circle with inner zoom) */}
-              <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-full border border-gray-200/80 shadow-sm overflow-hidden group-hover:shadow-xl group-hover:border-brand-red/40 transition-all duration-300 ease-out isolate bg-gray-100 flex items-center justify-center">
+              {/* Circular Product Image Container (Fluid proportional scaling across all screen widths) */}
+              <div className="relative w-full aspect-square max-w-[176px] rounded-full border border-gray-200/80 shadow-sm overflow-hidden group-hover:shadow-xl group-hover:border-brand-red/40 transition-all duration-300 ease-out isolate bg-gray-100 flex items-center justify-center">
                 <img
                   src={cat.image}
                   alt={cat.name}
@@ -144,14 +136,16 @@ export default function Home() {
                 />
               </div>
 
-              {/* Title & Badge Underneath */}
-              <div className="mt-4 text-center space-y-1">
-                <h3 className="font-semibold text-sm sm:text-base text-slate-800 group-hover:text-brand-red transition-colors duration-200 leading-tight">
+              {/* Title & Badge Underneath (Scales smoothly with container) */}
+              <div className="mt-2 sm:mt-3 md:mt-4 text-center space-y-0.5 sm:space-y-1 w-full px-0.5">
+                <h3 className="font-semibold text-[clamp(10px,2.5vw,16px)] text-slate-800 group-hover:text-brand-red transition-colors duration-200 leading-tight break-words">
                   {cat.name}
                 </h3>
-                <span className="text-[11px] font-semibold text-gray-400 block">
-                  {cat.badge}
-                </span>
+                {cat.badge && (
+                  <span className="text-[10px] sm:text-[11px] font-semibold text-gray-400 block">
+                    {cat.badge}
+                  </span>
+                )}
               </div>
             </Link>
           ))}
