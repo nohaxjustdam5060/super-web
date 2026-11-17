@@ -138,6 +138,7 @@ export default function Navbar() {
   const [hasOffers, setHasOffers] = useState(false);
   const [activeParentSlug, setActiveParentSlug] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [expandedMobileCategory, setExpandedMobileCategory] = useState(null);
 
   // Mobile Top Announcement Rotator State
@@ -264,14 +265,27 @@ export default function Navbar() {
       </div>
 
       {/* Main Header */}
-      <div className="max-w-[1440px] mx-auto px-4 py-1 sm:py-1.5 flex items-center justify-between gap-2 sm:gap-4 bg-brand-dark min-h-[60px] md:min-h-[72px]">
-        {/* Brand Logo (Aligned left with 'Todo el Catálogo' on Desktop, Centered on Mobile) */}
-        <div className="flex-1 md:flex-initial flex items-center justify-center md:justify-start">
-          <Link to="/" className="flex items-center justify-center md:justify-start group flex-shrink-0" title="SUPERLAPTOP">
+      <div className="max-w-[1440px] mx-auto px-3 sm:px-4 py-1 sm:py-1.5 flex items-center justify-between gap-3 sm:gap-4 bg-brand-dark min-h-[60px] md:min-h-[72px]">
+        {/* Far Left on Mobile/Tablet: Hamburger Menu Button (Visible < lg) */}
+        <button
+          onClick={() => {
+            setMobileMenuOpen(!mobileMenuOpen);
+            setMobileSearchOpen(false);
+          }}
+          className="lg:hidden text-slate-200 hover:text-white p-1.5 rounded-md border border-slate-700 hover:bg-slate-800 transition-colors flex items-center justify-center cursor-pointer flex-shrink-0"
+          aria-label="Abrir Menú de Categorías"
+          title="Menú de Categorías"
+        >
+          {mobileMenuOpen ? <X className="w-5 h-5 text-brand-red-accent" /> : <Menu className="w-5 h-5 text-white" />}
+        </button>
+
+        {/* Brand Logo (Minimum gap guaranteed via overflow-hidden & max-w-full; Centered on Mobile < md, Left-aligned on Desktop md+) */}
+        <div className="flex flex-1 md:flex-initial items-center justify-center md:justify-start min-w-0 overflow-hidden">
+          <Link to="/" className="flex items-center justify-center md:justify-start group max-w-full min-w-0" title="SUPERLAPTOP">
             <img
               src="/images/LOGOSUP.png"
               alt="SuperLaptop"
-              className="h-10 md:h-12 lg:h-14 w-auto max-w-[190px] sm:max-w-[220px] md:max-w-[260px] object-contain md:object-left group-hover:scale-105 transition-transform"
+              className="h-9 sm:h-10 md:h-12 lg:h-14 w-auto max-w-full md:max-w-[260px] object-contain md:object-left group-hover:scale-105 transition-transform"
             />
           </Link>
         </div>
@@ -279,11 +293,11 @@ export default function Navbar() {
         {/* Search Bar Desktop (Cohesive Unified Input with Live Search Autocomplete Dropdown) */}
         <SearchAutocomplete variant="desktop" />
 
-        {/* Header Right Actions (Profile, Cart & Hamburger on Mobile/Tablet) */}
+        {/* Header Right Actions (Profile, Cart & Mobile Search Button) */}
         <div className="flex items-center space-x-1.5 sm:space-x-2.5 flex-nowrap justify-end flex-shrink-0">
-          {/* 1. User Profile / Login */}
+          {/* 1. User Profile / Login (Hidden <= 323px to preserve logo size without shrinking) */}
           {user ? (
-            <Link to="/profile" className="flex items-center space-x-1.5 text-xs font-bold text-slate-200 hover:text-white p-1" title="Mi Cuenta">
+            <Link to="/profile" className="hidden min-[324px]:flex items-center space-x-1.5 text-xs font-bold text-slate-200 hover:text-white p-1" title="Mi Cuenta">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-800 text-brand-red-accent font-black text-xs flex items-center justify-center border border-slate-700">
                 {user.name.substring(0, 2).toUpperCase()}
               </div>
@@ -292,7 +306,7 @@ export default function Navbar() {
           ) : (
             <Link
               to="/login"
-              className="flex items-center space-x-1 text-xs font-bold text-slate-200 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700/90 border border-slate-700 px-2 sm:px-3 py-1.5 rounded-md"
+              className="hidden min-[324px]:flex items-center space-x-1 text-xs font-bold text-slate-200 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700/90 border border-slate-700 px-2 sm:px-3 py-1.5 rounded-md"
               title="Iniciar Sesión"
             >
               <User className="w-4 h-4 flex-shrink-0" />
@@ -315,17 +329,32 @@ export default function Navbar() {
             )}
           </button>
 
-          {/* 3. Hamburger Menu Button (Visible on mobile/tablet, hidden on desktop lg+) */}
+          {/* 3. Mobile Search Toggle Button (Visible 271px..767px; hides <= 270px for ultra-narrow screens) */}
           <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden text-slate-200 hover:text-white p-1.5 rounded-md border border-slate-700 hover:bg-slate-800 transition-colors flex items-center justify-center cursor-pointer"
-            aria-label="Abrir Menú de Categorías"
-            title="Menú de Categorías"
+            onClick={() => {
+              setMobileSearchOpen(!mobileSearchOpen);
+              setMobileMenuOpen(false);
+            }}
+            className="hidden min-[271px]:flex md:hidden text-slate-200 hover:text-white p-1.5 rounded-md border border-slate-700 hover:bg-slate-800 transition-colors items-center justify-center cursor-pointer"
+            aria-label="Buscar productos"
+            title="Buscar productos"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5 text-brand-red-accent" /> : <Menu className="w-5 h-5 text-white" />}
+            {mobileSearchOpen ? <X className="w-5 h-5 text-brand-red-accent" /> : <Search className="w-5 h-5 text-white" />}
           </button>
         </div>
       </div>
+
+      {/* Expandable Mobile Search Bar (Recycled SearchAutocomplete logic) */}
+      {mobileSearchOpen && (
+        <div className="md:hidden bg-brand-dark border-t border-white/10 px-4 py-3 shadow-xl">
+          <SearchAutocomplete
+            variant="mobile"
+            autoFocus={true}
+            placeholder="Buscar laptops, componentes..."
+            onCloseMobileMenu={() => setMobileSearchOpen(false)}
+          />
+        </div>
+      )}
 
       {/* Navigation Sub-Bar & Centered Full-Width Mega-Menu */}
       <nav

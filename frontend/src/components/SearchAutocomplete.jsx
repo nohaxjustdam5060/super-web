@@ -8,6 +8,7 @@ export default function SearchAutocomplete({
   variant = 'desktop', // 'desktop' | 'mobile'
   placeholder = 'Buscar laptops, procesadores, tarjetas gráficas, monitores...',
   onCloseMobileMenu,
+  autoFocus = false,
   className = ''
 }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -124,6 +125,7 @@ export default function SearchAutocomplete({
         <input
           ref={inputRef}
           type="text"
+          autoFocus={autoFocus}
           placeholder={placeholder}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
