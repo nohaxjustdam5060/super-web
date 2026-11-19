@@ -283,9 +283,9 @@ export default function Navbar() {
         <div className="flex flex-1 md:flex-initial items-center justify-center md:justify-start min-w-0 overflow-hidden">
           <Link to="/" className="flex items-center justify-center md:justify-start group max-w-full min-w-0" title="SUPERLAPTOP">
             <img
-              src="/images/LOGOSUP.png"
+              src="/images/logov2.jpg"
               alt="SuperLaptop"
-              className="h-9 sm:h-10 md:h-12 lg:h-14 w-auto max-w-full md:max-w-[260px] object-contain md:object-left group-hover:scale-105 transition-transform"
+              className="h-9 sm:h-10 md:h-12 lg:h-14 lg:w-[300px] w-auto max-w-full md:max-w-[300px] object-contain md:object-left group-hover:scale-105 transition-transform"
             />
           </Link>
         </div>

@@ -241,6 +241,7 @@ export default function Home() {
         bannerTitle="Laptops Gaming"
         bannerBorderColor="border-brand-red/40 hover:border-brand-red/80"
         bannerImage="/images/banner-gaming-strix.jpg"
+        bannerImageMobile="/images/banner-gaming-strix-horizontal.jpg"
         bannerLink="/catalog?category_id=laptops-gaming"
         products={gamingProducts}
         loading={loadingGaming}
@@ -255,6 +256,7 @@ export default function Home() {
         bannerTitle="Laptops de Consumo"
         bannerBorderColor="border-slate-800/90 hover:border-sky-500/60"
         bannerImage="/images/banner-consumo-hp.jpg"
+        bannerImageMobile="/images/banner-consumo-hp-horizontal.jpg"
         bannerLink="/catalog?category_id=laptops-consumo"
         products={consumoProducts}
         loading={loadingConsumo}
@@ -269,6 +271,7 @@ export default function Home() {
         bannerTitle="Convertibles & ThinkBook"
         bannerBorderColor="border-slate-800/90 hover:border-purple-500/60"
         bannerImage="/images/banner-thinkpad-l16.jpg"
+        bannerImageMobile="/images/banner-thinkpad-l16-horizontal.jpg"
         bannerLink="/catalog?category_id=laptops"
         products={convertiblesProducts}
         loading={loadingConvertibles}
@@ -283,6 +286,7 @@ export default function Home() {
         bannerTitle="Computadoras y Componentes"
         bannerBorderColor="border-slate-800/90 hover:border-amber-500/60"
         bannerImage="/images/banner-computadoras-asus.jpg"
+        bannerImageMobile="/images/banner-computadoras-asus-horizontal.jpg"
         bannerLink="/catalog?category_id=computadoras-y-componentes"
         products={computadorasProducts}
         loading={loadingComputadoras}

@@ -12,6 +12,7 @@ export default function CategoryBannerCarousel({
   // Banner Props
   bannerTitle,
   bannerImage,
+  bannerImageMobile,
   bannerLink,
   bannerBorderColor = 'border-slate-800/90 hover:border-brand-red/60',
   // Products & Carousel Props
@@ -147,17 +148,23 @@ export default function CategoryBannerCarousel({
 
       {/* Main Container: Left Banner + Right Product Carousel */}
       <div className="flex flex-col lg:flex-row gap-4 sm:gap-5 items-stretch">
-        {/* Left Column: Vertical Promotional Banner (Clean Full Image) */}
-        <div className="w-full lg:w-[280px] xl:w-[320px] 2xl:w-[340px] flex-shrink-0 flex flex-col py-1.5">
+        {/* Left Column: Vertical Promotional Banner on Desktop, Horizontal Banner on Mobile/Tablet */}
+        <div className="w-full lg:w-[280px] xl:w-[280px] 2xl:w-[280px] flex-shrink-0 flex flex-col py-1.5">
           <Link
             to={bannerLink}
-            className={`relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl border ${bannerBorderColor} block transition-all duration-300 ease-out cursor-pointer isolate transform-gpu w-full aspect-[9/16] sm:aspect-[4/5] sm:max-h-[460px] lg:aspect-auto lg:h-full lg:min-h-0 flex-1 group hover:scale-[1.01]`}
+            className={`relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl border ${bannerBorderColor} block transition-all duration-300 ease-out cursor-pointer isolate transform-gpu w-full lg:h-full lg:min-h-0 lg:flex-1 group hover:scale-[1.01]`}
           >
-            {/* Background Image: Clean, full visibility without dark overlays */}
+            {/* Mobile/Tablet Horizontal Image (< lg): natural aspect ratio without cropping */}
+            <img
+              src={bannerImageMobile || bannerImage}
+              alt={bannerTitle || title}
+              className="lg:hidden w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 ease-out transform-gpu will-change-transform"
+            />
+            {/* Desktop Vertical Image (lg+): fills left column flush with product cards */}
             <img
               src={bannerImage}
               alt={bannerTitle || title}
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out z-0 transform-gpu will-change-transform"
+              className="hidden lg:block absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out z-0 transform-gpu will-change-transform"
             />
           </Link>
         </div>

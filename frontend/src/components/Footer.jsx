@@ -52,7 +52,7 @@ export default function Footer() {
         <div>
           <Link to="/" className="inline-block mb-4 group" title="SUPERLAPTOP">
             <img
-              src="/images/LOGOSUP.png"
+              src="/images/logov2.jpg"
               alt="SuperLaptop"
               className="h-10 md:h-12 w-auto object-contain group-hover:scale-105 transition-transform"
             />
