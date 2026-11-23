@@ -100,25 +100,26 @@ export default function Home() {
             {
               name: 'Laptops Gaming',
               slug: 'laptops-gaming',
-              image: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=500&auto=format&fit=crop',
+              image: '/images/categoria-laptops-gaming.jpg',
+              imageClass: 'scale-[1.55] group-hover:scale-[1.7]',
               badge: ''
             },
             {
               name: 'Laptops de Consumo',
               slug: 'laptops-consumo',
-              image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500&auto=format&fit=crop',
+              image: '/images/categoria-laptops-consumo.jpg',
               badge: ''
             },
             {
               name: 'Laptops Empresariales',
               slug: 'laptops-empresariales',
-              image: 'https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=500&auto=format&fit=crop',
+              image: '/images/categoria-laptops-empresariales.jpg',
               badge: ''
             },
             {
               name: '2 en 1 / Convertibles',
               slug: 'convertibles',
-              image: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=500&auto=format&fit=crop',
+              image: '/images/categoria-convertibles.jpg',
               badge: ''
             }
           ].map((cat, idx) => (
@@ -132,7 +133,7 @@ export default function Home() {
                 <img
                   src={cat.image}
                   alt={cat.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 ease-out"
+                  className={`w-full h-full object-cover transition-transform duration-300 ease-out ${cat.imageClass || 'group-hover:scale-110'}`}
                 />
               </div>
 
@@ -171,16 +172,16 @@ export default function Home() {
           {/* Promo Banner 1: Tablets & Móviles */}
           <Link
             to="/catalog?category_id=moviles-y-wearables"
-            className="relative rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl min-h-[340px] sm:min-h-[380px] group border border-slate-800/90 hover:border-slate-700/80 flex flex-col justify-end p-8 text-white transition-all duration-300 ease-out cursor-pointer block isolate transform-gpu"
+            className="relative rounded-md overflow-hidden shadow-xl hover:shadow-2xl min-h-[340px] sm:min-h-[380px] group border border-slate-800/90 hover:border-slate-700/80 flex flex-col justify-end p-8 text-white transition-all duration-300 ease-out cursor-pointer block isolate transform-gpu bg-white"
           >
             {/* Background Image */}
             <img
-              src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=800&auto=format&fit=crop"
+              src="/images/promo-tablets-moviles.png"
               alt="Tablets & Móviles"
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out z-0 transform-gpu will-change-transform"
+              className="absolute inset-0 w-full h-full object-contain p-4 sm:p-6 pb-14 sm:pb-16 group-hover:scale-105 transition-transform duration-500 ease-out z-0 transform-gpu will-change-transform"
             />
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-900/30 z-10 pointer-events-none" />
+            {/* Gradient Overlay (Reduced opacity for better product visibility) */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-transparent z-10 pointer-events-none" />
             {/* Red Accent Bar */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-red via-brand-red-accent to-transparent z-10" />
 
@@ -203,16 +204,16 @@ export default function Home() {
           {/* Promo Banner 2: Workstations & All in One */}
           <Link
             to="/catalog?category_id=computadoras-y-componentes"
-            className="relative rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl min-h-[340px] sm:min-h-[380px] group border border-slate-800/90 hover:border-slate-700/80 flex flex-col justify-end p-8 text-white transition-all duration-300 ease-out cursor-pointer block isolate transform-gpu"
+            className="relative rounded-md overflow-hidden shadow-xl hover:shadow-2xl min-h-[340px] sm:min-h-[380px] group border border-slate-800/90 hover:border-slate-700/80 flex flex-col justify-end p-8 text-white transition-all duration-300 ease-out cursor-pointer block isolate transform-gpu bg-white"
           >
             {/* Background Image */}
             <img
-              src="/images/laptop_hogar_banner.jpg"
+              src="/images/promo-workstations-all-in-one.jpg"
               alt="Workstations & All in One"
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out z-0 transform-gpu will-change-transform"
+              className="absolute inset-0 w-full h-full object-contain p-4 sm:p-6 pb-14 sm:pb-16 group-hover:scale-105 transition-transform duration-500 ease-out z-0 transform-gpu will-change-transform"
             />
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-900/30 z-10 pointer-events-none" />
+            {/* Gradient Overlay (Reduced opacity for better product visibility) */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-transparent z-10 pointer-events-none" />
             {/* Red Accent Bar */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-red-accent via-amber-400 to-transparent z-10" />
 

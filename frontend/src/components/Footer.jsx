@@ -76,7 +76,7 @@ export default function Footer() {
           <ul className="space-y-2.5 text-sm">
             <li><Link to="/catalog?category_id=laptops" className="hover:text-brand-red-accent transition-colors">Laptops</Link></li>
             <li><Link to="/catalog?category_id=computadoras-y-componentes" className="hover:text-brand-red-accent transition-colors">Computadoras y Componentes</Link></li>
-            <li><Link to="/catalog?category_id=moviles-y-wearables" className="hover:text-brand-red-accent transition-colors">Móviles y Wearables</Link></li>
+            <li><Link to="/catalog?category_id=moviles-y-tablets" className="hover:text-brand-red-accent transition-colors">Móviles y Tablets</Link></li>
             <li><Link to="/catalog?category_id=perifericos-y-accesorios" className="hover:text-brand-red-accent transition-colors">Periféricos y Accesorios</Link></li>
             <li><Link to="/catalog?category_id=oficina-y-software" className="hover:text-brand-red-accent transition-colors">Oficina y Software</Link></li>
             

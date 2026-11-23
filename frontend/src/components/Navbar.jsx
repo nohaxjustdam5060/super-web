@@ -141,6 +141,59 @@ export default function Navbar() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [expandedMobileCategory, setExpandedMobileCategory] = useState(null);
 
+  // Smart Sub-Nav visibility on scroll (hides after ~180px down, reveals after 15px up anywhere)
+  const [showSubNav, setShowSubNav] = useState(true);
+  const showSubNavRef = useRef(true);
+  const lastScrollYRef = useRef(0);
+  const scrollAnchorYRef = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      const lastY = lastScrollYRef.current;
+
+      if (currentY <= 180) {
+        if (!showSubNavRef.current) {
+          showSubNavRef.current = true;
+          setShowSubNav(true);
+        }
+        scrollAnchorYRef.current = currentY;
+        lastScrollYRef.current = currentY;
+        return;
+      }
+
+      if (currentY > lastY) {
+        // Scrolling DOWN
+        if (showSubNavRef.current) {
+          if (currentY - scrollAnchorYRef.current >= 10) {
+            showSubNavRef.current = false;
+            setShowSubNav(false);
+            setActiveParentSlug(null);
+            scrollAnchorYRef.current = currentY;
+          }
+        } else {
+          scrollAnchorYRef.current = currentY;
+        }
+      } else if (currentY < lastY) {
+        // Scrolling UP
+        if (!showSubNavRef.current) {
+          if (scrollAnchorYRef.current - currentY >= 15) {
+            showSubNavRef.current = true;
+            setShowSubNav(true);
+            scrollAnchorYRef.current = currentY;
+          }
+        } else {
+          scrollAnchorYRef.current = currentY;
+        }
+      }
+
+      lastScrollYRef.current = currentY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // Mobile Top Announcement Rotator State
   const [announcementIndex, setAnnouncementIndex] = useState(0);
 
@@ -210,7 +263,14 @@ export default function Navbar() {
   }, [currentCategory, displayedCategory]);
 
   return (
-    <header className="sticky top-0 z-50 bg-brand-dark border-b border-white/10 shadow-md transition-all" ref={navRef}>
+    <>
+    <div className="sticky top-0 z-50">
+    <header
+      className={`relative z-50 bg-brand-dark transition-all ${
+        !showSubNav ? 'shadow-md border-b border-white/10' : 'border-b border-transparent'
+      }`}
+      ref={navRef}
+    >
       {/* Top Announcement Bar (Compact Single-line height h-7 sm:h-8 across all screens) */}
       <div className="bg-brand-dark text-white text-[10px] sm:text-xs h-7 sm:h-8 px-3 sm:px-4 flex items-center border-b border-white/5">
         <div className="max-w-[1440px] mx-auto w-full flex flex-row justify-between items-center h-full gap-2">
@@ -241,7 +301,7 @@ export default function Navbar() {
             </span>
             <span className="flex items-center text-gray-300 font-medium whitespace-nowrap">
               <ShieldCheck className="w-3.5 h-3.5 mr-1.5 text-brand-red flex-shrink-0" />
-              <span>Garantía Oficial 100% E-Commerce</span>
+              <span>Garantía Oficial 12 meses</span>
             </span>
           </div>
 
@@ -356,9 +416,99 @@ export default function Navbar() {
         </div>
       )}
 
+
+      {/* Mobile Drawer Navigation (Accordion Style) */}
+      {mobileMenuOpen && (
+        <div className="bg-brand-dark border-b border-slate-800 p-4 space-y-4 shadow-2xl max-h-[85vh] overflow-y-auto border-t border-slate-800 text-white">
+          {/* Search Mobile (Predictive Live Search with Autocomplete Dropdown) */}
+          <SearchAutocomplete
+            variant="mobile"
+            placeholder="Buscar en la tienda..."
+            onCloseMobileMenu={() => setMobileMenuOpen(false)}
+          />
+
+          {/* Mobile Direct Links */}
+          <div className="flex gap-2">
+            <Link
+              to="/catalog"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`${hasOffers ? 'flex-1' : 'w-full'} bg-brand-red text-white text-center py-2.5 rounded-xl font-bold text-xs uppercase shadow`}
+            >
+              Todo el Catálogo
+            </Link>
+            {hasOffers && (
+              <Link
+                to="/catalog?is_featured=true"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex-1 bg-amber-500 text-slate-950 font-black text-center py-2.5 rounded-xl text-xs uppercase shadow"
+              >
+                ⚡ Ofertas
+              </Link>
+            )}
+          </div>
+
+          {/* Categories Accordion */}
+          <div className="space-y-2 pt-2">
+            <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">Categorías de Productos</h4>
+            {categories.map((parentCat) => {
+              const isExpanded = expandedMobileCategory === parentCat.slug;
+              const hasSubcategories = parentCat.subcategories && parentCat.subcategories.length > 0;
+
+              return (
+                <div key={parentCat.id} className="border border-slate-800 rounded-xl overflow-hidden bg-slate-900/60">
+                  <button
+                    onClick={() => setExpandedMobileCategory(isExpanded ? null : parentCat.slug)}
+                    className="w-full p-3 bg-slate-800/80 flex items-center justify-between text-xs font-bold text-white active:bg-slate-800"
+                  >
+                    <span className="flex items-center">
+                      <DynamicIcon item={parentCat} className="w-4 h-4 mr-2 text-brand-red-accent" />
+                      {parentCat.name}
+                    </span>
+                    {hasSubcategories && (
+                      <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180 text-white' : ''}`} />
+                    )}
+                  </button>
+
+                  {isExpanded && hasSubcategories && (
+                    <div className="p-3 bg-slate-900 space-y-2 border-t border-slate-800">
+                      <button
+                        onClick={() => handleSubcategoryClick(parentCat.slug)}
+                        className="w-full text-left text-xs font-extrabold text-brand-red-accent py-1 hover:underline"
+                      >
+                        Ver todo en {parentCat.name} →
+                      </button>
+                      {parentCat.subcategories.map((sub) => (
+                        <button
+                          key={sub.id}
+                          onClick={() => handleSubcategoryClick(sub.slug)}
+                          className="w-full text-left text-xs font-semibold text-slate-300 py-2.5 px-3 hover:bg-slate-800/90 rounded-lg flex items-center justify-between transition-colors group"
+                        >
+                          <span className="flex items-center gap-2.5 min-w-0">
+                            <span className="p-1.5 rounded-md bg-slate-800 text-slate-400 group-hover:text-brand-red-accent group-hover:bg-slate-700 transition-colors shrink-0">
+                              <DynamicIcon item={sub} className="w-3.5 h-3.5" />
+                            </span>
+                            <span className="truncate">{sub.name}</span>
+                          </span>
+                          <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-300 shrink-0 ml-2" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </header>
+
       {/* Navigation Sub-Bar & Centered Full-Width Mega-Menu */}
       <nav
-        className="bg-brand-dark text-gray-200 text-xs sm:text-sm font-medium relative hidden md:block"
+        className={`bg-brand-dark text-gray-200 text-xs sm:text-sm font-medium absolute top-full left-0 right-0 z-40 hidden md:block border-b border-white/10 shadow-md transition-all duration-[400ms] ease-in-out transform-gpu ${
+          showSubNav
+            ? 'translate-y-0 opacity-100 pointer-events-auto'
+            : '-translate-y-full opacity-0 pointer-events-none'
+        }`}
         onMouseLeave={() => setActiveParentSlug(null)}
       >
         <div className="max-w-[1440px] mx-auto px-4 flex flex-wrap items-center justify-between">
@@ -504,90 +654,9 @@ export default function Navbar() {
           )}
         </div>
       </nav>
-
-      {/* Mobile Drawer Navigation (Accordion Style) */}
-      {mobileMenuOpen && (
-        <div className="bg-brand-dark border-b border-slate-800 p-4 space-y-4 shadow-2xl max-h-[85vh] overflow-y-auto border-t border-slate-800 text-white">
-          {/* Search Mobile (Predictive Live Search with Autocomplete Dropdown) */}
-          <SearchAutocomplete
-            variant="mobile"
-            placeholder="Buscar en la tienda..."
-            onCloseMobileMenu={() => setMobileMenuOpen(false)}
-          />
-
-          {/* Mobile Direct Links */}
-          <div className="flex gap-2">
-            <Link
-              to="/catalog"
-              onClick={() => setMobileMenuOpen(false)}
-              className={`${hasOffers ? 'flex-1' : 'w-full'} bg-brand-red text-white text-center py-2.5 rounded-xl font-bold text-xs uppercase shadow`}
-            >
-              Todo el Catálogo
-            </Link>
-            {hasOffers && (
-              <Link
-                to="/catalog?is_featured=true"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex-1 bg-amber-500 text-slate-950 font-black text-center py-2.5 rounded-xl text-xs uppercase shadow"
-              >
-                ⚡ Ofertas
-              </Link>
-            )}
-          </div>
-
-          {/* Categories Accordion */}
-          <div className="space-y-2 pt-2">
-            <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">Categorías de Productos</h4>
-            {categories.map((parentCat) => {
-              const isExpanded = expandedMobileCategory === parentCat.slug;
-              const hasSubcategories = parentCat.subcategories && parentCat.subcategories.length > 0;
-
-              return (
-                <div key={parentCat.id} className="border border-slate-800 rounded-xl overflow-hidden bg-slate-900/60">
-                  <button
-                    onClick={() => setExpandedMobileCategory(isExpanded ? null : parentCat.slug)}
-                    className="w-full p-3 bg-slate-800/80 flex items-center justify-between text-xs font-bold text-white active:bg-slate-800"
-                  >
-                    <span className="flex items-center">
-                      <DynamicIcon item={parentCat} className="w-4 h-4 mr-2 text-brand-red-accent" />
-                      {parentCat.name}
-                    </span>
-                    {hasSubcategories && (
-                      <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180 text-white' : ''}`} />
-                    )}
-                  </button>
-
-                  {isExpanded && hasSubcategories && (
-                    <div className="p-3 bg-slate-900 space-y-2 border-t border-slate-800">
-                      <button
-                        onClick={() => handleSubcategoryClick(parentCat.slug)}
-                        className="w-full text-left text-xs font-extrabold text-brand-red-accent py-1 hover:underline"
-                      >
-                        Ver todo en {parentCat.name} →
-                      </button>
-                      {parentCat.subcategories.map((sub) => (
-                        <button
-                          key={sub.id}
-                          onClick={() => handleSubcategoryClick(sub.slug)}
-                          className="w-full text-left text-xs font-semibold text-slate-300 py-2.5 px-3 hover:bg-slate-800/90 rounded-lg flex items-center justify-between transition-colors group"
-                        >
-                          <span className="flex items-center gap-2.5 min-w-0">
-                            <span className="p-1.5 rounded-md bg-slate-800 text-slate-400 group-hover:text-brand-red-accent group-hover:bg-slate-700 transition-colors shrink-0">
-                              <DynamicIcon item={sub} className="w-3.5 h-3.5" />
-                            </span>
-                            <span className="truncate">{sub.name}</span>
-                          </span>
-                          <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-300 shrink-0 ml-2" />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </header>
+    </div>
+    {/* Static spacer so page content never shifts or jumps when sub-nav slides behind header */}
+    <div className="hidden md:block h-[42px] bg-brand-dark" aria-hidden="true" />
+    </>
   );
 }

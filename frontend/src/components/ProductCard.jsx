@@ -53,7 +53,7 @@ export default function ProductCard({ product }) {
       {/* Content Info */}
       <div className="p-3.5 sm:p-4 md:p-5 flex-1 flex flex-col justify-between">
         <div>
-          <div className="flex items-center justify-between text-[10px] sm:text-xs text-gray-500 mb-1 sm:mb-1.5">
+          <div className="flex items-center justify-between text-[10px] sm:text-xs text-gray-500 border-y border-gray-200/80 py-1.5 mb-2">
             <span className="font-semibold text-brand-blue uppercase truncate">{product.brand?.name || 'SUPERLAPTOP'}</span>
             <span className="text-gray-400 hidden sm:inline">SKU: {product.sku}</span>
           </div>

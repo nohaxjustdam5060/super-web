@@ -472,16 +472,20 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Compact Highlighted Specs Mini-Cards */}
+            {/* Highlighted Specs (Sleek open layout separated by vertical divider bars) */}
             {highlightedSpecs.length > 0 && (
               <div className="pt-2">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-3 sm:gap-y-0 border-y border-slate-100 py-3">
                   {highlightedSpecs.map((sp, idx) => {
                     const IconComp = sp.icon;
                     return (
                       <div
                         key={idx}
-                        className="bg-slate-50 border border-slate-200/90 rounded-lg p-2 sm:p-2.5 flex items-center space-x-2 min-w-0 shadow-2xs hover:border-brand-red/30 transition-colors"
+                        className={`flex items-center space-x-2.5 min-w-0 ${
+                          idx % 2 === 1 ? 'border-l border-slate-200 pl-3 sm:pl-3' : 'pr-2 sm:pr-3'
+                        } ${
+                          idx > 0 ? 'sm:border-l sm:border-slate-200 sm:pl-3' : 'sm:pl-0'
+                        } sm:last:pr-0`}
                       >
                         <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-brand-red/10 text-brand-red flex items-center justify-center flex-shrink-0">
                           <IconComp className="w-3.5 h-3.5" />

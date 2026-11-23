@@ -56,7 +56,7 @@ export default function HeroCarousel() {
     <div className="w-full relative overflow-hidden bg-slate-950 text-white select-none">
       {/* Clean Full-Width Advertising Banner Slider Box */}
       <div
-        className="w-full relative h-[160px] xs:h-[200px] sm:h-[280px] md:h-[380px] lg:h-[460px] xl:h-[520px] 2xl:h-[580px] overflow-hidden bg-slate-950"
+        className="w-full relative h-[250px] xs:h-[200px] sm:h-[370px] md:h-[470px] lg:h-[570px] xl:h-[650px] 2xl:h-[710px] overflow-hidden bg-slate-950"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
@@ -83,7 +83,7 @@ export default function HeroCarousel() {
                   alt={slide.alt}
                   loading={index === 0 ? 'eager' : 'lazy'}
                   decoding="async"
-                  className="w-full h-full object-cover object-center"
+                  className="w-full h-full object-fill object-center"
                 />
               </Link>
             </div>
@@ -141,7 +141,7 @@ export default function HeroCarousel() {
                 <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
                   <ShieldCheck className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
                 </div>
-                <span className="text-white font-medium text-xs whitespace-nowrap">Garantía Oficial E-Commerce</span>
+                <span className="text-white font-medium text-xs whitespace-nowrap">Garantía Oficial 12 meses</span>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
@@ -165,7 +165,7 @@ export default function HeroCarousel() {
                 <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
                   <ShieldCheck className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
                 </div>
-                <span className="text-white font-medium text-xs whitespace-nowrap">Garantía Oficial E-Commerce</span>
+                <span className="text-white font-medium text-xs whitespace-nowrap">Garantía Oficial 12 meses</span>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
@@ -193,7 +193,7 @@ export default function HeroCarousel() {
             <div className="w-6 h-6 rounded-md bg-slate-800/70 border border-slate-700/60 flex items-center justify-center shrink-0">
               <ShieldCheck className="w-3.5 h-3.5 text-brand-red" strokeWidth={2} />
             </div>
-            <span className="text-white font-medium text-xs sm:text-xs md:text-sm whitespace-nowrap">Garantía Oficial E-Commerce</span>
+            <span className="text-white font-medium text-xs sm:text-xs md:text-sm whitespace-nowrap">Garantía Oficial 12 meses</span>
           </div>
 
           <div className="w-px h-4 bg-slate-800 shrink-0" />

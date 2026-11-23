@@ -152,7 +152,7 @@ export default function CategoryBannerCarousel({
         <div className="w-full lg:w-[280px] xl:w-[280px] 2xl:w-[280px] flex-shrink-0 flex flex-col py-1.5">
           <Link
             to={bannerLink}
-            className={`relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl border ${bannerBorderColor} block transition-all duration-300 ease-out cursor-pointer isolate transform-gpu w-full lg:h-full lg:min-h-0 lg:flex-1 group hover:scale-[1.01]`}
+            className={`relative rounded-md overflow-hidden shadow-lg hover:shadow-2xl border ${bannerBorderColor} block transition-all duration-300 ease-out cursor-pointer isolate transform-gpu w-full lg:h-full lg:min-h-0 lg:flex-1 group hover:scale-[1.01]`}
           >
             {/* Mobile/Tablet Horizontal Image (< lg): natural aspect ratio without cropping */}
             <img

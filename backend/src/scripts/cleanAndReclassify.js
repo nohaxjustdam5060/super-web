@@ -58,14 +58,16 @@ function classifyProductToOfficialCategory(productName, attributes = []) {
 
   // Pre-detection of Whole Devices with typo-resistant patterns (\s* for space tolerance)
   const isPrinter = /\b(impresora|multifuncional|epson\s*eco|laserjet|deskjet|smart\s*tank|ecotank|pixma)\b/i.test(full);
-  const isDesktopOrMini = /\b(mini\s*pc|pro\s*mini|\bnuc\b|all[\s\-]*in[\s\-]*one|\baio\b|desktop|workstation|pc\s*gamer|prodesk|elitedesk|optiplex|thinkcentre|veriton|precision\s*tower|\bsff\b|\bmt\b|\btwr\b|\btorre\b)\b/i.test(full);
+  const isImacDevice = /\bimac\b/i.test(name) && !/\b(soporte|cable|adaptador|funda|teclado|mouse|protector|mica|cargador|hub|dock)\b/i.test(name);
+  const isDesktopOrMini = isImacDevice || /\b(mini\s*pc|pro\s*mini|\bnuc\b|all[\s\-]*in[\s\-]*one|\baio\b|desktop|workstation|pc\s*gamer|prodesk|elitedesk|optiplex|thinkcentre|veriton|precision\s*tower|\bsff\b|\bmt\b|\btwr\b|\btorre\b)\b/i.test(full);
 
   const isLaptop = !isDesktopOrMini && (
-    /\b(laptop|notebook|macbook|chromebook|omnibook|vivobook|zenbook|ideapad|thinkpad|matebook|surface|galaxy\s*book|tuf|nitro|thin|victus|legion|loq|omen|katana|cyborg|helios|strix|predator|swift|pavilion|aspire|modern|prestige|stealth|rog|vostro|probook|elitebook|latitude|expertbook|travelmate)\b/i.test(name) ||
+    /\b(laptop|notebook|macbook|chromebook|omnibook|vivobook|zenbook|ideapad|thinkpad|thinkbook|matebook|surface|galaxy\s*book|yoga|tuf|nitro|thin|victus|legion|loq|omen|katana|cyborg|helios|strix|predator|swift|pavilion|aspire|modern|prestige|stealth|rog|vostro|probook|elitebook|latitude|expertbook|travelmate)\b/i.test(name) ||
     (/\b(14"|15\.6"|16"|17\.3"|fhd|wuxga|qhd|uhd|144hz|165hz)\b/i.test(full) && /\b(intel|amd|ryzen|core|rtx|gtx|geforce|radeon)\b/i.test(full))
   );
 
-  const isTablet = /\b(tablet|ipad)\b/i.test(full) || (/\btab\b/i.test(name) && !/\btab\w+/i.test(name));
+  const isPadTablet = /\bpad\b/i.test(name) && !/\b(mouse|mouse\s*pad|pad\s*gamer|desk\s*pad|cooling\s*pad|thermal\s*pad|pad\s*t[eé]rmico|game\s*pad|antideslizante|base\s*refrigerante)\b/i.test(name);
+  const isTablet = /\b(tablet|ipad|matepad)\b/i.test(full) || (/\btab\b/i.test(name) && !/\btab\w+/i.test(name)) || isPadTablet;
   const isPhone = /\b(celular|smartphone|iphone)\b/i.test(full);
   const isMonitor = /\b(monitor|pantalla)\b/i.test(name) && !isLaptop && !isPhone && !isTablet && !isDesktopOrMini;
   const isProjector = /\b(proyector|projector)\b/i.test(full);
@@ -86,13 +88,13 @@ function classifyProductToOfficialCategory(productName, attributes = []) {
   // Computadoras de Escritorio / Mini PCs / AIO (Evaluado antes de laptops para evitar clasificación errónea de Mini PCs)
   if (isDesktopOrMini) {
     if (/\b(mini\s*pc|pro\s*mini|\bnuc\b)\b/i.test(full)) return OFFICIAL_IDS.MINI_PCS;
-    if (/\b(all[\s\-]*in[\s\-]*one|\baio\b)\b/i.test(full)) return OFFICIAL_IDS.ALL_IN_ONE;
+    if (isImacDevice || /\b(all[\s\-]*in[\s\-]*one|\baio\b)\b/i.test(full)) return OFFICIAL_IDS.ALL_IN_ONE;
     return OFFICIAL_IDS.PCS_ESCRITORIO;
   }
 
   // Laptops (Procesadas jerárquicamente por modelo)
   if (isLaptop) {
-    if (/\b(2\s*en\s*1|convertible|x360|yoga|spectre|flex|flip)\b/i.test(full)) return OFFICIAL_IDS.CONVERTIBLES;
+    if (/\b(2[\s\-]*en[\s\-]*1|2[\s\-]*in[\s\-]*1|convertible|x360|yoga|spectre|flex|flip)\b/i.test(full)) return OFFICIAL_IDS.CONVERTIBLES;
     if (/\b(probook|elitebook|latitude|thinkpad|expertbook|travelmate|vostro|precision|zbook)\b/i.test(full)) return OFFICIAL_IDS.LAPTOPS_EMPRESARIALES;
     if (/\b(gaming|essential|gamer|katana|cyborg|gf63|victus|legion|tuf|rog|nitro|predator|strix|thin|loq|omen|helios|rtx|gtx)\b/i.test(full)) return OFFICIAL_IDS.LAPTOPS_GAMING;
     if (/\b(thinkbook|ultrabook|zenbook|swift|gram|slim|air|omnibook)\b/i.test(full)) return OFFICIAL_IDS.THINBOOKS;

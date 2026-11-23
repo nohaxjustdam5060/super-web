@@ -1,9 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Filter, Grid, List, Search, RefreshCw, ChevronDown, CheckCircle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import DualRangeSlider from '../components/DualRangeSlider';
 import axiosClient from '../api/axiosClient';
+
+const SORT_OPTIONS = [
+  { value: 'newest', label: 'Más recientes' },
+  { value: 'price_asc', label: 'Precio: Menor a Mayor' },
+  { value: 'price_desc', label: 'Precio: Mayor a Menor' },
+  { value: 'name', label: 'Nombre A-Z' }
+];
 
 export default function Catalog() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -11,6 +18,25 @@ export default function Catalog() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('grid');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (sortRef.current && !sortRef.current.contains(e.target)) {
+        setSortOpen(false);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setSortOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   // Items per page limit (default 12)
   const [itemsPerPage, setItemsPerPage] = useState(12);
@@ -479,8 +505,8 @@ export default function Catalog() {
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 py-6 sm:py-8 space-y-6">
-      {/* Header */}
-      <div className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-sm space-y-3">
+      {/* Header (Minimalist bottom horizontal divider line) */}
+      <div className="border-b border-slate-200 pb-4 sm:pb-5 space-y-3">
         {/* 1. Breadcrumbs */}
         <nav aria-label="Breadcrumb" className="flex items-center space-x-2 text-xs sm:text-sm text-slate-400 flex-wrap">
           <Link to="/" className="hover:text-brand-red transition-colors">
@@ -512,25 +538,61 @@ export default function Catalog() {
           </div>
 
           {/* View mode & Sort Controls Bar */}
-          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full sm:w-auto justify-between sm:justify-end min-w-0">
-            {/* Sort Selector */}
-            <div className="flex items-center space-x-1.5 sm:space-x-2 flex-wrap min-w-0">
-              <label className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider flex-shrink-0">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-5 w-full sm:w-auto justify-between sm:justify-end min-w-0">
+            {/* Sleek Underline Sort Dropdown */}
+            <div ref={sortRef} className="relative flex items-center space-x-2 min-w-0">
+              <span className="text-[10px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider flex-shrink-0">
                 Ordenar:
-              </label>
-              <select
-                value={sort}
-                onChange={(e) => handleFilterChange('sort', e.target.value)}
-                className="bg-gray-100 border border-gray-300 text-[11px] sm:text-xs md:text-sm font-medium rounded-xl px-2.5 py-1.5 sm:py-2 focus:ring-2 focus:ring-brand-red max-w-[150px] sm:max-w-xs truncate text-gray-800 cursor-pointer"
+              </span>
+              <button
+                type="button"
+                onClick={() => setSortOpen((prev) => !prev)}
+                aria-expanded={sortOpen}
+                className="flex items-center justify-between gap-2 pb-1 border-b border-slate-300 hover:border-brand-red focus:border-brand-red text-xs sm:text-sm font-medium text-slate-800 transition-colors cursor-pointer bg-transparent outline-none min-w-[140px] sm:min-w-[175px]"
               >
-                <option value="newest">Más recientes</option>
-                <option value="price_asc">Precio: Menor a Mayor</option>
-                <option value="price_desc">Precio: Mayor a Menor</option>
-                <option value="name">Nombre A-Z</option>
-              </select>
+                <span className="truncate">
+                  {SORT_OPTIONS.find((o) => o.value === sort)?.label || 'Más recientes'}
+                </span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-slate-500 flex-shrink-0 transition-transform duration-200 ${
+                    sortOpen ? 'rotate-180 text-brand-red' : ''
+                  }`}
+                />
+              </button>
+
+              {/* Smooth Animated Dropdown Panel */}
+              <div
+                className={`absolute right-0 top-full mt-1.5 w-48 bg-white rounded-xl shadow-lg border border-slate-200/80 py-1.5 z-30 origin-top transition-all duration-200 ease-out ${
+                  sortOpen
+                    ? 'opacity-100 scale-y-100 translate-y-0 pointer-events-auto'
+                    : 'opacity-0 scale-y-95 -translate-y-1 pointer-events-none'
+                }`}
+              >
+                {SORT_OPTIONS.map((opt) => {
+                  const isSelected = sort === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        handleFilterChange('sort', opt.value);
+                        setSortOpen(false);
+                      }}
+                      className={`w-full text-left px-3.5 py-2 text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-between ${
+                        isSelected
+                          ? 'text-brand-red font-medium bg-red-50/60'
+                          : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                      }`}
+                    >
+                      <span>{opt.label}</span>
+                      {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-brand-red" />}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="flex items-center space-x-2 flex-shrink-0">
+            <div className="flex items-center space-x-3 flex-shrink-0">
               {/* Mobile Filter Toggle Button */}
               <button
                 onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
@@ -540,19 +602,25 @@ export default function Catalog() {
                 <span className="truncate">Filtros {activeFiltersCount > 0 && `(${activeFiltersCount})`}</span>
               </button>
 
-              {/* Grid/List View Toggle (Hidden on Mobile < 640px) */}
-              <div className="hidden sm:flex items-center border border-gray-300 rounded-xl bg-gray-100 p-1 flex-shrink-0">
+              {/* Grid/List View Toggle (Separated solely by a clean vertical divider line) */}
+              <div className="hidden sm:flex items-center divide-x divide-slate-300 flex-shrink-0">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-1.5 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-white shadow text-brand-red font-medium' : 'text-gray-500'}`}
+                  className={`pr-2.5 py-1 transition-colors cursor-pointer ${
+                    viewMode === 'grid' ? 'text-brand-red' : 'text-slate-400 hover:text-slate-700'
+                  }`}
                   aria-label="Vista cuadrícula"
+                  title="Vista cuadrícula"
                 >
                   <Grid className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-1.5 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-white shadow text-brand-red font-medium' : 'text-gray-500'}`}
+                  className={`pl-2.5 py-1 transition-colors cursor-pointer ${
+                    viewMode === 'list' ? 'text-brand-red' : 'text-slate-400 hover:text-slate-700'
+                  }`}
                   aria-label="Vista lista"
+                  title="Vista lista"
                 >
                   <List className="w-4 h-4" />
                 </button>
@@ -563,9 +631,9 @@ export default function Catalog() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8">
-        {/* Filter Sidebar (Collapsible on Mobile, Fixed on Desktop) */}
-        <aside className={`bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6 h-fit ${mobileFiltersOpen ? 'block' : 'hidden lg:block'}`}>
-          <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+        {/* Filter Sidebar (Collapsible on Mobile, Clean Divider Line on Desktop) */}
+        <aside className={`lg:border-r lg:border-slate-200 lg:pr-6 pb-6 lg:pb-0 border-b border-slate-200 lg:border-b-0 space-y-5 h-fit ${mobileFiltersOpen ? 'block' : 'hidden lg:block'}`}>
+          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
             <h3 className="font-semibold text-gray-900 flex items-center text-sm sm:text-base">
               <Filter className="w-4 h-4 mr-2 text-brand-red" /> Filtros del Catálogo
             </h3>
@@ -618,9 +686,9 @@ export default function Catalog() {
             const renderBrandFilter = () => {
               if (!filterOptions.brandOptions || filterOptions.brandOptions.length === 0) return null;
               return (
-                <div key="brand_filter">
-                  <h4 className="font-medium text-xs sm:text-sm text-gray-800 mb-2">Marca</h4>
-                  <div className="space-y-1.5 text-xs max-h-48 overflow-y-auto pr-1.5 border border-gray-100 p-2 rounded-xl bg-gray-50/70">
+                <div key="brand_filter" className="border-t border-slate-200/80 pt-4">
+                  <h4 className="font-medium text-xs sm:text-sm text-gray-800 mb-2.5">Marca</h4>
+                  <div className="space-y-1.5 text-xs max-h-48 overflow-y-auto pr-1.5">
                     {filterOptions.brandOptions.map((b) => {
                       const isChecked = isOptionChecked('brand_id', b.slug) || isOptionChecked('brand_id', b.id);
                       return (
@@ -648,9 +716,9 @@ export default function Catalog() {
             const renderCheckboxGroup = (title, items, paramKey, valueKey = 'value', labelKey = 'value') => {
               if (!items || items.length === 0) return null;
               return (
-                <div key={paramKey}>
-                  <h4 className="font-medium text-xs sm:text-sm text-gray-800 mb-2">{title}</h4>
-                  <div className="space-y-1.5 text-xs max-h-48 overflow-y-auto pr-1.5 border border-gray-100 p-2 rounded-xl bg-gray-50/70">
+                <div key={paramKey} className="border-t border-slate-200/80 pt-4">
+                  <h4 className="font-medium text-xs sm:text-sm text-gray-800 mb-2.5">{title}</h4>
+                  <div className="space-y-1.5 text-xs max-h-48 overflow-y-auto pr-1.5">
                     {items.map((item) => {
                       const val = item[valueKey];
                       const label = item[labelKey] || val;
