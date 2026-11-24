@@ -56,7 +56,7 @@ export default function HeroCarousel() {
     <div className="w-full relative overflow-hidden bg-slate-950 text-white select-none">
       {/* Clean Full-Width Advertising Banner Slider Box */}
       <div
-        className="w-full relative h-[250px] xs:h-[200px] sm:h-[370px] md:h-[470px] lg:h-[570px] xl:h-[650px] 2xl:h-[710px] overflow-hidden bg-slate-950"
+        className="w-full relative h-[200px] xs:h-[200px] sm:h-[280px] md:h-[370px] lg:h-[570px] xl:h-[650px] 2xl:h-[710px] overflow-hidden bg-slate-950"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >

@@ -504,7 +504,9 @@ export default function Navbar() {
 
       {/* Navigation Sub-Bar & Centered Full-Width Mega-Menu */}
       <nav
-        className={`bg-brand-dark text-gray-200 text-xs sm:text-sm font-medium absolute top-full left-0 right-0 z-40 hidden md:block border-b border-white/10 shadow-md transition-all duration-[400ms] ease-in-out transform-gpu ${
+        className={`bg-brand-dark text-gray-200 text-xs sm:text-sm font-medium absolute top-full left-0 right-0 z-40 hidden md:block transition-all duration-[400ms] ease-in-out transform-gpu ${
+          isMenuOpen ? 'border-b border-transparent' : 'border-b border-white/10 shadow-md'
+        } ${
           showSubNav
             ? 'translate-y-0 opacity-100 pointer-events-auto'
             : '-translate-y-full opacity-0 pointer-events-none'
@@ -564,9 +566,9 @@ export default function Navbar() {
 
         {/* FULL-WIDTH CENTERED MEGA-MENU PANEL WITH SMOOTH DROPDOWN & HEIGHT TRANSITION */}
         <div
-          className={`absolute left-0 right-0 top-full w-full bg-white text-gray-900 shadow-2xl z-50 overflow-hidden transition-[height,opacity,transform] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] transform rounded-b-md ${
+          className={`absolute left-0 right-0 top-full w-full bg-brand-dark text-white shadow-2xl z-50 overflow-hidden transition-[height,opacity,transform] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] transform rounded-b-md ${
             isMenuOpen
-              ? 'opacity-100 translate-y-0 pointer-events-auto visible border-b border-gray-200'
+              ? 'opacity-100 translate-y-0 pointer-events-auto visible border-b border-white/10'
               : 'opacity-0 -translate-y-2 pointer-events-none invisible border-b-0'
           }`}
           style={{ height: isMenuOpen ? `${menuHeight}px` : '0px' }}
@@ -580,9 +582,9 @@ export default function Navbar() {
                 currentCategory.subcategories.length <= 3 ? 'items-center' : 'items-start'
               }`}
             >
-              {/* Left Parent Category Showcase (Open White Background with Floating Image) */}
-              <div className="flex flex-col items-center lg:items-start justify-between gap-3 p-1 lg:pr-6 lg:border-r lg:border-slate-200/70 group/left h-fit w-full">
-                {/* Category Featured Image Floating on White with Smooth Fade Animation */}
+              {/* Left Parent Category Showcase (Unified Dark Background with Clean Divider) */}
+              <div className="flex flex-col items-center lg:items-start justify-between gap-3 p-1 lg:pr-6 lg:border-r lg:border-white/10 group/left h-fit w-full">
+                {/* Category Featured Image */}
                 {getCategoryImage(currentCategory) && (
                   <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center flex-shrink-0 mx-auto lg:mx-0 relative overflow-hidden">
                     <img
@@ -600,15 +602,15 @@ export default function Navbar() {
                   className="space-y-1.5 text-center lg:text-left w-full animate-menu-content"
                 >
                   <div className="flex items-center justify-center lg:justify-start space-x-1.5">
-                    <span className="p-1 bg-red-50 text-red-600 rounded-md">
+                    <span className="p-1 bg-brand-red/20 text-brand-red-accent rounded-md">
                       <DynamicIcon item={currentCategory} className="w-3.5 h-3.5" />
                     </span>
-                    <span className="text-[10px] font-black uppercase tracking-wider text-red-600">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-brand-red-accent">
                       Categoría Principal
                     </span>
                   </div>
 
-                  <h3 className="text-lg font-bold text-slate-900 leading-tight">
+                  <h3 className="text-lg font-bold text-white leading-tight">
                     {currentCategory.name}
                   </h3>
 
@@ -623,13 +625,13 @@ export default function Navbar() {
                 </div>
               </div>
 
-              {/* Right Subcategories Grid (Spans 3 Columns with Adaptive Layout & Smooth Content Fade) */}
+              {/* Right Subcategories Grid (Separated by sleek horizontal divider lines) */}
               <div
                 key={`subs-${currentCategory.slug}`}
                 className={`lg:col-span-3 grid animate-menu-content ${
                   currentCategory.subcategories.length <= 3
-                    ? 'grid-cols-1 sm:grid-cols-3 gap-3'
-                    : 'grid-cols-2 lg:grid-cols-3 gap-2.5 items-start'
+                    ? 'grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-2'
+                    : 'grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 items-start'
                 }`}
               >
                 {currentCategory.subcategories.map((sub) => {
@@ -637,15 +639,15 @@ export default function Navbar() {
                     <button
                       key={sub.id}
                       onClick={() => handleSubcategoryClick(sub.slug)}
-                      className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-red-500/50 hover:bg-slate-50 transition-all cursor-pointer group bg-white shadow-xs text-left"
+                      className="flex items-center gap-3 py-2.5 px-1.5 border-b border-white/10 hover:border-brand-red/70 transition-all cursor-pointer group text-left"
                     >
-                      <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700 group-hover:bg-red-50 group-hover:text-red-600 transition-colors shrink-0">
+                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-slate-300 group-hover:bg-brand-red/20 group-hover:text-brand-red-accent transition-colors shrink-0">
                         <DynamicIcon item={sub} className="w-4 h-4" />
                       </div>
-                      <span className="text-sm font-semibold text-slate-800 group-hover:text-red-600 transition-colors truncate">
+                      <span className="text-sm font-medium text-slate-200 group-hover:text-white transition-colors truncate">
                         {sub.name}
                       </span>
-                      <ChevronRight className="w-4 h-4 ml-auto text-slate-300 group-hover:text-red-500 group-hover:translate-x-0.5 transition-all shrink-0" />
+                      <ChevronRight className="w-4 h-4 ml-auto text-slate-500 group-hover:text-brand-red-accent group-hover:translate-x-0.5 transition-all shrink-0" />
                     </button>
                   );
                 })}

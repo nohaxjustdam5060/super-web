@@ -17,11 +17,31 @@ export default function ProductDetail() {
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [zoomState, setZoomState] = useState({ active: false, x: 50, y: 50 });
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
 
   const thumbnailRefs = useRef([]);
   const addItem = useCartStore((state) => state.addItem);
+
+  const handleGalleryMouseMove = (e) => {
+    // Only enable hover zoom on devices with fine pointer (mouse) and never when hovering arrow buttons
+    if (typeof window !== 'undefined' && !window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      return;
+    }
+    if (e.target.closest('button')) {
+      setZoomState((prev) => (prev.active ? { ...prev, active: false } : prev));
+      return;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+    setZoomState({ active: true, x, y });
+  };
+
+  const handleGalleryMouseLeave = () => {
+    setZoomState((prev) => (prev.active ? { ...prev, active: false } : prev));
+  };
 
   // Auto-scroll active thumbnail into view smoothly
   useEffect(() => {
@@ -280,50 +300,71 @@ export default function ProductDetail() {
       <div className="bg-white p-6 sm:p-8 rounded-lg border border-gray-200 shadow-sm grid grid-cols-1 lg:grid-cols-2 gap-10">
         {/* Images Gallery Carousel */}
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl flex items-center justify-center h-[340px] sm:h-[440px] md:h-[480px] lg:h-[520px] relative overflow-hidden group select-none">
-            {/* Smooth Crossfade Image Stage */}
-            <div className="w-full h-full relative flex items-center justify-center overflow-hidden">
+          <div
+            onMouseMove={handleGalleryMouseMove}
+            onMouseLeave={handleGalleryMouseLeave}
+            className="bg-white rounded-2xl flex items-center justify-center h-[340px] sm:h-[440px] md:h-[480px] lg:h-[520px] relative overflow-hidden group select-none"
+          >
+            {/* Horizontal Sliding Filmstrip Gallery with Magnetic Hover Zoom */}
+            <div className={`w-full h-full overflow-hidden ${zoomState.active ? 'lg:cursor-zoom-out' : 'lg:cursor-zoom-in'}`}>
               {imagesList.length > 0 ? (
-                imagesList.map((img, idx) => {
-                  const isCurrent = currentImageIndex === idx;
-                  return (
-                    <div
-                      key={img.id || img.image_url || idx}
-                      className={`absolute inset-0 flex items-center justify-center p-2 transition-all duration-300 ease-in-out ${
-                        isCurrent
-                          ? 'opacity-100 scale-100 pointer-events-auto z-10'
-                          : 'opacity-0 scale-95 pointer-events-none z-0'
-                      }`}
-                      aria-hidden={!isCurrent}
-                    >
-                      <ProductImage
-                        src={img.image_url}
-                        alt={`${product.name} - Vista ${idx + 1}`}
-                        className="w-full h-full object-contain transition-transform duration-300 hover:scale-105 select-none"
-                        size="xl"
-                        loading={idx === 0 ? 'eager' : 'lazy'}
-                      />
-                    </div>
-                  );
-                })
+                <div
+                  className="flex h-full transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
+                  style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}
+                >
+                  {imagesList.map((img, idx) => {
+                    const isZoomedSlide = zoomState.active && currentImageIndex === idx;
+                    return (
+                      <div
+                        key={img.id || img.image_url || idx}
+                        className="w-full h-full flex-shrink-0 flex items-center justify-center p-2 overflow-hidden"
+                      >
+                        <div
+                          className="w-full h-full flex items-center justify-center transition-transform duration-200 ease-out will-change-transform"
+                          style={{
+                            transformOrigin: `${zoomState.x}% ${zoomState.y}%`,
+                            transform: isZoomedSlide ? 'scale(2)' : 'scale(1)'
+                          }}
+                        >
+                          <ProductImage
+                            src={img.image_url}
+                            alt={`${product.name} - Vista ${idx + 1}`}
+                            className="w-full h-full object-contain select-none"
+                            size="xl"
+                            loading={idx === 0 ? 'eager' : 'lazy'}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               ) : (
-                <div className="w-full h-full flex items-center justify-center p-2">
-                  <ProductImage
-                    src={product.image_url || null}
-                    alt={product.name}
-                    className="w-full h-full object-contain select-none"
-                    size="xl"
-                  />
+                <div className="w-full h-full flex items-center justify-center p-2 overflow-hidden">
+                  <div
+                    className="w-full h-full flex items-center justify-center transition-transform duration-200 ease-out will-change-transform"
+                    style={{
+                      transformOrigin: `${zoomState.x}% ${zoomState.y}%`,
+                      transform: zoomState.active ? 'scale(2)' : 'scale(1)'
+                    }}
+                  >
+                    <ProductImage
+                      src={product.image_url || null}
+                      alt={product.name}
+                      className="w-full h-full object-contain select-none"
+                      size="xl"
+                    />
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Carousel Navigation Arrows */}
+            {/* Carousel Navigation Arrows (Stop zoom immediately on hover) */}
             {imagesList.length > 1 && (
               <>
                 <button
                   type="button"
                   onClick={handlePrevImage}
+                  onMouseEnter={handleGalleryMouseLeave}
                   className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/90 hover:bg-brand-red text-gray-800 hover:text-white flex items-center justify-center backdrop-blur-md shadow-md border border-gray-200/60 transition-all duration-200 hover:scale-105 active:scale-95 z-20 cursor-pointer opacity-90 group-hover:opacity-100"
                   aria-label="Imagen anterior"
                 >
@@ -333,6 +374,7 @@ export default function ProductDetail() {
                 <button
                   type="button"
                   onClick={handleNextImage}
+                  onMouseEnter={handleGalleryMouseLeave}
                   className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/90 hover:bg-brand-red text-gray-800 hover:text-white flex items-center justify-center backdrop-blur-md shadow-md border border-gray-200/60 transition-all duration-200 hover:scale-105 active:scale-95 z-20 cursor-pointer opacity-90 group-hover:opacity-100"
                   aria-label="Siguiente imagen"
                 >
