@@ -1,6 +1,6 @@
-import React, { memo, useMemo, useEffect } from 'react';
+﻿import React, { memo, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, MessageSquare, AlertCircle } from 'lucide-react';
+import { X, Trash2, Plus, Minus, ShoppingCart, ArrowRight, MessageSquare, AlertCircle } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import { generateWhatsAppOrderUrl } from '../utils/whatsappMessage';
 import ProductImage from './ProductImage';
@@ -77,7 +77,7 @@ const CartDrawer = memo(function CartDrawer() {
           {/* Header */}
           <div className="p-5 bg-brand-dark text-white flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <ShoppingBag className="w-5 h-5 text-brand-red-accent" />
+              <ShoppingCart className="w-5 h-5 text-brand-red-accent" />
               <h2 className="font-medium text-lg">Tu Carrito</h2>
               <span className="bg-brand-red text-white text-xs font-semibold px-2 py-0.5 rounded-full">
                 {totalItemsCount}
@@ -123,7 +123,7 @@ const CartDrawer = memo(function CartDrawer() {
           <div className="flex-1 overflow-y-auto p-5 space-y-4">
             {items.length === 0 ? (
               <div className="text-center py-16 text-gray-500">
-                <ShoppingBag className="w-16 h-16 mx-auto mb-4 text-gray-300 stroke-1" />
+                <ShoppingCart className="w-16 h-16 mx-auto mb-4 text-gray-300 stroke-1" />
                 <p className="font-semibold text-lg text-gray-700">Tu carrito está vacío</p>
                 <p className="text-sm text-gray-400 mt-1">Explora nuestro catálogo de componentes informáticos.</p>
                 <button

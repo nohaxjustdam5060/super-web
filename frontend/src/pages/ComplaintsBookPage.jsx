@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+﻿import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   BookOpen, 
@@ -8,7 +8,7 @@ import {
   ArrowLeft, 
   Send, 
   User, 
-  ShoppingBag, 
+  ShoppingCart, 
   Building2,
   Download,
   Loader2,
@@ -404,7 +404,7 @@ export default function ComplaintsBookPage() {
                 {/* 2. Bien Contratado */}
                 <div className="border border-gray-300 rounded-xl p-4 sm:p-5 bg-gray-50/70">
                   <h3 className="font-semibold text-gray-900 text-xs sm:text-sm uppercase tracking-wider border-b border-gray-200 pb-2 mb-3 flex items-center">
-                    <ShoppingBag className="w-4 h-4 mr-2 text-brand-red flex-shrink-0" />
+                    <ShoppingCart className="w-4 h-4 mr-2 text-brand-red flex-shrink-0" />
                     2. Identificación del Bien Contratado
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs sm:text-sm">
@@ -766,7 +766,7 @@ export default function ComplaintsBookPage() {
                           : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
                       }`}
                     >
-                      <ShoppingBag className="w-4 h-4" />
+                      <ShoppingCart className="w-4 h-4" />
                       <span>PRODUCTO</span>
                     </button>
 

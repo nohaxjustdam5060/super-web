@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Package, LogOut, KeyRound, Lock, CheckCircle2, AlertCircle, ShoppingBag, Truck, CreditCard, MessageSquare } from 'lucide-react';
+import { User, Package, LogOut, KeyRound, Lock, CheckCircle2, AlertCircle, ShoppingCart, Truck, CreditCard, MessageSquare } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { WHATSAPP_NUMBER, STORE_NAME } from '../utils/whatsappMessage';
 import axiosClient from '../api/axiosClient';
@@ -237,7 +237,7 @@ export default function Profile() {
                 to="/catalog"
                 className="inline-flex items-center space-x-2 bg-brand-red hover:bg-brand-red-hover text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-md transition-all active:scale-95"
               >
-                <ShoppingBag className="w-4 h-4" />
+                <ShoppingCart className="w-4 h-4" />
                 <span>Ir al Catálogo de Productos</span>
               </Link>
             </div>

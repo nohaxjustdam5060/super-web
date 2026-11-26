@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { 
-  LayoutDashboard, ShoppingBag, Users, AlertTriangle, DollarSign, Package, 
+  LayoutDashboard, ShoppingCart, Users, AlertTriangle, DollarSign, Package, 
   ShieldCheck, CheckCircle2, Clock, FileText, Building2, CreditCard, 
   ExternalLink, Filter, Truck, Eye, X, Printer, User, MapPin, Calendar,
   ChevronLeft, ChevronRight, RotateCcw, Percent, Save, RefreshCw
@@ -370,7 +370,7 @@ export default function AdminDashboard() {
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-brand-blue">
             <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Órdenes Generadas</span>
-            <ShoppingBag className="w-6 h-6 bg-blue-50 p-1 rounded-lg" />
+            <ShoppingCart className="w-6 h-6 bg-blue-50 p-1 rounded-lg" />
           </div>
           <p className="text-3xl font-semibold text-gray-900">{metrics?.ordersCount || 0}</p>
         </div>
@@ -462,7 +462,7 @@ export default function AdminDashboard() {
         <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 border-b border-gray-100 pb-4">
           <div>
             <h3 className="font-semibold text-gray-900 text-lg flex items-center">
-              <ShoppingBag className="w-5 h-5 mr-2 text-brand-red" /> Gestión de Pedidos & Verificación de Pagos
+              <ShoppingCart className="w-5 h-5 mr-2 text-brand-red" /> Gestión de Pedidos & Verificación de Pagos
             </h3>
             <p className="text-xs text-gray-500">Revisa órdenes recibidas, datos de envío, comprobantes y valida transferencias bancarias</p>
           </div>

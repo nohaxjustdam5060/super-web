@@ -1,6 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import { Link } from 'react-router-dom';
-import { Scale, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { Scale, Trash2, ShoppingCart, ArrowLeft } from 'lucide-react';
 import { useCompareStore } from '../store/useCompareStore';
 import { useCartStore } from '../store/useCartStore';
 
@@ -74,7 +74,7 @@ export default function Compare() {
                         : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60 pointer-events-none'
                     }`}
                   >
-                    <ShoppingBag className="w-3 h-3" /> <span>{Number(p.offer_price || p.price) > 0 ? 'Agregar' : 'Consultar'}</span>
+                    <ShoppingCart className="w-3 h-3" /> <span>{Number(p.offer_price || p.price) > 0 ? 'Agregar' : 'Consultar'}</span>
                   </button>
                 </th>
               ))}

@@ -4,14 +4,30 @@ import { Search, Loader2, ChevronRight, X } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import ProductImage from './ProductImage';
 
+const TYPEWRITER_PHRASES = [
+  'Buscar laptops gamer...',
+  'Buscar thinkbooks...',
+  'Buscar all in one...',
+  'Buscar 2 en 1...'
+];
+
 export default function SearchAutocomplete({
   variant = 'desktop', // 'desktop' | 'mobile'
   placeholder = 'Buscar laptops, procesadores, tarjetas gráficas, monitores...',
   onCloseMobileMenu,
+  onFocusChange,
   autoFocus = false,
   className = ''
 }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
+
+  useEffect(() => {
+    onFocusChange?.(isFocused);
+  }, [isFocused, onFocusChange]);
+  const [typedPlaceholder, setTypedPlaceholder] = useState('');
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [liveSearchResults, setLiveSearchResults] = useState([]);
   const [loadingLiveSearch, setLoadingLiveSearch] = useState(false);
   const [showLiveSearch, setShowLiveSearch] = useState(false);
@@ -19,6 +35,36 @@ export default function SearchAutocomplete({
   const containerRef = useRef(null);
   const inputRef = useRef(null);
   const navigate = useNavigate();
+
+  // Typewriter animated placeholder effect when input is empty and unfocused
+  useEffect(() => {
+    if (searchQuery || isFocused) {
+      setTypedPlaceholder('');
+      return;
+    }
+
+    const currentPhrase = TYPEWRITER_PHRASES[phraseIndex];
+    let timeout;
+
+    if (!isDeleting && typedPlaceholder.length < currentPhrase.length) {
+      timeout = setTimeout(() => {
+        setTypedPlaceholder(currentPhrase.slice(0, typedPlaceholder.length + 1));
+      }, 65);
+    } else if (!isDeleting && typedPlaceholder.length === currentPhrase.length) {
+      timeout = setTimeout(() => {
+        setIsDeleting(true);
+      }, 1500);
+    } else if (isDeleting && typedPlaceholder.length > 0) {
+      timeout = setTimeout(() => {
+        setTypedPlaceholder(currentPhrase.slice(0, typedPlaceholder.length - 1));
+      }, 35);
+    } else if (isDeleting && typedPlaceholder.length === 0) {
+      setIsDeleting(false);
+      setPhraseIndex((prev) => (prev + 1) % TYPEWRITER_PHRASES.length);
+    }
+
+    return () => clearTimeout(timeout);
+  }, [typedPlaceholder, isDeleting, phraseIndex, searchQuery, isFocused]);
 
   // Debounce & AbortController Effect (280ms)
   useEffect(() => {
@@ -116,38 +162,45 @@ export default function SearchAutocomplete({
   return (
     <div
       ref={containerRef}
-      className={`relative ${isDesktop ? 'hidden md:flex flex-1 max-w-2xl mx-2 lg:mx-4' : 'flex w-full'} ${className}`}
+      className={`relative ${isDesktop ? 'hidden md:flex flex-1 max-w-4xl mx-2 lg:mx-6' : 'flex w-full'} ${className}`}
     >
       <form
         onSubmit={handleSearchSubmit}
-        className="w-full flex items-center relative outline-none focus:outline-none"
+        className="w-full flex items-center relative outline-none focus:outline-none group"
       >
         <input
           ref={inputRef}
           type="text"
           autoFocus={autoFocus}
-          placeholder={placeholder}
+          placeholder={!isFocused && !searchQuery ? typedPlaceholder : ''}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onFocus={() => {
+            setIsFocused(true);
             if (searchQuery.trim().length >= 2) setShowLiveSearch(true);
           }}
+          onBlur={() => setIsFocused(false)}
           className={
             isDesktop
-              ? 'w-full bg-slate-800/60 border border-slate-700/60 focus:border-brand-red focus:bg-slate-800/90 rounded-md py-2 pl-4 pr-11 text-sm font-medium text-white placeholder:text-slate-400 outline-none focus:outline-none focus-visible:outline-none ring-0 ring-offset-0 focus:ring-0 shadow-inner transition-colors duration-200'
-              : 'w-full bg-slate-800/80 border border-slate-700/70 focus:border-brand-red focus:bg-slate-800 rounded-l-xl py-2.5 pl-3 pr-8 text-xs font-medium text-white placeholder:text-slate-400 outline-none focus:outline-none focus-visible:outline-none ring-0 ring-offset-0 transition-colors duration-200'
+              ? 'w-full bg-slate-800/80 border border-slate-700/70 focus:border-brand-red focus:bg-slate-800 rounded-full py-2.5 pl-5 pr-20 text-sm font-medium text-white placeholder:text-slate-400 outline-none focus:outline-none focus-visible:outline-none ring-0 ring-offset-0 focus:ring-0 shadow-inner transition-colors duration-200'
+              : 'w-full bg-slate-800/80 border border-slate-700/70 focus:border-brand-red focus:bg-slate-800 rounded-l-xl py-2.5 pl-3.5 pr-9 text-xs font-medium text-white placeholder:text-slate-400 outline-none focus:outline-none focus-visible:outline-none ring-0 ring-offset-0 transition-colors duration-200'
           }
         />
 
-        {/* Clear icon if search query is present on mobile */}
-        {!isDesktop && searchQuery && (
+        {/* Clear button (X) to the left of Search icon, shown only when searchQuery.length > 0 */}
+        {searchQuery.length > 0 && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-24 text-slate-400 hover:text-white p-1"
-            title="Limpiar"
+            className={
+              isDesktop
+                ? 'absolute right-11 text-slate-400 hover:text-white p-1 rounded-full hover:bg-slate-700/60 transition-colors cursor-pointer'
+                : 'absolute right-24 text-slate-400 hover:text-white p-1 cursor-pointer'
+            }
+            title="Limpiar búsqueda"
+            aria-label="Limpiar búsqueda"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className={isDesktop ? 'w-4 h-4' : 'w-3.5 h-3.5'} />
           </button>
         )}
 
@@ -155,7 +208,7 @@ export default function SearchAutocomplete({
           type="submit"
           className={
             isDesktop
-              ? 'absolute right-2 text-slate-400 group-focus-within:text-brand-red hover:text-white p-1.5 rounded-md transition-colors duration-200 flex items-center justify-center cursor-pointer outline-none focus:outline-none focus-visible:outline-none ring-0 ring-offset-0'
+              ? 'absolute right-3 text-slate-300 group-focus-within:text-brand-red hover:text-white p-1.5 rounded-full transition-colors duration-200 flex items-center justify-center cursor-pointer outline-none focus:outline-none focus-visible:outline-none ring-0 ring-offset-0'
               : 'bg-brand-red hover:bg-brand-red-hover text-white px-4 py-2.5 rounded-r-xl font-bold text-xs flex items-center justify-center flex-shrink-0 cursor-pointer shadow-sm transition-colors outline-none focus:outline-none focus-visible:outline-none'
           }
           title="Buscar"

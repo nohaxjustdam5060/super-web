@@ -1,6 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingBag, CheckCircle, Tag } from 'lucide-react';
+import { ShoppingCart, CheckCircle, Tag } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import ProductImage from './ProductImage';
 
@@ -21,6 +21,10 @@ export default function ProductCard({ product }) {
   const addItem = useCartStore((state) => state.addItem);
 
   const primaryImage = product.images?.find((img) => img.is_primary)?.image_url || product.images?.[0]?.image_url || product.image_url || null;
+  const secondaryImage = (Array.isArray(product.images)
+    ? product.images.map((img) => img?.image_url).find((url) => url && url !== primaryImage)
+    : null) || null;
+  const hasSecondaryImage = Boolean(secondaryImage);
 
   const price = Number(product.price) || 0;
   const previousPrice = Number(product.previous_price) || 0;
@@ -39,14 +43,34 @@ export default function ProductCard({ product }) {
       </div>
 
       {/* Product Image */}
-      <Link to={`/product/${product.slug}`} className="block p-3 sm:p-5 md:p-6 bg-gray-50/50 group-hover:bg-white transition-colors relative overflow-hidden">
-        <div className="w-full h-36 sm:h-44 md:h-48 flex items-center justify-center">
-          <ProductImage
-            src={primaryImage}
-            alt={product.name}
-            className="w-full h-full object-contain object-center group-hover:scale-105 transition-transform duration-300"
-            size="md"
-          />
+      <Link
+        to={`/product/${product.slug}`}
+        className="group/image block p-3 sm:p-5 md:p-6 bg-gray-50/50 group-hover:bg-white transition-colors relative overflow-hidden"
+      >
+        <div className="w-full h-36 sm:h-44 md:h-48 relative flex items-center justify-center">
+          {hasSecondaryImage ? (
+            <>
+              <ProductImage
+                src={primaryImage}
+                alt={product.name}
+                className="w-full h-full object-contain object-center transition-all duration-430 ease-out group-hover/image:opacity-0 group-hover/image:scale-95"
+                size="md"
+              />
+              <ProductImage
+                src={secondaryImage}
+                alt={`${product.name} - vista alternativa`}
+                className="w-full h-full object-contain object-center absolute inset-0 transition-all duration-500 ease-out opacity-0 scale-105 group-hover/image:opacity-100 group-hover/image:scale-100"
+                size="md"
+              />
+            </>
+          ) : (
+            <ProductImage
+              src={primaryImage}
+              alt={product.name}
+              className="w-full h-full object-contain object-center group-hover:scale-105 transition-transform duration-300"
+              size="md"
+            />
+          )}
         </div>
       </Link>
 
@@ -114,7 +138,7 @@ export default function ProductCard({ product }) {
                     disabled
                     className="w-full bg-gray-200 text-gray-400 font-bold py-2 sm:py-2.5 px-2 sm:px-4 rounded-md flex items-center justify-center space-x-1.5 sm:space-x-2 text-xs sm:text-sm cursor-not-allowed opacity-60 pointer-events-none shadow-none"
                   >
-                    <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
                     <span className="truncate">Precio por consultar</span>
                   </button>
                 </>
@@ -138,7 +162,7 @@ export default function ProductCard({ product }) {
                     disabled
                     className="w-full bg-gray-200 text-gray-500 font-bold py-2 sm:py-2.5 px-2 sm:px-4 rounded-md flex items-center justify-center space-x-1.5 sm:space-x-2 text-xs sm:text-sm cursor-not-allowed opacity-80"
                   >
-                    <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
                     <span className="truncate">Sin Stock Disponible</span>
                   </button>
                 </>
@@ -156,7 +180,7 @@ export default function ProductCard({ product }) {
                   onClick={() => addItem(product, 1)}
                   className="w-full bg-brand-red hover:bg-brand-red-hover text-white font-bold py-2 sm:py-2.5 px-2 sm:px-4 rounded-md flex items-center justify-center space-x-1.5 sm:space-x-2 shadow-md active:scale-95 transition-all text-xs sm:text-sm cursor-pointer"
                 >
-                  <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                  <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
                   <span className="truncate">Agregar al Carrito</span>
                 </button>
               </>

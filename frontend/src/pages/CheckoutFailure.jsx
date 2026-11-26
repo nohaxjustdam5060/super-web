@@ -1,6 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { XCircle, RefreshCw, ShoppingBag } from 'lucide-react';
+import { XCircle, RefreshCw, ShoppingCart } from 'lucide-react';
 
 export default function CheckoutFailure() {
   const [searchParams] = useSearchParams();
@@ -34,7 +34,7 @@ export default function CheckoutFailure() {
             onClick={() => navigate('/catalog')}
             className="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-gray-800 font-medium py-3.5 px-8 rounded-xl text-sm flex items-center justify-center space-x-2"
           >
-            <ShoppingBag className="w-4 h-4" />
+            <ShoppingCart className="w-4 h-4" />
             <span>Volver al Catálogo</span>
           </button>
         </div>

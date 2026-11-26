@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { CheckCircle2, ShoppingBag, Clock, AlertTriangle, Loader2, ArrowRight } from 'lucide-react';
+import { CheckCircle2, ShoppingCart, Clock, AlertTriangle, Loader2, ArrowRight } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import axiosClient from '../api/axiosClient';
 
@@ -93,7 +93,7 @@ export default function CheckoutSuccess() {
         ) : (
           <>
             <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
-              <ShoppingBag className="w-12 h-12" />
+              <ShoppingCart className="w-12 h-12" />
             </div>
             <h1 className="text-3xl font-semibold text-gray-900">
               PEDIDO REGISTRADO

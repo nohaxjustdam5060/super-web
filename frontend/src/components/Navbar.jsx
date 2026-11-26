@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Search, ShoppingBag, User, Cpu, Menu, X, ShieldCheck, Truck, Headphones,
+  Search, ShoppingCart, User, Cpu, Menu, X, ShieldCheck, Truck, Headphones, Phone,
   ChevronDown, ChevronRight, Laptop, Gamepad2, Briefcase, Smile, Feather, RefreshCw,
   Monitor, Tv, Box, HardDrive, Database, Layers, Zap, Settings, Smartphone, Tablet,
   Watch, Keyboard, Square, Radio, Mic, BatteryCharging, Wifi, Sliders, Printer,
@@ -93,7 +93,7 @@ const CATEGORY_ICON_MAP = {
 const FALLBACK_ICON_NAME_MAP = {
   Laptop, Gamepad2, Briefcase, Smile, Feather, RefreshCw, Cpu, Monitor, Tv, Box,
   HardDrive, Database, Layers, Zap, Settings, Smartphone, Tablet, Watch, Headphones,
-  Keyboard, Square, Radio, Mic, BatteryCharging, ShoppingBag, Wifi, Sliders, Printer,
+  Keyboard, Square, Radio, Mic, BatteryCharging, ShoppingBag: ShoppingCart, Wifi, Sliders, Printer,
   Projector, ShieldCheck, TabletSmartphone, BrainCircuit, Minimize2, CircuitBoard,
   MemoryStick, Server, SlidersHorizontal, Backpack, Volume2
 };
@@ -194,15 +194,54 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Mobile Top Announcement Rotator State
+  // Top Announcement Bar Animation & Pause State
   const [announcementIndex, setAnnouncementIndex] = useState(0);
+  const [topBarEntered, setTopBarEntered] = useState(false);
+  const [topBarPulsing, setTopBarPulsing] = useState(false);
+  const [isTopBarHovered, setIsTopBarHovered] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const isTopBarPaused = isTopBarHovered || isSearchFocused;
 
   useEffect(() => {
+    let raf2;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        setTopBarEntered(true);
+      });
+    });
+    return () => {
+      cancelAnimationFrame(raf1);
+      if (raf2) cancelAnimationFrame(raf2);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isTopBarPaused) {
+      setTopBarPulsing(false);
+      return;
+    }
+
+    let resetTimer;
+    const pulseInterval = setInterval(() => {
+      setTopBarPulsing(true);
+      resetTimer = setTimeout(() => {
+        setTopBarPulsing(false);
+      }, 320);
+    }, 10000);
+
+    return () => {
+      clearInterval(pulseInterval);
+      if (resetTimer) clearTimeout(resetTimer);
+    };
+  }, [isTopBarPaused]);
+
+  useEffect(() => {
+    if (isTopBarPaused) return;
     const timer = setInterval(() => {
       setAnnouncementIndex((prev) => (prev + 1) % 2);
     }, 3000);
     return () => clearInterval(timer);
-  }, []);
+  }, [isTopBarPaused]);
 
   const navigate = useNavigate();
   const navRef = useRef(null);
@@ -272,8 +311,12 @@ export default function Navbar() {
       ref={navRef}
     >
       {/* Top Announcement Bar (Compact Single-line height h-7 sm:h-8 across all screens) */}
-      <div className="bg-brand-dark text-white text-[10px] sm:text-xs h-7 sm:h-8 px-3 sm:px-4 flex items-center border-b border-white/5">
-        <div className="max-w-[1440px] mx-auto w-full flex flex-row justify-between items-center h-full gap-2">
+      <div
+        className="bg-brand-dark text-white text-[10px] sm:text-xs h-7 sm:h-8 flex items-center border-b border-white/5"
+        onMouseEnter={() => setIsTopBarHovered(true)}
+        onMouseLeave={() => setIsTopBarHovered(false)}
+      >
+        <div className="max-w-[1440px] mx-auto px-4 w-full flex flex-row justify-between items-center h-full gap-4 sm:gap-6">
           {/* Mobile Single-line Auto-Rotating Benefit (< sm) */}
           <div className="sm:hidden flex items-center justify-center min-w-0 flex-1 overflow-hidden h-full">
             <div
@@ -288,32 +331,49 @@ export default function Navbar() {
               <span className="truncate">
                 {announcementIndex === 0
                   ? 'Envío Express a Todo el Perú (24-48h)'
-                  : 'Garantía Oficial 100% E-Commerce'}
+                  : 'Garantía Oficial 12 meses'}
               </span>
             </div>
           </div>
 
-          {/* Desktop Static Benefits (sm+) */}
-          <div className="hidden sm:flex items-center space-x-6 min-w-0">
-            <span className="flex items-center text-gray-300 font-medium whitespace-nowrap">
+          {/* Desktop Benefits with Subtle Slide-In & 10s Re-Entry Pulse (sm+) */}
+          <div className="hidden sm:flex items-center space-x-4 min-w-0">
+            <span
+              className={`flex items-center text-gray-300 font-medium whitespace-nowrap transition-all ${
+                !topBarEntered
+                  ? 'opacity-0 -translate-x-[15px] duration-500 ease-out'
+                  : topBarPulsing
+                  ? 'opacity-35 -translate-x-[10px] duration-300 ease-in'
+                  : 'opacity-100 translate-x-0 duration-500 ease-out'
+              }`}
+            >
               <Truck className="w-3.5 h-3.5 mr-1.5 text-brand-red flex-shrink-0" />
               <span>Envío Express a Todo el Perú (24-48h)</span>
             </span>
-            <span className="flex items-center text-gray-300 font-medium whitespace-nowrap">
+            <span
+              className={`flex items-center text-gray-300 font-medium whitespace-nowrap transition-all delay-[150ms] ${
+                !topBarEntered
+                  ? 'opacity-0 -translate-x-[15px] duration-500 ease-out'
+                  : topBarPulsing
+                  ? 'opacity-35 -translate-x-[10px] duration-300 ease-in'
+                  : 'opacity-100 translate-x-0 duration-500 ease-out'
+              }`}
+            >
               <ShieldCheck className="w-3.5 h-3.5 mr-1.5 text-brand-red flex-shrink-0" />
               <span>Garantía Oficial 12 meses</span>
             </span>
           </div>
 
-          {/* Right Info: WhatsApp & Admin (Visible only on sm+ / desktop / tablet) */}
-          <div className="hidden sm:flex items-center space-x-2.5 sm:space-x-3 text-gray-300 text-[10px] sm:text-xs flex-shrink-0">
+          {/* Contact Phone & Admin (Visible only on sm+ / desktop / tablet) */}
+          <div className="hidden sm:flex items-center space-x-3 text-gray-300 text-[10px] sm:text-xs flex-shrink-0">
             <a
               href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hola, tengo una consulta sobre un producto en ${STORE_NAME}`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="cursor-pointer transition-colors hover:text-brand-red flex items-center whitespace-nowrap"
             >
-              Atención: {STORE_PHONE_DISPLAY}
+              <Phone className="w-3.5 h-3.5 mr-1.5 text-brand-red flex-shrink-0" />
+              <span>Atención: {STORE_PHONE_DISPLAY}</span>
             </a>
             {user?.role === 'admin' || user?.role === 'super_admin' ? (
               <Link to="/admin" className="text-slate-100 font-bold hover:text-brand-red-accent hover:underline whitespace-nowrap">
@@ -351,39 +411,43 @@ export default function Navbar() {
         </div>
 
         {/* Search Bar Desktop (Cohesive Unified Input with Live Search Autocomplete Dropdown) */}
-        <SearchAutocomplete variant="desktop" />
+        <SearchAutocomplete variant="desktop" onFocusChange={setIsSearchFocused} />
 
         {/* Header Right Actions (Profile, Cart & Mobile Search Button) */}
-        <div className="flex items-center space-x-1.5 sm:space-x-2.5 flex-nowrap justify-end flex-shrink-0">
+        <div className="flex items-center gap-4 sm:gap-5 flex-nowrap justify-end flex-shrink-0">
           {/* 1. User Profile / Login (Hidden <= 323px to preserve logo size without shrinking) */}
           {user ? (
-            <Link to="/profile" className="hidden min-[324px]:flex items-center space-x-1.5 text-xs font-bold text-slate-200 hover:text-white p-1" title="Mi Cuenta">
+            <Link
+              to="/profile"
+              className="hidden min-[324px]:flex items-center justify-center text-slate-200 hover:text-white hover:scale-105 transition-all p-1"
+              aria-label="Mi Cuenta"
+              title="Mi Cuenta"
+            >
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-800 text-brand-red-accent font-black text-xs flex items-center justify-center border border-slate-700">
                 {user.name.substring(0, 2).toUpperCase()}
               </div>
-              <span className="hidden lg:inline font-bold text-xs">{user.name.split(' ')[0]}</span>
             </Link>
           ) : (
             <Link
               to="/login"
-              className="hidden min-[324px]:flex items-center space-x-1 text-xs font-bold text-slate-200 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700/90 border border-slate-700 px-2 sm:px-3 py-1.5 rounded-md"
+              className="hidden min-[324px]:flex items-center justify-center text-slate-200 hover:text-white hover:scale-105 transition-all p-1"
+              aria-label="Ingresar"
               title="Iniciar Sesión"
             >
-              <User className="w-4 h-4 flex-shrink-0" />
-              <span className="hidden sm:inline">Ingresar</span>
+              <User className="w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0" strokeWidth={1.75} />
             </Link>
           )}
 
-          {/* 2. Cart Button */}
+          {/* 2. Cart Button (Icon-only with top-right counter badge) */}
           <button
             onClick={openCart}
-            className="relative bg-brand-red hover:bg-brand-red-hover text-white px-2.5 sm:px-3.5 py-1.5 rounded-md flex items-center space-x-1 sm:space-x-1.5 shadow-md transition-transform active:scale-95 cursor-pointer"
+            className="relative flex items-center justify-center text-slate-200 hover:text-white hover:scale-105 transition-all active:scale-95 p-1 cursor-pointer"
+            aria-label="Carrito"
             title="Ver Carrito"
           >
-            <ShoppingBag className="w-4 h-4 flex-shrink-0" />
-            <span className="hidden sm:inline font-black text-xs uppercase tracking-wider">Carrito</span>
+            <ShoppingCart className="w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0" strokeWidth={1.75} />
             {totalCartCount > 0 && (
-              <span className="bg-white text-brand-red font-black text-xs px-1.5 py-0.5 rounded-full shadow">
+              <span className="absolute -top-1 -right-1.5 min-w-[18px] h-[18px] px-1 bg-brand-red text-white font-black text-[10px] leading-none flex items-center justify-center rounded-full shadow ring-2 ring-brand-dark">
                 {totalCartCount}
               </span>
             )}
@@ -411,6 +475,7 @@ export default function Navbar() {
             variant="mobile"
             autoFocus={true}
             placeholder="Buscar laptops, componentes..."
+            onFocusChange={setIsSearchFocused}
             onCloseMobileMenu={() => setMobileSearchOpen(false)}
           />
         </div>

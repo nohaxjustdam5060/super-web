@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
-  ShoppingBag, ShieldCheck, Truck, RefreshCw, CheckCircle, Plus, Minus, 
+  ShoppingCart, ShieldCheck, Truck, RefreshCw, CheckCircle, Plus, Minus, 
   ArrowLeft, ChevronLeft, ChevronRight, MessageSquare, Clock, XCircle, Cpu, HardDrive, 
-  Database, Monitor, Layers, Wrench, FileText, Check, Tag 
+  Database, Monitor, Layers, Wrench, FileText, Check, Tag, Zap 
 } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import ProductCard from '../components/ProductCard';
@@ -21,8 +21,10 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
 
+  const navigate = useNavigate();
   const thumbnailRefs = useRef([]);
   const addItem = useCartStore((state) => state.addItem);
+  const closeCart = useCartStore((state) => state.closeCart);
 
   const handleGalleryMouseMove = (e) => {
     // Only enable hover zoom on devices with fine pointer (mouse) and never when hovering arrow buttons
@@ -391,38 +393,45 @@ export default function ProductDetail() {
 
           {/* Synchronized Thumbnails */}
           {imagesList.length > 1 && (
-            <div className="flex items-center space-x-3 overflow-x-auto pb-2 pt-1 px-1 scrollbar-none">
+            <div className="flex items-center overflow-x-auto pb-2 pt-1 px-1 scrollbar-none">
               {imagesList.map((img, idx) => {
                 const isActive = currentImageIndex === idx;
                 return (
-                  <button
-                    key={idx}
-                    ref={(el) => (thumbnailRefs.current[idx] = el)}
-                    type="button"
-                    onClick={() => setCurrentImageIndex(idx)}
-                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex items-center justify-center p-1.5 bg-white transition-all duration-200 cursor-pointer relative flex-shrink-0 ${
-                      isActive
-                        ? 'border-2 border-brand-red shadow-xs'
-                        : 'border border-gray-200 hover:border-gray-300'
-                    }`}
-                    title={`Ver imagen ${idx + 1}`}
-                  >
-                    <ProductImage
-                      src={img.image_url}
-                      alt={`Miniatura ${idx + 1}`}
-                      className="w-full h-full object-contain"
-                      size="xs"
-                      showText={false}
-                    />
-                    {img.is_primary && (
+                  <React.Fragment key={idx}>
+                    {idx > 0 && (
                       <span
-                        className="absolute top-1.5 left-1.5 w-4 h-4 bg-brand-red text-white rounded-full flex items-center justify-center text-[9px] z-10 shadow-xs leading-none font-medium pointer-events-none"
-                        title="Imagen Principal"
-                      >
-                        ★
-                      </span>
+                        className="h-10 sm:h-12 w-px bg-gray-200/90 flex-shrink-0 mx-1.5 sm:mx-2"
+                        aria-hidden="true"
+                      />
                     )}
-                  </button>
+                    <button
+                      ref={(el) => (thumbnailRefs.current[idx] = el)}
+                      type="button"
+                      onClick={() => setCurrentImageIndex(idx)}
+                      className={`w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center p-1.5 transition-all duration-200 cursor-pointer relative flex-shrink-0 border-b-2 ${
+                        isActive
+                          ? 'border-brand-red opacity-100'
+                          : 'border-transparent opacity-70 hover:opacity-100'
+                      }`}
+                      title={`Ver imagen ${idx + 1}`}
+                    >
+                      <ProductImage
+                        src={img.image_url}
+                        alt={`Miniatura ${idx + 1}`}
+                        className="w-full h-full object-contain"
+                        size="xs"
+                        showText={false}
+                      />
+                      {img.is_primary && (
+                        <span
+                          className="absolute top-1 left-1 w-4 h-4 bg-brand-red text-white rounded-full flex items-center justify-center text-[9px] z-10 shadow-xs leading-none font-medium pointer-events-none"
+                          title="Imagen Principal"
+                        >
+                          ★
+                        </span>
+                      )}
+                    </button>
+                  </React.Fragment>
                 );
               })}
             </div>
@@ -432,31 +441,11 @@ export default function ProductDetail() {
         {/* Product Purchase & Info Box */}
         <div className="space-y-6 flex flex-col justify-between">
           <div className="space-y-4">
-            {/* Header Meta: Brand, SKU & Stock Status Badge */}
+            {/* Header Meta: Brand & SKU */}
             <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center flex-wrap gap-2">
-                <span className="text-xs font-medium text-brand-blue uppercase bg-brand-blue-light px-3 py-1 rounded-md border border-brand-blue/20">
-                  {product.brand?.name || 'SUPERLAPTOP'}
-                </span>
-
-                {/* DYNAMIC STOCK BADGE */}
-                {stockCount > 3 ? (
-                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm">
-                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Disponible en Stock ({stockCount} unids)</span>
-                  </span>
-                ) : stockCount > 0 ? (
-                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200 shadow-sm">
-                    <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
-                    <span>¡Últimas {stockCount} unidades disponibles!</span>
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-red-100 text-red-800 border border-red-200 shadow-sm">
-                    <XCircle className="w-3.5 h-3.5 text-red-600" />
-                    <span>Agotado / Sin Stock</span>
-                  </span>
-                )}
-              </div>
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                {product.brand?.name || 'SUPERLAPTOP'}
+              </span>
 
               <span className="text-xs text-gray-400 font-mono">SKU: {product.sku}</span>
             </div>
@@ -475,8 +464,8 @@ export default function ProductDetail() {
               {product.name}
             </h1>
 
-            {/* Price Container with Visual Offer Highlights */}
-            <div className="bg-gray-50 p-4 sm:p-5 rounded-lg border border-gray-100 flex flex-wrap items-baseline justify-between gap-3">
+            {/* Price Section (White background with clean horizontal divider below product name) */}
+            <div className="bg-white pt-4 pb-1 border-t border-gray-200/80 flex flex-wrap items-baseline justify-between gap-3">
               <div className="flex flex-wrap items-baseline gap-3 sm:gap-4">
                 {!isPriceValid ? (
                   <div className="text-2xl sm:text-3xl font-semibold text-gray-900">
@@ -595,12 +584,32 @@ export default function ProductDetail() {
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60 pointer-events-none shadow-none'
                 }`}
               >
-                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <span className="break-words">
                   {!isPriceValid ? 'Precio por consultar' : isAvailable ? 'Agregar al Carrito' : 'Agotado'}
                 </span>
               </button>
             </div>
+
+            {/* Buy Now Button (Same full width as WhatsApp button) */}
+            <button
+              type="button"
+              onClick={() => {
+                if (!canPurchase) return;
+                addItem(product, 1);
+                closeCart();
+                navigate('/checkout');
+              }}
+              disabled={!canPurchase}
+              className={`w-full font-semibold py-2.5 sm:py-3.5 px-3 sm:px-6 rounded-md flex items-center justify-center space-x-2 shadow-lg transition-transform text-[11px] sm:text-xs md:text-sm text-center leading-tight whitespace-normal break-words min-h-[44px] ${
+                canPurchase
+                  ? 'bg-brand-dark hover:bg-slate-800 text-white cursor-pointer active:scale-95'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60 pointer-events-none shadow-none'
+              }`}
+            >
+              <Zap className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+              <span>Comprar ahora</span>
+            </button>
 
             {/* Direct WhatsApp Purchase Button (Fluid typography and multi-line wrapping text) */}
             <a
